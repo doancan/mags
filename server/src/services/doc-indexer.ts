@@ -284,7 +284,12 @@ export class DocIndexer {
     const doc = this.getDoc(name);
     if (!doc) return null;
 
-    const raw = readFileSync(doc.path, "utf-8");
+    let raw: string;
+    try {
+      raw = readFileSync(doc.path, "utf-8");
+    } catch {
+      return null;
+    }
     const { content } = matter(raw);
 
     if (!section) return content;
