@@ -8,6 +8,130 @@ import { join } from "node:path";
 import type { DetectedStack } from "../types/index.js";
 
 export class StackDetector {
+  private static readonly frameworkMap: Record<string, string> = {
+    next: "Next.js",
+    nuxt: "Nuxt",
+    react: "React",
+    vue: "Vue",
+    angular: "Angular",
+    svelte: "Svelte",
+    "@nestjs/core": "NestJS",
+    express: "Express",
+    fastify: "Fastify",
+    hono: "Hono",
+    "@hono/hono": "Hono",
+    "react-native": "React Native",
+    expo: "Expo",
+    electron: "Electron",
+    astro: "Astro",
+    remix: "Remix",
+    typescript: "TypeScript",
+    pg: "PostgreSQL",
+    mysql2: "MySQL",
+    "better-sqlite3": "SQLite",
+    mongodb: "MongoDB",
+    mongoose: "MongoDB",
+    redis: "Redis",
+    ioredis: "Redis",
+    prisma: "Prisma ORM",
+    "@prisma/client": "Prisma ORM",
+    typeorm: "TypeORM",
+    "drizzle-orm": "Drizzle ORM",
+    sequelize: "Sequelize",
+    knex: "Knex",
+  };
+
+  private static cleanVersion(version: string): string {
+    return version.replace(/^[\^~>=<]+/, "");
+  }
+
+  extractVersions(projectRoot: string): Record<string, string> {
+    const versions: Record<string, string> = {};
+
+    // package.json
+    this.extractNodeVersions(projectRoot, versions);
+    // pyproject.toml
+    this.extractPythonVersions(projectRoot, versions);
+    // go.mod
+    this.extractGoVersions(projectRoot, versions);
+
+    return versions;
+  }
+
+  private extractNodeVersions(root: string, versions: Record<string, string>): void {
+    const pkgPath = join(root, "package.json");
+    if (!existsSync(pkgPath)) return;
+
+    try {
+      const pkg = JSON.parse(readFileSync(pkgPath, "utf-8"));
+      const allDeps = {
+        ...(pkg.dependencies ?? {}),
+        ...(pkg.devDependencies ?? {}),
+      };
+
+      for (const [dep, ver] of Object.entries(allDeps)) {
+        const name = StackDetector.frameworkMap[dep];
+        if (name && typeof ver === "string") {
+          versions[name] = StackDetector.cleanVersion(ver);
+        }
+      }
+    } catch {
+      // Invalid package.json
+    }
+  }
+
+  private extractPythonVersions(root: string, versions: Record<string, string>): void {
+    const pyprojectPath = join(root, "pyproject.toml");
+    if (!existsSync(pyprojectPath)) return;
+
+    try {
+      const content = readFileSync(pyprojectPath, "utf-8");
+      const pyFrameworkMap: Record<string, string> = {
+        fastapi: "FastAPI",
+        django: "Django",
+        flask: "Flask",
+        starlette: "Starlette",
+        celery: "Celery",
+      };
+
+      for (const [pkg, name] of Object.entries(pyFrameworkMap)) {
+        // Match patterns like: fastapi = ">=0.100.0" or fastapi = "^0.100.0"
+        const regex = new RegExp(`${pkg}\\s*[=><!~]+\\s*["']?([\\d.]+)`, "i");
+        const match = content.match(regex);
+        if (match) {
+          versions[name] = StackDetector.cleanVersion(match[1]);
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
+  private extractGoVersions(root: string, versions: Record<string, string>): void {
+    const goModPath = join(root, "go.mod");
+    if (!existsSync(goModPath)) return;
+
+    try {
+      const content = readFileSync(goModPath, "utf-8");
+      const goFrameworkMap: Record<string, string> = {
+        "gin-gonic/gin": "Gin",
+        "labstack/echo": "Echo",
+        "gofiber/fiber": "Fiber",
+        "go-chi/chi": "Chi",
+      };
+
+      for (const [pkg, name] of Object.entries(goFrameworkMap)) {
+        const regex = new RegExp(`${pkg.replace(/\//g, "\\/")}\\s+v([\\d.]+)`, "i");
+        const match = content.match(regex);
+        if (match) {
+          versions[name] = match[1];
+        }
+      }
+    } catch {
+      // ignore
+    }
+  }
+
   detect(projectRoot: string): DetectedStack {
     const result: DetectedStack = {
       languages: [],
@@ -15,6 +139,7 @@ export class StackDetector {
       databases: [],
       apiStyle: [],
       packageManager: "",
+      versions: {},
     };
 
     this.detectNode(projectRoot, result);
@@ -24,6 +149,7 @@ export class StackDetector {
     this.detectJava(projectRoot, result);
     this.detectApiStyle(projectRoot, result);
     this.detectDatabases(projectRoot, result);
+    result.versions = this.extractVersions(projectRoot);
 
     return result;
   }
@@ -70,7 +196,7 @@ export class StackDetector {
         electron: "Electron",
         astro: "Astro",
         remix: "Remix",
-      };
+      } as const;
 
       for (const [dep, name] of Object.entries(frameworkMap)) {
         if (allDeps[dep]) {

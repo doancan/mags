@@ -5,18 +5,26 @@
 
 import { z } from "zod";
 import type { DocIndexer } from "../services/doc-indexer.js";
+import type { MemoryStore } from "../services/memory-store.js";
+import type { ProgressManager } from "../services/progress-manager.js";
+import type { StackDetector } from "../services/stack-detector.js";
+import { ConsistencyChecker } from "../services/consistency-checker.js";
 import type { ValidationIssue, ValidationResult } from "../types/index.js";
 
 export function registerValidationTools(
   server: any,
-  docIndexer: DocIndexer
+  docIndexer: DocIndexer,
+  memoryStore: MemoryStore,
+  progressManager: ProgressManager,
+  stackDetector: StackDetector,
+  projectRoot: string
 ) {
   // --- mags_validate_docs ---
   server.tool(
     "mags_validate_docs",
     "Validate document consistency: check frontmatter, cross-references, empty sections, and structural issues",
-    {},
-    async () => {
+    { deep: z.boolean().optional().default(false) },
+    async ({ deep }: { deep: boolean }) => {
       const docs = docIndexer.listDocs();
       const issues: ValidationIssue[] = [];
 
@@ -109,6 +117,19 @@ export function registerValidationTools(
         }
       }
 
+      // Deep validation
+      if (deep) {
+        const checker = new ConsistencyChecker(
+          docIndexer,
+          memoryStore,
+          progressManager,
+          stackDetector,
+          projectRoot
+        );
+        const deepIssues = await checker.runDeepValidation();
+        issues.push(...deepIssues);
+      }
+
       // Calculate score (0-100), weighted per document
       const errorCount = issues.filter((i) => i.severity === "error").length;
       const warningCount = issues.filter(
@@ -139,6 +160,7 @@ export function registerValidationTools(
                   warnings: warningCount,
                   info: infoCount,
                   docsChecked: docs.length,
+                  deepValidation: deep,
                 },
               },
               null,

@@ -24,6 +24,19 @@ export interface DetectedStack {
   databases: string[];
   apiStyle: string[];
   packageManager: string;
+  versions: Record<string, string>;
+}
+
+export interface TechTerm {
+  name: string;
+  version?: string;
+  doc: string;
+  line?: number;
+}
+
+export interface FrontmatterSchema {
+  required: string[];
+  status_values?: string[];
 }
 
 export interface StackConfig {

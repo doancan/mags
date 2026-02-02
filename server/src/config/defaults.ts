@@ -2,7 +2,7 @@
 // MAGS — Default Constants
 // ============================================
 
-import type { ModuleDefinition } from "../types/index.js";
+import type { ModuleDefinition, FrontmatterSchema } from "../types/index.js";
 
 export const SUPPORTED_DOC_EXTENSIONS = [".md", ".mdx", ".rst", ".adoc"] as const;
 
@@ -13,6 +13,16 @@ export const MAX_MEMORY_ENTRIES = 1000;
 export const MEMORY_WARNING_THRESHOLD = 0.8;
 
 export const DEFAULT_LOCALE = "en";
+
+export const FRONTMATTER_SCHEMAS: Record<string, FrontmatterSchema> = {
+  adr: {
+    required: ["title", "status", "last_updated"],
+    status_values: ["accepted", "superseded", "deprecated", "proposed"],
+  },
+  default: {
+    required: ["title"],
+  },
+};
 
 export const DEFAULT_MODULES: ModuleDefinition[] = [
   { name: "auth", aliases: ["auth", "authentication", "login", "register", "jwt", "session"] },

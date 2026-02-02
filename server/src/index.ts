@@ -21,6 +21,8 @@ import { TemplateEngine } from "./services/template-engine.js";
 import { LocalEmbeddingProvider } from "./services/embedding/local.js";
 import { OpenAIEmbeddingProvider } from "./services/embedding/openai.js";
 
+import { StackDetector } from "./services/stack-detector.js";
+
 import { registerDocTools } from "./tools/doc-tools.js";
 import { registerMemoryTools } from "./tools/memory-tools.js";
 import { registerProgressTools } from "./tools/progress-tools.js";
@@ -109,7 +111,8 @@ async function main() {
     memoryStore,
     config
   );
-  registerValidationTools(server, docIndexer);
+  const stackDetector = new StackDetector();
+  registerValidationTools(server, docIndexer, memoryStore, progressManager, stackDetector, projectRoot);
   registerClaudeMdTools(server, docIndexer, projectRoot, config);
   registerChangelogTools(server, projectRoot);
   registerScaffoldTools(server);

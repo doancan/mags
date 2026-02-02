@@ -349,7 +349,39 @@ describe("Skill Integrity Guard", () => {
   });
 });
 
-// ── 1.5 Plugin Structure Guard ─────────────────────
+// ── 1.5 Deep Validation Guard ───────────────────────
+
+describe("Deep Validation Guard", () => {
+  it("mags_validate_docs accepts deep parameter", () => {
+    const validationToolsSrc = readFileSync(
+      join(SERVER_DIR, "src", "tools", "validation-tools.ts"),
+      "utf-8"
+    );
+    // Must have deep parameter in the tool definition
+    expect(validationToolsSrc).toContain("z.boolean()");
+    expect(validationToolsSrc).toMatch(/deep/);
+  });
+
+  it("ConsistencyChecker service exists", () => {
+    const checkerPath = join(SERVER_DIR, "src", "services", "consistency-checker.ts");
+    expect(existsSync(checkerPath)).toBe(true);
+  });
+
+  it("FRONTMATTER_SCHEMAS is defined in defaults.ts", () => {
+    const defaultsSrc = readFileSync(DEFAULTS_PATH, "utf-8");
+    expect(defaultsSrc).toContain("FRONTMATTER_SCHEMAS");
+  });
+
+  it("validation-tools imports ConsistencyChecker", () => {
+    const validationToolsSrc = readFileSync(
+      join(SERVER_DIR, "src", "tools", "validation-tools.ts"),
+      "utf-8"
+    );
+    expect(validationToolsSrc).toContain("ConsistencyChecker");
+  });
+});
+
+// ── 1.6 Plugin Structure Guard ──────────────────────
 
 describe("Plugin Structure Guard", () => {
   it('plugin.json command is "node" (cross-platform)', () => {
@@ -378,7 +410,7 @@ describe("Plugin Structure Guard", () => {
   });
 });
 
-// ── 1.6 Bundle Freshness Guard ─────────────────────
+// ── 1.7 Bundle Freshness Guard ─────────────────────
 
 describe("Bundle Freshness Guard", () => {
   const bundleContent = readFileSync(BUNDLE_PATH, "utf-8");
