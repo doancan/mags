@@ -51,6 +51,8 @@ Ask the user these questions (all at once, not one by one):
 4. What is the architecture type? (monolith, microservices, library, cli, mobile, serverless)
 5. What language should documentation be in? (en, tr, or other locale)
 
+Call `mags_detect_stack` to auto-detect the project's tech stack. Use this information to enrich the docs.
+
 Then create the docs/ directory structure using `mags_create_doc` with these templates. **Pass the user's chosen locale (from question 5) as the `locale` parameter to each `mags_create_doc` call:**
 - `docs/architecture/overview.md` — Project overview from user answers
 - `docs/architecture/tech-stack.md` — Tech stack details
@@ -87,7 +89,7 @@ tasks: []
 last_updated: <current ISO date>
 ```
 
-Call `mags_update_progress` to initialize the progress tracker.
+Call `mags_init_progress` to initialize the progress tracker with the project's modules.
 
 ### 4. Offer CLAUDE.md generation
 
