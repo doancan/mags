@@ -6,8 +6,11 @@ server/dist/*
 !server/dist/mags-server.bundle.mjs
 *.tsbuildinfo
 
-# MAGS runtime data
-docs/.mags/
+# MAGS runtime data (per-user memory, sessions, progress)
+**/.mags/
+memories.db
+memories.db-wal
+memories.db-shm
 
 # OS
 .DS_Store
