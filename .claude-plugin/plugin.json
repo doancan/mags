@@ -12,8 +12,8 @@
   "keywords": ["documentation", "memory", "project-management", "guidance", "session-persistence"],
   "mcpServers": {
     "mags": {
-      "command": "node",
-      "args": ["${CLAUDE_PLUGIN_ROOT}/server/dist/mags-server.bundle.mjs"],
+      "command": "${CLAUDE_PLUGIN_ROOT}/server/start.sh",
+      "args": [],
       "env": {
         "MAGS_EMBEDDING_PROVIDER": "local"
       }
