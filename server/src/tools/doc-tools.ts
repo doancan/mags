@@ -143,34 +143,35 @@ export function registerDocTools(
       );
       const match = sectionRegex.exec(docContent);
 
-      if (!match) {
-        return {
-          content: [
-            { type: "text" as const, text: `Section "${section}" not found in "${name}"` },
-          ],
-          isError: true,
-        };
-      }
-
       // Reconstruct frontmatter + content
       const frontmatter = matter.stringify("", {
         ...parsed.data,
         last_updated: new Date().toISOString().split("T")[0],
       });
 
-      const beforeSection = docContent.slice(0, match.index);
-      const level = match[0].match(/^(#+)/)?.[1] ?? "##";
+      let newContent: string;
+      let created = false;
 
-      // Find next same-level heading
-      const rest = docContent.slice(match.index + match[0].length);
-      const nextHeading = rest.match(
-        new RegExp(`^#{1,${level.length}}\\s+`, "m")
-      );
-      const afterSection = nextHeading
-        ? rest.slice(rest.indexOf(nextHeading[0]))
-        : "";
+      if (!match) {
+        // Section not found — append as new ## section at the end
+        const trimmed = docContent.trimEnd();
+        newContent = `${frontmatter.trim()}\n\n${trimmed}\n\n## ${section}\n\n${content}\n`;
+        created = true;
+      } else {
+        const beforeSection = docContent.slice(0, match.index);
+        const level = match[0].match(/^(#+)/)?.[1] ?? "##";
 
-      const newContent = `${frontmatter.trim()}\n\n${beforeSection}${level} ${section}\n\n${content}\n\n${afterSection}`.trim() + "\n";
+        // Find next same-level heading
+        const rest = docContent.slice(match.index + match[0].length);
+        const nextHeading = rest.match(
+          new RegExp(`^#{1,${level.length}}\\s+`, "m")
+        );
+        const afterSection = nextHeading
+          ? rest.slice(rest.indexOf(nextHeading[0]))
+          : "";
+
+        newContent = `${frontmatter.trim()}\n\n${beforeSection}${level} ${section}\n\n${content}\n\n${afterSection}`.trim() + "\n";
+      }
 
       const bakPath = doc.path + ".bak";
       try {
@@ -201,6 +202,7 @@ export function registerDocTools(
               success: true,
               path: doc.relativePath,
               section,
+              ...(created ? { created: true } : {}),
             }),
           },
         ],
