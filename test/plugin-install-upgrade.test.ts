@@ -60,19 +60,24 @@ describe("plugin manifest integrity", () => {
     expect(plugin.version).toBe(rootPkg.version);
   });
 
-  it("plugin.json mcpServers command points to start.sh", () => {
+  it("plugin.json mcpServers command uses cross-platform node launcher", () => {
     const plugin = JSON.parse(readFileSync(PLUGIN_JSON, "utf-8"));
     const cmd = plugin.mcpServers?.mags?.command;
-    expect(cmd).toBe("${CLAUDE_PLUGIN_ROOT}/server/start.sh");
+    const args = plugin.mcpServers?.mags?.args;
+    expect(cmd).toBe("node");
+    expect(args).toContain("${CLAUDE_PLUGIN_ROOT}/server/start.js");
   });
 
-  it("start.sh exists and is executable", () => {
+  it("start.js (cross-platform launcher) exists", () => {
+    expect(existsSync(join(SERVER_DIR, "start.js"))).toBe(true);
+  });
+
+  it("start.sh (Unix launcher) exists and is executable", () => {
     expect(existsSync(START_SCRIPT)).toBe(true);
     // Check executable bit
     const stat = execSync(`stat -f %Lp "${START_SCRIPT}" 2>/dev/null || stat -c %a "${START_SCRIPT}" 2>/dev/null`, {
       encoding: "utf-8",
     }).trim();
-    // Should have at least user execute (1xx or x7x or xx5)
     const mode = parseInt(stat, 8);
     expect(mode & 0o111).toBeGreaterThan(0);
   });
@@ -95,17 +100,18 @@ describe("plugin manifest integrity", () => {
   });
 });
 
-// ── start.sh Behavior ──────────────────────────────
+// ── Launcher Behavior (start.js — cross-platform) ──
 
-describe("start.sh behavior", () => {
+describe("start.js launcher behavior", () => {
   let cacheDir: string;
 
   function createFakeCache() {
     cacheDir = mkdtempSync(join(tmpdir(), "mags-cache-"));
-    // Copy essential files that start.sh needs
+    // Copy essential files that start.js needs
     cpSync(join(SERVER_DIR, "dist"), join(cacheDir, "dist"), { recursive: true });
     cpSync(join(SERVER_DIR, "package.json"), join(cacheDir, "package.json"));
     cpSync(join(SERVER_DIR, "package-lock.json"), join(cacheDir, "package-lock.json"));
+    cpSync(join(SERVER_DIR, "start.js"), join(cacheDir, "start.js"));
     cpSync(START_SCRIPT, join(cacheDir, "start.sh"));
     chmodSync(join(cacheDir, "start.sh"), 0o755);
     return cacheDir;
@@ -123,18 +129,15 @@ describe("start.sh behavior", () => {
     // No node_modules — should auto-install
     expect(existsSync(join(cacheDir, "node_modules"))).toBe(false);
 
-    // Run start.sh with a timeout (it starts an MCP server, so we kill it)
+    // Run start.js with a timeout (it starts an MCP server, so we kill it)
     try {
-      execFileSync("bash", ["-c", `
-        "${cacheDir}/start.sh" &
-        PID=$!
-        sleep 5
-        kill $PID 2>/dev/null
-        wait $PID 2>/dev/null
-        exit 0
-      `], { timeout: 30000, stdio: "pipe" });
+      execFileSync("node", [join(cacheDir, "start.js")], {
+        timeout: 30000,
+        stdio: "pipe",
+        killSignal: "SIGTERM",
+      });
     } catch {
-      // Process killed — expected
+      // Process killed or exited — expected
     }
 
     // Verify better-sqlite3 was installed
@@ -153,30 +156,23 @@ describe("start.sh behavior", () => {
 
     expect(existsSync(join(cacheDir, "node_modules", "better-sqlite3"))).toBe(true);
 
-    // Place a marker file inside node_modules — if npm install runs, it would
-    // wipe/recreate the directory and our marker would disappear.
+    // Place a marker file inside node_modules
     const markerPath = join(cacheDir, "node_modules", ".mags-test-marker");
     writeFileSync(markerPath, "skip-test");
 
-    // Run start.sh again
-    let stderr = "";
+    // Run start.js again
     try {
-      const result = execFileSync("bash", ["-c", `
-        "${cacheDir}/start.sh" &
-        PID=$!
-        sleep 2
-        kill $PID 2>/dev/null
-        wait $PID 2>/dev/null
-        exit 0
-      `], { timeout: 15000, stdio: "pipe" });
-      stderr = result.toString();
-    } catch (e: any) {
-      stderr = e.stderr?.toString() ?? "";
+      execFileSync("node", [join(cacheDir, "start.js")], {
+        timeout: 15000,
+        stdio: "pipe",
+        killSignal: "SIGTERM",
+      });
+    } catch {
+      // Process killed — expected
     }
 
     // Marker file should still exist (npm install was NOT triggered)
     expect(existsSync(markerPath)).toBe(true);
-    // The marker content should be intact (not overwritten)
     expect(readFileSync(markerPath, "utf-8")).toBe("skip-test");
   }, 45000);
 
@@ -187,16 +183,13 @@ describe("start.sh behavior", () => {
     mkdirSync(join(cacheDir, "node_modules", "better-sqlite3"), { recursive: true });
     writeFileSync(join(cacheDir, "node_modules", "better-sqlite3", "package.json"), "{}");
 
-    // Run start.sh — should detect corruption and reinstall
+    // Run start.js — should detect corruption and reinstall
     try {
-      execFileSync("bash", ["-c", `
-        "${cacheDir}/start.sh" &
-        PID=$!
-        sleep 5
-        kill $PID 2>/dev/null
-        wait $PID 2>/dev/null
-        exit 0
-      `], { timeout: 30000, stdio: "pipe" });
+      execFileSync("node", [join(cacheDir, "start.js")], {
+        timeout: 30000,
+        stdio: "pipe",
+        killSignal: "SIGTERM",
+      });
     } catch {
       // Process killed — expected
     }
