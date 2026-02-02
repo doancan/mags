@@ -10,8 +10,6 @@
   "homepage": "https://github.com/doancan/mags",
   "license": "MIT",
   "keywords": ["documentation", "memory", "project-management", "guidance", "session-persistence"],
-  "hooks": "./hooks/hooks.json",
-  "skills": "./skills/",
   "mcpServers": {
     "mags": {
       "command": "node",
