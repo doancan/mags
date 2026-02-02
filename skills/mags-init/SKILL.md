@@ -47,7 +47,7 @@ Ask the user these questions (all at once, not one by one):
 4. What is the architecture type? (monolith, microservices, library, cli, mobile, serverless)
 5. What language should documentation be in? (en, tr, or other locale)
 
-Then create the docs/ directory structure using `mags_create_doc` with these templates:
+Then create the docs/ directory structure using `mags_create_doc` with these templates. **Pass the user's chosen locale (from question 5) as the `locale` parameter to each `mags_create_doc` call:**
 - `docs/architecture/overview.md` — Project overview from user answers
 - `docs/architecture/tech-stack.md` — Tech stack details
 - `docs/rules/coding-standards.md` — Basic coding standards for the stack
@@ -70,8 +70,11 @@ Create the following structure:
 version: 1
 project_root: .
 docs_path: docs/
+locale: <user's chosen locale from question 5, e.g. "en" or "tr">
 initialized_at: <current ISO date>
 ```
+
+Use the locale code the user selected in question 5 (en, tr, etc.) as the `locale` value.
 
 **progress.yaml** content:
 ```yaml

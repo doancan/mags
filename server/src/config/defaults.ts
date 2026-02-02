@@ -36,6 +36,8 @@ export const PROGRESS_STATUSES = [
   "blocked",
 ] as const;
 
+export const SUPPORTED_LOCALES = ["en", "tr"] as const;
+
 export const DEFAULT_LOCALE = "en";
 
 export const DEFAULT_ARCHITECTURE = "monolith";

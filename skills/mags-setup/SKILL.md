@@ -25,6 +25,7 @@ Analyze the current project and recommend an optimal setup for Claude Code workf
 ### 1. Analyze project
 
 Gather project signals in parallel:
+- Read `.mags/config.yaml` to check for a `locale` field. If present, use this locale value when calling `mags_create_doc` and `mags_scaffold_module` throughout this flow.
 - Call `mags_project_summary` for overall context.
 - Use `Glob` to detect project type:
   - `package.json` — Node/JS project
@@ -96,5 +97,5 @@ Present actionable next steps:
 Wait for user to pick an action. Do not proceed automatically.
 
 If the user picks option 1, call `mags_generate_claude_md` and write the result to the project root.
-If the user picks option 2, ask for the module name, then call `mags_scaffold_module`.
+If the user picks option 2, ask for the module name, then call `mags_scaffold_module` (pass the `locale` from config.yaml if available).
 If the user picks option 3, create the appropriate hook scripts in `.githooks/` or configure via the project's tooling (husky for Node, pre-commit for Python, etc.).

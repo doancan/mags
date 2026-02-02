@@ -5,6 +5,60 @@
 
 import { z } from "zod";
 import type { ScaffoldFile } from "../types/index.js";
+import { DEFAULT_LOCALE } from "../config/defaults.js";
+
+const SCAFFOLD_LABELS: Record<string, Record<string, string>> = {
+  en: {
+    features: "Features",
+    description: "Description",
+    priority: "Priority",
+    acceptanceCriteria: "Acceptance Criteria",
+    tables: "Tables",
+    column: "Column",
+    type: "Type",
+    indexes: "Indexes",
+    events: "Events",
+    producer: "Producer",
+    consumer: "Consumer",
+    schema: "Schema",
+    listPage: "List page",
+    detailPage: "Detail page",
+    createPage: "Create page",
+    consumerConfiguration: "Consumer Configuration",
+    topic: "Topic",
+    groupId: "Group ID",
+    retryPolicy: "Retry Policy",
+    eventSchemas: "Event Schemas",
+    module: "Module",
+  },
+  tr: {
+    features: "Özellikler",
+    description: "Açıklama",
+    priority: "Öncelik",
+    acceptanceCriteria: "Kabul Kriterleri",
+    tables: "Tablolar",
+    column: "Kolon",
+    type: "Tip",
+    indexes: "İndeksler",
+    events: "Olaylar",
+    producer: "Üretici",
+    consumer: "Tüketici",
+    schema: "Şema",
+    listPage: "Liste sayfası",
+    detailPage: "Detay sayfası",
+    createPage: "Oluşturma sayfası",
+    consumerConfiguration: "Tüketici Yapılandırması",
+    topic: "Topic",
+    groupId: "Group ID",
+    retryPolicy: "Yeniden Deneme Politikası",
+    eventSchemas: "Olay Şemaları",
+    module: "Modül",
+  },
+};
+
+function getLabels(locale?: string | null): Record<string, string> {
+  return SCAFFOLD_LABELS[locale ?? DEFAULT_LOCALE] ?? SCAFFOLD_LABELS[DEFAULT_LOCALE];
+}
 
 export function registerScaffoldTools(server: any) {
   // --- mags_scaffold_module ---
@@ -24,20 +78,28 @@ export function registerScaffoldTools(server: any) {
         .nullable()
         .optional()
         .describe("API style (default: rest)"),
+      locale: z
+        .string()
+        .nullable()
+        .optional()
+        .describe("Locale for scaffold content (e.g. 'en', 'tr')"),
     },
     async ({
       module,
       description,
       type,
       apiStyle,
+      locale,
     }: {
       module: string;
       description: string;
       type?: "backend" | "frontend" | "fullstack" | null;
       apiStyle?: "rest" | "graphql" | "grpc" | "event-driven" | null;
+      locale?: string | null;
     }) => {
       const moduleType = type || "fullstack";
       const style = apiStyle || "rest";
+      const L = getLabels(locale);
       const files: ScaffoldFile[] = [];
 
       // PRD section scaffold
@@ -47,15 +109,15 @@ export function registerScaffoldTools(server: any) {
 
 > ${description}
 
-### Features
+### ${L.features}
 
-| ID | Feature | Description | Priority |
+| ID | Feature | ${L.description} | ${L.priority} |
 |---|---|---|---|
 | ${module.toUpperCase()}-001 | | | P0 |
 | ${module.toUpperCase()}-002 | | | P1 |
 | ${module.toUpperCase()}-003 | | | P2 |
 
-### Acceptance Criteria
+### ${L.acceptanceCriteria}
 
 - [ ]
 - [ ]
@@ -67,11 +129,11 @@ export function registerScaffoldTools(server: any) {
       if (moduleType === "backend" || moduleType === "fullstack") {
         files.push({
           path: `data-model-${module}-section.md`,
-          content: `## ${capitalize(module)} Tables
+          content: `## ${capitalize(module)} ${L.tables}
 
 ### ${module}
 
-| Column | Type | Description |
+| ${L.column} | ${L.type} | ${L.description} |
 |---|---|---|
 | id | UUID | PK |
 | tenant_id | UUID | FK → tenant.id |
@@ -79,7 +141,7 @@ export function registerScaffoldTools(server: any) {
 | updated_at | TIMESTAMP | |
 | deleted_at | TIMESTAMP | Soft delete |
 
-**Indexes:**
+**${L.indexes}:**
 - \`idx_${module}_tenant\`: (tenant_id, created_at DESC)
 `,
         });
@@ -193,15 +255,15 @@ message Delete${capitalize(module)}Request {
               path: `api-${module}-section.md`,
               content: `### ${capitalize(module)} (Event-Driven)
 
-#### Events
+#### ${L.events}
 
-| Event | Producer | Consumer | Schema |
+| Event | ${L.producer} | ${L.consumer} | ${L.schema} |
 |---|---|---|---|
 | ${module}.created | ${module}-service | notification-service | ${capitalize(module)}CreatedEvent |
 | ${module}.updated | ${module}-service | search-service | ${capitalize(module)}UpdatedEvent |
 | ${module}.deleted | ${module}-service | cleanup-service | ${capitalize(module)}DeletedEvent |
 
-#### Event Schemas
+#### ${L.eventSchemas}
 
 \`\`\`json
 {
@@ -217,9 +279,9 @@ message Delete${capitalize(module)}Request {
 }
 \`\`\`
 
-#### Consumer Configuration
+#### ${L.consumerConfiguration}
 
-| Consumer | Topic | Group ID | Retry Policy |
+| ${L.consumer} | ${L.topic} | ${L.groupId} | ${L.retryPolicy} |
 |---|---|---|---|
 | | ${module}-events | ${module}-consumer | 3 retries, exponential backoff |
 `,
@@ -249,14 +311,14 @@ DELETE /api/v1/${module}s/{id}          → Delete
       if (moduleType === "frontend" || moduleType === "fullstack") {
         files.push({
           path: `structure-${module}-section.md`,
-          content: `### ${capitalize(module)} Module
+          content: `### ${capitalize(module)} ${L.module}
 
 \`\`\`
 src/
 ├── routes/${module}/
-│   ├── index.tsx           → List page
-│   ├── $id.tsx             → Detail page
-│   └── new.tsx             → Create page
+│   ├── index.tsx           → ${L.listPage}
+│   ├── $id.tsx             → ${L.detailPage}
+│   └── new.tsx             → ${L.createPage}
 ├── components/${module}/
 │   ├── ${module}-list.tsx
 │   ├── ${module}-card.tsx

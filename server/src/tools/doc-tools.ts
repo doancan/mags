@@ -225,19 +225,29 @@ export function registerDocTools(
       variables: z.record(z.string()).nullable().optional().describe("Template variables"),
       path: z.string().nullable().optional().describe("Custom output path relative to docs/"),
       overwrite: z.boolean().optional().default(false).describe("Allow overwriting existing file"),
+      locale: z.string().nullable().optional().describe("Locale for template content (e.g. 'en', 'tr')"),
     },
     async ({
       template,
       variables,
       path: customPath,
       overwrite,
+      locale,
     }: {
       template: string;
       variables?: Record<string, string> | null;
       path?: string | null;
       overwrite: boolean;
+      locale?: string | null;
     }) => {
+      const previousLocale = templateEngine.getLocale();
+      if (locale) {
+        templateEngine.setLocale(locale);
+      }
       const rendered = templateEngine.render(template, variables ?? {});
+      if (locale) {
+        templateEngine.setLocale(previousLocale);
+      }
       if (!rendered) {
         const available = templateEngine.listTemplates().map((t) => t.name);
         return {

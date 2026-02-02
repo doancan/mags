@@ -153,6 +153,22 @@ export class TemplateEngine {
   }
 
   /**
+   * Change locale at runtime — clears template cache and reloads
+   */
+  setLocale(locale: string): void {
+    this.locale = locale;
+    this.templates.clear();
+    this.loadTemplates();
+  }
+
+  /**
+   * Get current locale
+   */
+  getLocale(): string {
+    return this.locale;
+  }
+
+  /**
    * List available templates
    */
   listTemplates(): Array<{ name: string; description: string; variables: TemplateVariable[] }> {
