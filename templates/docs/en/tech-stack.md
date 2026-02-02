@@ -9,6 +9,10 @@ tags: [architecture, tech-stack]
 
 # {{project_name}} — Tech Stack
 
+## Summary
+
+> Brief summary of the tech stack and key architectural decisions.
+
 ## Architecture Overview
 
 ```

@@ -9,6 +9,10 @@ tags: [architecture, tech-stack, typescript]
 
 # Tech Stack
 
+## Summary
+
+> Brief summary of the tech stack and key architectural decisions.
+
 ## Runtime
 
 | Component | Choice | Version | Notes |

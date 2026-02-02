@@ -6,8 +6,11 @@ user-invocable: true
 allowed-tools:
   - mcp__mags_mags__mags_list_docs
   - mcp__mags_mags__mags_create_doc
+  - mcp__mags_mags__mags_update_doc
   - mcp__mags_mags__mags_search_docs
+  - mcp__mags_mags__mags_init_progress
   - mcp__mags_mags__mags_update_progress
+  - mcp__mags_mags__mags_detect_stack
   - mcp__mags_mags__mags_generate_claude_md
   - mcp__mags_mags__mags_project_summary
   - mcp__mags_mags__mags_remember

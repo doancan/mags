@@ -9,6 +9,10 @@ tags: [architecture, tech-stack]
 
 # {{project_name}} — Tech Stack
 
+## Özet
+
+> Tech stack ve temel mimari kararların kısa özeti.
+
 ## Mimari Genel Bakış
 
 ```
