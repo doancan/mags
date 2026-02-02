@@ -30,48 +30,10 @@ const PLUGIN_JSON = join(PROJECT_ROOT, ".claude-plugin", "plugin.json");
 const MARKETPLACE_JSON = join(PROJECT_ROOT, ".claude-plugin", "marketplace.json");
 
 // ── Plugin Manifest Integrity ──────────────────────
+// NOTE: Version SSOT, plugin structure, and bundle guards
+// are now in test/guards.test.ts for comprehensive coverage.
 
 describe("plugin manifest integrity", () => {
-  it("plugin.json is valid JSON", () => {
-    const raw = readFileSync(PLUGIN_JSON, "utf-8");
-    expect(() => JSON.parse(raw)).not.toThrow();
-  });
-
-  it("marketplace.json is valid JSON", () => {
-    const raw = readFileSync(MARKETPLACE_JSON, "utf-8");
-    expect(() => JSON.parse(raw)).not.toThrow();
-  });
-
-  it("plugin.json and marketplace.json have matching versions", () => {
-    const plugin = JSON.parse(readFileSync(PLUGIN_JSON, "utf-8"));
-    const marketplace = JSON.parse(readFileSync(MARKETPLACE_JSON, "utf-8"));
-    expect(plugin.version).toBe(marketplace.plugins[0].version);
-  });
-
-  it("plugin.json version matches server/package.json version", () => {
-    const plugin = JSON.parse(readFileSync(PLUGIN_JSON, "utf-8"));
-    const serverPkg = JSON.parse(readFileSync(join(SERVER_DIR, "package.json"), "utf-8"));
-    expect(plugin.version).toBe(serverPkg.version);
-  });
-
-  it("plugin.json version matches root package.json version", () => {
-    const plugin = JSON.parse(readFileSync(PLUGIN_JSON, "utf-8"));
-    const rootPkg = JSON.parse(readFileSync(join(PROJECT_ROOT, "package.json"), "utf-8"));
-    expect(plugin.version).toBe(rootPkg.version);
-  });
-
-  it("plugin.json mcpServers command uses cross-platform node launcher", () => {
-    const plugin = JSON.parse(readFileSync(PLUGIN_JSON, "utf-8"));
-    const cmd = plugin.mcpServers?.mags?.command;
-    const args = plugin.mcpServers?.mags?.args;
-    expect(cmd).toBe("node");
-    expect(args).toContain("${CLAUDE_PLUGIN_ROOT}/server/start.js");
-  });
-
-  it("start.js (cross-platform launcher) exists", () => {
-    expect(existsSync(join(SERVER_DIR, "start.js"))).toBe(true);
-  });
-
   it("start.sh (Unix launcher) exists and is executable", () => {
     expect(existsSync(START_SCRIPT)).toBe(true);
     // Check executable bit
@@ -80,10 +42,6 @@ describe("plugin manifest integrity", () => {
     }).trim();
     const mode = parseInt(stat, 8);
     expect(mode & 0o111).toBeGreaterThan(0);
-  });
-
-  it("bundle file exists", () => {
-    expect(existsSync(BUNDLE_PATH)).toBe(true);
   });
 
   it("marketplace.json has required fields", () => {
@@ -477,31 +435,7 @@ describe("data persistence across reopens (simulates upgrade)", () => {
   });
 });
 
-// ── Bundle Integrity ───────────────────────────────
-
-describe("bundle integrity", () => {
-  it("bundle file is non-empty", () => {
-    const stat = readFileSync(BUNDLE_PATH);
-    expect(stat.length).toBeGreaterThan(10000); // Bundle should be substantial
-  });
-
-  it("bundle starts with ESM createRequire shim", () => {
-    const head = readFileSync(BUNDLE_PATH, "utf-8").slice(0, 200);
-    expect(head).toContain("createRequire");
-  });
-
-  it("bundle references better-sqlite3 as external require", () => {
-    const content = readFileSync(BUNDLE_PATH, "utf-8");
-    expect(content).toContain("better-sqlite3");
-  });
-
-  it("bundle does NOT contain node_modules paths", () => {
-    const content = readFileSync(BUNDLE_PATH, "utf-8");
-    // Should not have hardcoded absolute paths
-    expect(content).not.toContain("/Users/");
-    expect(content).not.toContain("\\Users\\");
-  });
-});
+// Bundle integrity guards are now in test/guards.test.ts
 
 // ── Plugin Directory Structure ─────────────────────
 
@@ -550,26 +484,4 @@ describe("plugin directory structure", () => {
   });
 });
 
-// ── Version Consistency ────────────────────────────
-
-describe("version consistency across all files", () => {
-  let version: string;
-
-  it("all version sources agree", () => {
-    const pluginVersion = JSON.parse(readFileSync(PLUGIN_JSON, "utf-8")).version;
-    const marketplaceVersion = JSON.parse(readFileSync(MARKETPLACE_JSON, "utf-8")).plugins[0].version;
-    const serverVersion = JSON.parse(readFileSync(join(SERVER_DIR, "package.json"), "utf-8")).version;
-    const rootVersion = JSON.parse(readFileSync(join(PROJECT_ROOT, "package.json"), "utf-8")).version;
-
-    version = pluginVersion;
-
-    expect(marketplaceVersion).toBe(version);
-    expect(serverVersion).toBe(version);
-    expect(rootVersion).toBe(version);
-  });
-
-  it("version follows semver format", () => {
-    const v = JSON.parse(readFileSync(PLUGIN_JSON, "utf-8")).version;
-    expect(v).toMatch(/^\d+\.\d+\.\d+$/);
-  });
-});
+// Version consistency guards are now in test/guards.test.ts

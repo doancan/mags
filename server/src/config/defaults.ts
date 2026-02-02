@@ -6,31 +6,11 @@ import type { ModuleDefinition } from "../types/index.js";
 
 export const SUPPORTED_DOC_EXTENSIONS = [".md", ".mdx", ".rst", ".adoc"] as const;
 
-export const DOC_FRONTMATTER_FIELDS = [
-  "title",
-  "version",
-  "status",
-  "author",
-  "last_updated",
-  "tags",
-] as const;
-
-export const SESSION_FILE_PREFIX = "session-";
-
 export const DEFAULT_QUERY_LIMIT = 10;
 
 export const MAX_MEMORY_ENTRIES = 1000;
 
 export const MEMORY_WARNING_THRESHOLD = 0.8;
-
-export const PROGRESS_STATUSES = [
-  "not_started",
-  "in_progress",
-  "completed",
-  "blocked",
-] as const;
-
-export const SUPPORTED_LOCALES = ["en", "tr"] as const;
 
 export const DEFAULT_LOCALE = "en";
 

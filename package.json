@@ -29,6 +29,7 @@
     "node": ">=18.0.0"
   },
   "scripts": {
+    "test": "cd server && npm test",
     "build": "cd server && npm run build",
     "dev": "cd server && npm run dev",
     "start": "cd server && npm start",
