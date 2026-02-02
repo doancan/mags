@@ -286,23 +286,36 @@ Scan patterns vary by architecture type:
 
 ### mags_validate_docs
 
-Validates all documents.
+Validates all documents. Supports shallow (default) and deep validation modes.
 
-**No parameters.**
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `deep` | boolean | No | `false` | Enable deep cross-document consistency checks |
 
-**Checks:**
+**Shallow checks (always run):**
 - Frontmatter: presence of title, status, last_updated
 - Content: empty sections, TODO/FIXME markers, short documents
 - Cross-references: broken markdown links
+
+**Deep checks (when `deep: true`):**
+- **Version conflicts:** detects major version mismatches across documents and against package.json/pyproject.toml/go.mod
+- **Memory-document consistency:** flags contradictions between stored decisions and documentation (e.g., memory says "JWT" but doc says "session-based")
+- **Frontmatter schemas:** enforces required fields per document type (ADR requires title, status, last_updated)
+- **ADR structure:** checks for required sections (Status, Context, Decision, Consequences — supports both EN and TR headings)
+- **Module completeness:** verifies that tracked modules appear in PRD, data-model, and API design documents
 
 **Returns:**
 ```json
 {
   "issues": [{ "type": "...", "doc": "...", "detail": "...", "severity": "error|warning|info" }],
   "score": 85,
-  "summary": { "errors": 0, "warnings": 3, "info": 2, "docsChecked": 18 }
+  "summary": { "errors": 0, "warnings": 3, "info": 2, "docsChecked": 18, "deepValidation": false }
 }
 ```
+
+**Issue types (shallow):** `missing_frontmatter`, `empty_section`, `placeholder`, `too_short`, `broken_link`
+
+**Issue types (deep):** `version_conflict`, `version_drift`, `memory_doc_conflict`, `frontmatter_missing`, `invalid_status`, `adr_missing_section`, `adr_invalid_status`, `module_incomplete`
 
 **Score formula:** `100 - (errors × 15 + warnings × 2 + info × 0.5) / docsChecked`
 

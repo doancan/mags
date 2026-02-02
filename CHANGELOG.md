@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-02-02
+
+### Added
+
+- Deep cross-document validation via `mags_validate_docs({ deep: true })`
+  - Version conflict detection across documents and against package.json/pyproject.toml/go.mod
+  - Memory-document contradiction detection (e.g., memory says "JWT" but doc says "session-based")
+  - Frontmatter schema enforcement per document type (ADR-specific required fields)
+  - ADR structure validation (required sections: Status, Context, Decision, Consequences — EN/TR)
+  - Module completeness checks (PRD, data-model, api-design coverage)
+- `ConsistencyChecker` service for all deep validation logic
+- `StackDetector.extractVersions()` — extracts actual versions from package.json, pyproject.toml, go.mod
+- `FRONTMATTER_SCHEMAS` configuration for document type-specific required fields
+- `TechTerm` and `FrontmatterSchema` type definitions
+- `DetectedStack.versions` field for version-aware stack detection
+- Regression guard suite with version SSOT, constants, template, skill, plugin, and bundle guards
+- Cross-platform Node.js launcher (`start.js`)
+
+### Fixed
+
+- Stack detection uses shared `StackDetector` instance for validation
+- Skills reference: `mags_init_progress` in mags-init allowed-tools
+- Template frontmatter standardization and root/en locale sync
+- Version SSOT: all 4 sources (root pkg, server pkg, plugin.json, marketplace.json) in sync
+
 ## [0.1.0] - 2026-02-02
 
 ### Added

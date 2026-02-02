@@ -165,7 +165,7 @@ When all items in a module are completed, the module auto-completes. `mags_get_n
 ### Validation & Generation
 | Tool | Description |
 |------|-------------|
-| `mags_validate_docs` | Check frontmatter, sections, cross-refs, quality score |
+| `mags_validate_docs` | Check frontmatter, sections, cross-refs, quality score; `deep` mode adds version, memory, ADR, and module consistency checks |
 | `mags_generate_claude_md` | Generate CLAUDE.md from project docs (stack-aware) |
 | `mags_audit_claude_md` | Audit existing CLAUDE.md for completeness |
 | `mags_generate_changelog` | Generate changelog from conventional commits |
@@ -253,7 +253,7 @@ mags/
 │   ├── src/
 │   │   ├── index.ts          # Entry point
 │   │   ├── config/           # Configuration loading
-│   │   ├── services/         # Core services (12)
+│   │   ├── services/         # Core services (13)
 │   │   │   ├── doc-indexer.ts
 │   │   │   ├── doc-parser.ts
 │   │   │   ├── memory-store.ts
@@ -266,6 +266,7 @@ mags/
 │   │   │   ├── module-discoverer.ts
 │   │   │   ├── architecture-adapter.ts
 │   │   │   ├── claude-md-rules.ts
+│   │   │   ├── consistency-checker.ts
 │   │   │   └── embedding/    # Pluggable embedding providers
 │   │   ├── tools/            # MCP tool registrations (24 tools)
 │   │   └── types/            # TypeScript type definitions
@@ -300,7 +301,7 @@ npm run dev        # Watch mode with tsx
 npm run build      # TypeScript compilation
 npm run bundle     # Create single-file bundle
 npm run typecheck  # Type check without emitting
-npm test           # Run all 516 tests
+npm test           # Run all tests
 npm run test:cov   # Run tests with coverage
 ```
 
