@@ -1,0 +1,25 @@
+{
+  "name": "mags",
+  "version": "0.1.0",
+  "description": "Memory And Guidance System — Project documentation memory, session persistence, and development guidance for Claude Code",
+  "author": {
+    "name": "Dogancan",
+    "url": "https://github.com/doancan"
+  },
+  "repository": "https://github.com/doancan/mags",
+  "homepage": "https://github.com/doancan/mags",
+  "license": "MIT",
+  "keywords": ["documentation", "memory", "project-management", "guidance", "session-persistence"],
+  "hooks": "./hooks/hooks.json",
+  "skills": "./skills/",
+  "agents": "./agents/",
+  "mcpServers": {
+    "mags": {
+      "command": "node",
+      "args": ["${CLAUDE_PLUGIN_ROOT}/server/dist/mags-server.bundle.mjs"],
+      "env": {
+        "MAGS_EMBEDDING_PROVIDER": "local"
+      }
+    }
+  }
+}

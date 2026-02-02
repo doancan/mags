@@ -1,0 +1,19 @@
+# MAGS Configuration
+# Customize MAGS behavior for this project
+
+docs_dir: "docs"
+mags_dir: "docs/.mags"
+templates: "general"
+
+# Session management
+auto_session_save: true
+auto_session_load: true
+
+# Document validation
+doc_validation: true
+
+# Embedding configuration
+embedding:
+  provider: "local"        # "local" (offline, TF-IDF) or "openai" (semantic)
+  # openai_api_key: ""     # Required if provider is "openai"
+  # openai_model: "text-embedding-3-small"

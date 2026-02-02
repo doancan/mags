@@ -1,0 +1,40 @@
+{
+  "name": "@mags/server",
+  "version": "0.1.0",
+  "description": "MAGS MCP Server — Document indexing, memory, and session management",
+  "type": "module",
+  "main": "dist/index.js",
+  "files": [
+    "dist/"
+  ],
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "bundle": "node bundle.mjs",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/mags-server.bundle.mjs",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "fuse.js": "^7.0.0",
+    "gray-matter": "^4.0.3",
+    "handlebars": "^4.7.8",
+    "yaml": "^2.4.0",
+    "zod": "^3.23.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "@vitest/coverage-v8": "^4.0.18",
+    "esbuild": "^0.27.2",
+    "tsx": "^4.7.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.0.18"
+  }
+}

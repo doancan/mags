@@ -1,0 +1,243 @@
+// ============================================
+// MAGS — Context Tools
+// MCP tool handlers for project context
+// ============================================
+
+import { z } from "zod";
+import type { DocIndexer } from "../services/doc-indexer.js";
+import type { ProgressManager } from "../services/progress-manager.js";
+import type { SessionManager } from "../services/session-manager.js";
+import type { MemoryStore } from "../services/memory-store.js";
+import type { MagsConfig, ModuleDefinition } from "../types/index.js";
+import { DEFAULT_MODULES } from "../config/defaults.js";
+
+export function registerContextTools(
+  server: any,
+  docIndexer: DocIndexer,
+  progressManager: ProgressManager,
+  sessionManager: SessionManager,
+  memoryStore: MemoryStore,
+  config: MagsConfig
+) {
+  // --- mags_project_summary ---
+  server.tool(
+    "mags_project_summary",
+    "Get a comprehensive project summary for session context. Includes: project overview, tech stack, current phase, last session, and next steps. Call this at the start of every session.",
+    {},
+    async () => {
+      const docs = docIndexer.listDocs();
+      const progress = progressManager.getProgress();
+      const lastSession = sessionManager.getLatest();
+      const recentDecisions = await memoryStore.recall("", "decisions", 5);
+
+      // Build summary
+      const sections: string[] = [];
+
+      // Project info from docs
+      const visionDoc = docIndexer.getDocContent("vision");
+
+      if (visionDoc) {
+        const firstParagraph = visionDoc
+          .split("\n\n")
+          .find((p) => p.trim().length > 20 && !p.startsWith("#"));
+        if (firstParagraph) {
+          sections.push(`## Project\n${firstParagraph.trim().slice(0, 300)}`);
+        }
+      }
+
+      // Document stats
+      sections.push(
+        `## Documents\nTotal: ${docs.length} | ` +
+          `Locked: ${docs.filter((d) => d.status === "LOCKED").length} | ` +
+          `Draft: ${docs.filter((d) => d.status === "DRAFT").length}`
+      );
+
+      // Progress
+      if (progress && "modules" in progress) {
+        const completed = progress.modules.filter(
+          (m) => m.status === "completed"
+        ).length;
+        const total = progress.modules.length;
+        sections.push(
+          `## Progress\nPhase: ${progress.phase} | Modules: ${completed}/${total} completed`
+        );
+
+        const inProgress = progress.modules.filter(
+          (m) => m.status === "in_progress"
+        );
+        if (inProgress.length > 0) {
+          sections.push(
+            `Active: ${inProgress.map((m) => `${m.name} (${m.completionPercent}%)`).join(", ")}`
+          );
+        }
+      }
+
+      // Last session
+      if (lastSession) {
+        sections.push(
+          `## Last Session (${lastSession.date})\n${lastSession.summary}`
+        );
+        if (lastSession.nextSteps.length > 0) {
+          sections.push(
+            `Next steps:\n${lastSession.nextSteps.map((s) => `- ${s}`).join("\n")}`
+          );
+        }
+      }
+
+      // Recent decisions
+      if (recentDecisions.length > 0) {
+        sections.push(
+          `## Recent Decisions\n${recentDecisions.map((d) => `- ${d.key}: ${d.value}`).join("\n")}`
+        );
+      }
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: sections.join("\n\n"),
+          },
+        ],
+      };
+    }
+  );
+
+  // --- mags_module_context ---
+  server.tool(
+    "mags_module_context",
+    "Get all relevant context for a specific module: PRD section, data model tables, API endpoints, project structure, and progress. Use this before working on a module.",
+    {
+      module: z.string().describe("Module name (e.g., 'auth', 'crm', 'pms', 'feedback')"),
+    },
+    async ({ module }: { module: string }) => {
+      const sections: string[] = [];
+      const moduleLower = module.toLowerCase();
+
+      // Build module aliases from config or defaults
+      const moduleDefinitions: ModuleDefinition[] = config.modules ?? DEFAULT_MODULES;
+      const moduleAliases: Record<string, string[]> = {};
+      for (const mod of moduleDefinitions) {
+        moduleAliases[mod.name] = mod.aliases;
+      }
+
+      // PRD section
+      const prdContent = docIndexer.getDocContent("prd");
+      if (prdContent) {
+        const moduleSection = extractModuleSection(prdContent, moduleLower, moduleAliases);
+        if (moduleSection) {
+          sections.push(`## PRD\n${moduleSection}`);
+        }
+      }
+
+      // Data model
+      const dataModel = docIndexer.getDocContent("data-model");
+      if (dataModel) {
+        const tables = extractModuleSection(dataModel, moduleLower, moduleAliases);
+        if (tables) {
+          sections.push(`## Data Model\n${tables}`);
+        }
+      }
+
+      // API design
+      const apiDesign = docIndexer.getDocContent("api-design");
+      if (apiDesign) {
+        const endpoints = extractModuleSection(apiDesign, moduleLower, moduleAliases);
+        if (endpoints) {
+          sections.push(`## API Endpoints\n${endpoints}`);
+        }
+      }
+
+      // Project structure
+      const structure = docIndexer.getDocContent("project-structure");
+      if (structure) {
+        const moduleStructure = extractModuleSection(structure, moduleLower, moduleAliases);
+        if (moduleStructure) {
+          sections.push(`## Project Structure\n${moduleStructure}`);
+        }
+      }
+
+      // Progress
+      const progress = progressManager.getProgress(module);
+      if (progress) {
+        sections.push(`## Progress\n${JSON.stringify(progress, null, 2)}`);
+      }
+
+      // Related memories
+      const memories = await memoryStore.recall(module, undefined, 5);
+      if (memories.length > 0) {
+        sections.push(
+          `## Related Notes\n${memories.map((m) => `- **${m.key}**: ${m.value}`).join("\n")}`
+        );
+      }
+
+      if (sections.length === 0) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `No context found for module "${module}". Available documents: ${docIndexer.listDocs().map((d) => d.name).join(", ")}`,
+            },
+          ],
+        };
+      }
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: `# Module Context: ${module}\n\n${sections.join("\n\n---\n\n")}`,
+          },
+        ],
+      };
+    }
+  );
+}
+
+/**
+ * Extract relevant section from a document based on module name
+ */
+function extractModuleSection(
+  content: string,
+  module: string,
+  moduleAliases: Record<string, string[]>
+): string | null {
+  const lines = content.split("\n");
+  const aliases = moduleAliases[module] ?? [module];
+
+  // Find sections that match
+  const matchingSections: string[] = [];
+  let currentSection = "";
+  let isRelevant = false;
+
+  for (const line of lines) {
+    const headingMatch = line.match(/^(#{1,3})\s+(.+)/);
+
+    if (headingMatch) {
+      // Save previous section if relevant
+      if (isRelevant && currentSection.trim()) {
+        matchingSections.push(currentSection.trim());
+      }
+
+      const title = headingMatch[2].toLowerCase();
+
+      const titleClean = title.replace(/[^a-z]/g, "");
+      isRelevant = aliases.some(
+        (alias) =>
+          title.includes(alias) ||
+          (titleClean.length > 0 && alias.includes(titleClean))
+      );
+      currentSection = line + "\n";
+    } else {
+      currentSection += line + "\n";
+    }
+  }
+
+  // Don't forget the last section
+  if (isRelevant && currentSection.trim()) {
+    matchingSections.push(currentSection.trim());
+  }
+
+  return matchingSections.length > 0
+    ? matchingSections.join("\n\n")
+    : null;
+}

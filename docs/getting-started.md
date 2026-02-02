@@ -1,0 +1,193 @@
+# Getting Started
+
+MAGS (Memory And Guidance System) is a Claude Code plugin that preserves project context across sessions. It indexes your documents, remembers decisions, tracks progress, and starts every session where the last one left off.
+
+## Installation
+
+### 1. Install the Plugin
+
+```bash
+# Add the MAGS marketplace
+claude plugin marketplace add https://github.com/doancan/mags
+
+# Install the plugin
+claude plugin install mags@mags-marketplace
+```
+
+### 2. Restart Claude Code
+
+Restart Claude Code to load the plugin. The MCP server comes pre-bundled — no additional setup or build step needed.
+
+### 3. Initialize in Your Project
+
+In your project directory within Claude Code:
+
+```
+/mags-init
+```
+
+This command:
+- Scans and indexes existing `docs/` if present
+- Otherwise asks for project info and scaffolds documents from templates
+- Sets up `docs/.mags/` directory (progress, memory, sessions)
+- Optionally generates CLAUDE.md
+
+## Verify Installation
+
+Confirm the plugin is working correctly:
+
+```bash
+# Check plugin status
+claude plugin list
+# → mags@mags-marketplace  ✔ enabled
+
+# Check MCP server connection
+claude mcp list
+# → plugin:mags:mags  ✓ Connected
+```
+
+## First Use Scenarios
+
+### Scenario A: Project with Existing Docs
+
+A project that already has a `docs/` directory with markdown files:
+
+```
+/mags-init
+→ docs/ found, 18 documents indexed
+→ .mags/ directory created
+
+/mags-status
+→ Project dashboard: document count, health score, suggestions
+```
+
+### Scenario B: Starting from Scratch
+
+A new project with no documentation yet:
+
+```
+/mags-init
+→ Project info requested (name, description, tech stack)
+→ Document templates created (vision, PRD, tech-stack, etc.)
+→ CLAUDE.md generated
+```
+
+You can fill in the templates with Claude's help:
+
+```
+"Let's fill in the PRD — user modules are: auth, tenant, dashboard"
+→ Claude uses mags_get_doc and mags_update_doc to edit the document
+```
+
+### Scenario C: Existing Project, Adding MAGS Later
+
+A project with code already written but disorganized documentation:
+
+```
+/mags-init
+→ Existing documents are scanned and indexed
+
+# Record decisions and conventions
+"We use JWT + refresh tokens for auth, remember this"
+→ mags_remember is called
+
+# Start progress tracking
+"We have auth, tenant, and dashboard modules, initialize progress"
+→ mags_init_progress is called
+```
+
+### Scenario D: Legacy/Brownfield Project
+
+An existing project that needs documentation, migration planning, and tech debt tracking:
+
+```
+/mags-legacy
+→ Stack detected: TypeScript, Next.js, PostgreSQL
+→ 8 modules discovered with confidence scores
+→ Legacy context gathered (migration goals, pain points)
+→ Documents created: current-architecture, migration-plan, tech-debt, target-architecture
+→ Progress tracking initialized with tech debt items
+```
+
+## Core Concepts
+
+### Documents
+
+Project documents are stored as files in `docs/`. MAGS indexes them and makes them searchable. Supported formats: `.md`, `.mdx`, `.rst`, `.adoc`. Each document can have YAML frontmatter:
+
+```yaml
+---
+title: API Design
+status: draft       # draft → review → locked
+tags: [backend, api]
+---
+```
+
+### Memory
+
+Information stored as key-value pairs. Claude automatically saves them when you speak in natural language:
+
+| Category | Purpose | Example |
+|----------|---------|---------|
+| `decisions` | Architectural and technical decisions | "We use Drizzle as our ORM" |
+| `conventions` | Code standards | "Every endpoint must include tenant isolation" |
+| `notes` | Observations and ideas | "Login page should be SSR" |
+| `context` | Session context | "Currently working on auth module" |
+| `bugs` | Bug observations | "Refresh token race condition exists" |
+
+### Progress
+
+Module-based progress tracking. Each module has sub-items, dependencies, and a status:
+
+```
+not_started → in_progress → completed
+                           → blocked (due to dependency)
+```
+
+When all items are completed, the module auto-completes. `mags_get_next` recommends the next task based on dependencies.
+
+### Sessions
+
+Every work session is automatically saved: what was done, decisions made, next steps. When a new session starts, hooks automatically load the previous context — no manual intervention needed.
+
+## Daily Usage Flow
+
+MAGS hooks automate most of the work. A typical session looks like this:
+
+```
+Session starts
+  → (automatic) project_summary + last_session + progress + conventions loaded
+
+Start working on a module
+  → "Load the context for the auth module"
+  → Claude calls mags_module_context("auth")
+  → PRD section + data model + API endpoints + progress displayed
+
+Develop
+  → Write code, make decisions
+  → "We're using custom JWT middleware instead of Passport, remember this"
+  → Claude automatically saves to memory
+
+Session ends
+  → (automatic) session is saved, progress is updated
+```
+
+### Useful Commands
+
+| What you want to do | What to do |
+|---------------------|------------|
+| See overall status | `/mags-status` |
+| Create a new document | `/mags-docs create prd` |
+| Check document quality | `/mags-docs validate` |
+| Record a decision | Tell Claude in natural language |
+| Get module context | "Load the auth module context" |
+| Find out what's next | "What's next?" → `mags_get_next` |
+| Generate a changelog | `/mags-changelog` |
+| Set up a legacy project | `/mags-legacy` |
+
+## Next Steps
+
+- [Commands Reference](./commands-reference.md) — All 7 slash commands in detail
+- [MCP Tools Reference](./tools-reference.md) — All 24 MCP tools with parameters
+- [Workflows](./workflows.md) — Common usage scenarios and patterns
+- [Configuration](./configuration.md) — Settings and customization

@@ -1,0 +1,6 @@
+id: example-pack
+name: Example Custom Template Pack
+version: 1.0.0
+description: An example template pack showing the custom pack format
+templates:
+  - example-template

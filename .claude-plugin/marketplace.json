@@ -1,0 +1,24 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "mags-marketplace",
+  "description": "MAGS — Memory And Guidance System for Claude Code",
+  "owner": {
+    "name": "Dogancan"
+  },
+  "plugins": [
+    {
+      "name": "mags",
+      "description": "Memory And Guidance System — Documentation, memory, session persistence, and development guidance for Claude Code",
+      "version": "0.1.0",
+      "author": {
+        "name": "Dogancan"
+      },
+      "source": {
+        "source": "url",
+        "url": "https://github.com/doancan/mags.git"
+      },
+      "category": "productivity",
+      "homepage": "https://github.com/doancan/mags"
+    }
+  ]
+}

@@ -1,0 +1,40 @@
+# Dependencies
+node_modules/
+
+# Build artifacts (keep pre-built bundle)
+server/dist/*
+!server/dist/mags-server.bundle.mjs
+*.tsbuildinfo
+
+# MAGS runtime data
+docs/.mags/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Claude Code local overrides
+.claude/*.local.md
+
+# Logs
+*.log
+npm-debug.log*
+yarn-error.log*
+
+# Backup files
+*.bak
+*.tmp
+
+# Test coverage
+coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo

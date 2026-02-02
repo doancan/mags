@@ -1,0 +1,305 @@
+// ============================================
+// MAGS — Document Tools
+// MCP tool handlers for document operations
+// ============================================
+
+import { z } from "zod";
+import { writeFileSync, existsSync, mkdirSync, copyFileSync, unlinkSync } from "node:fs";
+import { join, dirname } from "node:path";
+import type { DocIndexer } from "../services/doc-indexer.js";
+import type { TemplateEngine } from "../services/template-engine.js";
+
+export function registerDocTools(
+  server: any,
+  docIndexer: DocIndexer,
+  templateEngine: TemplateEngine,
+  docsPath: string
+) {
+  // --- mags_list_docs ---
+  server.tool(
+    "mags_list_docs",
+    "List all project documents with their status and metadata",
+    { status: z.string().nullable().optional().describe("Filter by status: all, draft, locked, review") },
+    async ({ status }: { status?: string | null }) => {
+      const docs = docIndexer.listDocs(status ?? undefined);
+      const list = docs.map((d) => ({
+        name: d.name,
+        path: d.relativePath,
+        title: d.title,
+        status: d.status ?? "—",
+        lastUpdated: d.lastUpdated ?? "—",
+        wordCount: d.wordCount,
+        sections: d.sections.length,
+      }));
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({ docs: list, total: list.length }, null, 2),
+          },
+        ],
+      };
+    }
+  );
+
+  // --- mags_get_doc ---
+  server.tool(
+    "mags_get_doc",
+    "Read a specific document. Optionally filter by section heading.",
+    {
+      name: z.string().describe("Document name (without extension) or relative path"),
+      section: z.string().nullable().optional().describe("Section heading to extract"),
+    },
+    async ({ name, section }: { name: string; section?: string | null }) => {
+      const content = docIndexer.getDocContent(name, section ?? undefined);
+
+      if (!content) {
+        const available = docIndexer.listDocs().map((d) => d.name);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Document "${name}" not found${section ? ` or section "${section}" not found` : ""}. Available: ${available.join(", ")}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      const doc = docIndexer.getDoc(name);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                name: doc?.name,
+                title: doc?.title,
+                status: doc?.status,
+                section: section ?? "full",
+                content,
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  );
+
+  // --- mags_update_doc ---
+  server.tool(
+    "mags_update_doc",
+    "Update a specific section of a document",
+    {
+      name: z.string().describe("Document name"),
+      section: z.string().describe("Section heading to update"),
+      content: z.string().describe("New content for the section"),
+    },
+    async ({
+      name,
+      section,
+      content,
+    }: {
+      name: string;
+      section: string;
+      content: string;
+    }) => {
+      const doc = docIndexer.getDoc(name);
+      if (!doc) {
+        return {
+          content: [{ type: "text" as const, text: `Document "${name}" not found` }],
+          isError: true,
+        };
+      }
+
+      // Read current content and replace section
+      const { readFileSync } = await import("node:fs");
+      const { default: matter } = await import("gray-matter");
+
+      const raw = readFileSync(doc.path, "utf-8");
+      const parsed = matter(raw);
+      const docContent = parsed.content;
+
+      // Find and replace section
+      const sectionRegex = new RegExp(
+        `(^#{1,3}\\s+${escapeRegex(section)}\\s*$)`,
+        "m"
+      );
+      const match = sectionRegex.exec(docContent);
+
+      if (!match) {
+        return {
+          content: [
+            { type: "text" as const, text: `Section "${section}" not found in "${name}"` },
+          ],
+          isError: true,
+        };
+      }
+
+      // Reconstruct frontmatter + content
+      const frontmatter = matter.stringify("", {
+        ...parsed.data,
+        last_updated: new Date().toISOString().split("T")[0],
+      });
+
+      const beforeSection = docContent.slice(0, match.index);
+      const level = match[0].match(/^(#+)/)?.[1] ?? "##";
+
+      // Find next same-level heading
+      const rest = docContent.slice(match.index + match[0].length);
+      const nextHeading = rest.match(
+        new RegExp(`^#{1,${level.length}}\\s+`, "m")
+      );
+      const afterSection = nextHeading
+        ? rest.slice(rest.indexOf(nextHeading[0]))
+        : "";
+
+      const newContent = `${frontmatter.trim()}\n\n${beforeSection}${level} ${section}\n\n${content}\n\n${afterSection}`.trim() + "\n";
+
+      const bakPath = doc.path + ".bak";
+      try {
+        copyFileSync(doc.path, bakPath);
+      } catch {
+        // If backup fails, proceed anyway (file might not exist yet)
+      }
+
+      try {
+        writeFileSync(doc.path, newContent, "utf-8");
+        // Success — remove backup
+        try { unlinkSync(bakPath); } catch { /* ignore if .bak doesn't exist */ }
+      } catch (err) {
+        return {
+          content: [{ type: "text" as const, text: `Failed to write "${doc.relativePath}": ${err instanceof Error ? err.message : String(err)}. Backup saved at ${bakPath}` }],
+          isError: true,
+        };
+      }
+
+      // Re-index
+      docIndexer.index();
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({
+              success: true,
+              path: doc.relativePath,
+              section,
+            }),
+          },
+        ],
+      };
+    }
+  );
+
+  // --- mags_search_docs ---
+  server.tool(
+    "mags_search_docs",
+    "Search across all documents using full-text fuzzy search",
+    {
+      query: z.string().describe("Search query"),
+      limit: z.number().nullable().optional().describe("Max results (default 10)"),
+    },
+    async ({ query, limit }: { query: string; limit?: number | null }) => {
+      const results = docIndexer.search(query, limit ?? 10);
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({ query, results, total: results.length }, null, 2),
+          },
+        ],
+      };
+    }
+  );
+
+  // --- mags_create_doc ---
+  server.tool(
+    "mags_create_doc",
+    "Create a new document from a template",
+    {
+      template: z.string().describe("Template name (vision, prd, etc.)"),
+      variables: z.record(z.string()).nullable().optional().describe("Template variables"),
+      path: z.string().nullable().optional().describe("Custom output path relative to docs/"),
+      overwrite: z.boolean().optional().default(false).describe("Allow overwriting existing file"),
+    },
+    async ({
+      template,
+      variables,
+      path: customPath,
+      overwrite,
+    }: {
+      template: string;
+      variables?: Record<string, string> | null;
+      path?: string | null;
+      overwrite: boolean;
+    }) => {
+      const rendered = templateEngine.render(template, variables ?? {});
+      if (!rendered) {
+        const available = templateEngine.listTemplates().map((t) => t.name);
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Template "${template}" not found. Available: ${available.join(", ")}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      const outputPath = join(
+        docsPath,
+        customPath ?? `${template}.md`
+      );
+
+      // Overwrite guard
+      if (existsSync(outputPath) && !overwrite) {
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `File already exists at "${outputPath}". Use overwrite: true to replace it.`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
+      const dir = dirname(outputPath);
+      if (!existsSync(dir)) {
+        mkdirSync(dir, { recursive: true });
+      }
+
+      try {
+        writeFileSync(outputPath, rendered, "utf-8");
+      } catch (err) {
+        return {
+          content: [{ type: "text" as const, text: `Failed to create document at "${outputPath}": ${err instanceof Error ? err.message : String(err)}` }],
+          isError: true,
+        };
+      }
+      docIndexer.index();
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({
+              success: true,
+              path: outputPath,
+              template,
+            }),
+          },
+        ],
+      };
+    }
+  );
+}
+
+function escapeRegex(str: string): string {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}

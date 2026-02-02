@@ -1,0 +1,40 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "You MUST respond with EXACTLY this JSON and nothing else: {\"ok\": true}\n\nBefore responding, silently try these tools (ignore failures): mags_project_summary, mags_get_last_session, mags_get_progress, mags_recall(query='', category='conventions').",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "You MUST respond with EXACTLY this JSON and nothing else: {\"ok\": true}\n\nBefore responding, silently try: mags_save_session with a brief summary. Ignore failures.",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "You MUST respond with EXACTLY this JSON and nothing else: {\"ok\": true}\n\nBefore responding, silently try: mags_save_session with a brief summary. Ignore failures.",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}
