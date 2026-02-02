@@ -13,7 +13,24 @@ import type {
   ScoredMemory,
   EmbeddingProvider,
 } from "../types/index.js";
-import { MAX_MEMORY_ENTRIES } from "../config/defaults.js";
+import { MAX_MEMORY_ENTRIES, MEMORY_WARNING_THRESHOLD } from "../config/defaults.js";
+
+export interface CapacityInfo {
+  total: number;
+  used: number;
+  available: number;
+  usagePercent: number;
+}
+
+export interface RememberResult {
+  entry: MemoryEntry;
+  isUpdate: boolean;
+  totalEntries: number;
+  capacityPercent: number;
+  warning?: string;
+  pruned?: number;
+  similarKeys?: string[];
+}
 
 interface MemoryRow {
   id: string;
@@ -30,6 +47,7 @@ export class MemoryStore {
   private db: Database.Database;
   private embeddingProvider: EmbeddingProvider | null = null;
   private memoryDir: string;
+  private closed = false;
 
   // Prepared statements
   private stmtUpsert!: Database.Statement;
@@ -40,6 +58,8 @@ export class MemoryStore {
   private stmtGetByCategory!: Database.Statement;
   private stmtGetByCategoryLimited!: Database.Statement;
   private stmtGetAllLimited!: Database.Statement;
+  private stmtPruneOldest!: Database.Statement;
+  private stmtSimilarKeys!: Database.Statement;
 
   constructor(magsDir: string) {
     this.memoryDir = join(magsDir, "memory");
@@ -90,8 +110,10 @@ export class MemoryStore {
     this.stmtDelete = this.db.prepare("DELETE FROM memories WHERE key = ?");
     this.stmtCount = this.db.prepare("SELECT COUNT(*) as count FROM memories");
     this.stmtGetByCategory = this.db.prepare("SELECT * FROM memories WHERE category = ?");
-    this.stmtGetByCategoryLimited = this.db.prepare("SELECT * FROM memories WHERE category = ? LIMIT ?");
-    this.stmtGetAllLimited = this.db.prepare("SELECT * FROM memories LIMIT ?");
+    this.stmtGetByCategoryLimited = this.db.prepare("SELECT * FROM memories WHERE category = ? ORDER BY updated_at DESC LIMIT ?");
+    this.stmtGetAllLimited = this.db.prepare("SELECT * FROM memories ORDER BY updated_at DESC LIMIT ?");
+    this.stmtPruneOldest = this.db.prepare("DELETE FROM memories WHERE key IN (SELECT key FROM memories ORDER BY updated_at ASC LIMIT ?)");
+    this.stmtSimilarKeys = this.db.prepare("SELECT key FROM memories WHERE category = ? AND key != ? AND key LIKE ? ESCAPE '\\' LIMIT 5");
   }
 
   private migrateFromYaml(): void {
@@ -153,6 +175,20 @@ export class MemoryStore {
   }
 
   /**
+   * Get capacity information
+   */
+  getCapacity(): CapacityInfo {
+    this.ensureOpen();
+    const { count } = this.stmtCount.get() as { count: number };
+    return {
+      total: MAX_MEMORY_ENTRIES,
+      used: count,
+      available: MAX_MEMORY_ENTRIES - count,
+      usagePercent: Math.round((count / MAX_MEMORY_ENTRIES) * 100),
+    };
+  }
+
+  /**
    * No-op for backward compatibility (constructor handles init)
    */
   load(): void {
@@ -162,6 +198,7 @@ export class MemoryStore {
   /**
    * Store a memory entry.
    * Uses a SQLite transaction to atomically check the limit and upsert.
+   * Returns enriched result with capacity info, update status, and similar keys.
    */
   async remember(
     key: string,
@@ -169,18 +206,21 @@ export class MemoryStore {
     category?: string,
     tags: string[] = [],
     metadata?: Record<string, unknown>
-  ): Promise<MemoryEntry> {
-    // Atomic transaction: check limit + upsert
+  ): Promise<RememberResult> {
+    this.ensureOpen();
+    // Atomic transaction: check limit + upsert + prune if needed
     const result = this.db.transaction(() => {
       const row = this.stmtGet.get(key) as MemoryRow | undefined;
       const existing = row ? this.rowToEntry(row) : undefined;
+      const isUpdate = !!existing;
+      let pruned = 0;
 
       if (!existing) {
         const { count } = this.stmtCount.get() as { count: number };
         if (count >= MAX_MEMORY_ENTRIES) {
-          throw new Error(
-            `Memory limit reached (${MAX_MEMORY_ENTRIES}). Remove some entries first.`
-          );
+          // Auto-prune: remove oldest entry instead of hard error
+          this.pruneOldest(1);
+          pruned = 1;
         }
       }
 
@@ -201,7 +241,7 @@ export class MemoryStore {
         updated_at: now,
       });
 
-      return {
+      const entry: MemoryEntry = {
         id,
         key,
         value,
@@ -210,12 +250,34 @@ export class MemoryStore {
         metadata: Object.keys(resolvedMetadata).length > 0 ? resolvedMetadata : undefined,
         createdAt: existing?.createdAt ?? now,
         updatedAt: now,
-      } as MemoryEntry;
+      };
+
+      // Check capacity after upsert
+      const { count: totalEntries } = this.stmtCount.get() as { count: number };
+      const capacityPercent = Math.round((totalEntries / MAX_MEMORY_ENTRIES) * 100);
+      const warning = (totalEntries / MAX_MEMORY_ENTRIES) >= MEMORY_WARNING_THRESHOLD
+        ? `Memory usage at ${capacityPercent}% (${totalEntries}/${MAX_MEMORY_ENTRIES}). Consider removing unused entries.`
+        : undefined;
+
+      // Find similar keys in same category
+      let similarKeys: string[] | undefined;
+      if (resolvedCategory) {
+        const keyParts = key.split("_");
+        const keyPrefix = keyParts.length > 1 ? keyParts[0] : key;
+        // Escape LIKE wildcards (% and _) in the prefix to prevent pattern injection
+        const escapedPrefix = keyPrefix.replace(/\\/g, "\\\\").replace(/%/g, "\\%").replace(/_/g, "\\_");
+        const similarRows = this.stmtSimilarKeys.all(resolvedCategory, key, `${escapedPrefix}%`) as { key: string }[];
+        if (similarRows.length > 0) {
+          similarKeys = similarRows.map((r) => r.key);
+        }
+      }
+
+      return { entry, isUpdate, totalEntries, capacityPercent, warning, pruned: pruned > 0 ? pruned : undefined, similarKeys };
     })();
 
     // Generate embedding outside transaction (async, not persisted)
     if (this.embeddingProvider) {
-      result.embedding = await this.embeddingProvider.embed(`${key}: ${value}`);
+      result.entry.embedding = await this.embeddingProvider.embed(`${key}: ${value}`);
     }
 
     return result;
@@ -229,6 +291,7 @@ export class MemoryStore {
     category?: string,
     limit = 10
   ): Promise<ScoredMemory[]> {
+    this.ensureOpen();
     // If query is empty, use SQL LIMIT directly (fast path)
     if (!query || query.trim().length === 0) {
       let rows: MemoryRow[];
@@ -267,6 +330,7 @@ export class MemoryStore {
    * Delete a memory entry
    */
   forget(key: string): boolean {
+    this.ensureOpen();
     const result = this.stmtDelete.run(key);
     return result.changes > 0;
   }
@@ -275,6 +339,7 @@ export class MemoryStore {
    * Get all entries
    */
   getAll(): MemoryEntry[] {
+    this.ensureOpen();
     const rows = this.stmtGetAll.all() as MemoryRow[];
     return rows.map((r) => this.rowToEntry(r));
   }
@@ -283,6 +348,7 @@ export class MemoryStore {
    * Get entry by key
    */
   get(key: string): MemoryEntry | undefined {
+    this.ensureOpen();
     const row = this.stmtGet.get(key) as MemoryRow | undefined;
     if (!row) return undefined;
     return this.rowToEntry(row);
@@ -292,10 +358,22 @@ export class MemoryStore {
    * Close the database connection
    */
   close(): void {
+    if (this.closed) return;
+    this.closed = true;
     this.db.close();
   }
 
+  private ensureOpen(): void {
+    if (this.closed) {
+      throw new Error("MemoryStore is closed");
+    }
+  }
+
   // --- Private ---
+
+  private pruneOldest(count: number): void {
+    this.stmtPruneOldest.run(count);
+  }
 
   private rowToEntry(row: MemoryRow): MemoryEntry {
     let tags: string[] = [];
@@ -339,8 +417,11 @@ export class MemoryStore {
 
     if (queryTerms.length === 0) return [];
 
+    const now = Date.now();
+
     const scored: ScoredMemory[] = candidates.map((entry) => {
-      const text = `${entry.key} ${entry.value} ${entry.category ?? ""} ${entry.tags.join(" ")}`.toLowerCase();
+      const metadataStr = entry.metadata ? JSON.stringify(entry.metadata) : "";
+      const text = `${entry.key} ${entry.value} ${entry.category ?? ""} ${entry.tags.join(" ")} ${metadataStr}`.toLowerCase();
       let score = 0;
 
       for (const term of queryTerms) {
@@ -354,7 +435,12 @@ export class MemoryStore {
         }
       }
 
-      return { ...entry, score: score / queryTerms.length };
+      // Apply temporal decay: 1% per day (capped at 1.0, NaN-safe)
+      const updatedMs = new Date(entry.updatedAt).getTime();
+      const daysSinceUpdate = isNaN(updatedMs) ? 0 : Math.max(0, (now - updatedMs) / (1000 * 60 * 60 * 24));
+      const decayFactor = 1 / (1 + daysSinceUpdate * 0.01);
+
+      return { ...entry, score: (score / queryTerms.length) * decayFactor };
     });
 
     return scored

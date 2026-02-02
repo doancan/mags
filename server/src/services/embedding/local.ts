@@ -44,6 +44,10 @@ export class LocalEmbeddingProvider implements EmbeddingProvider {
       return [];
     }
 
+    // Clear IDF cache to avoid stale values from previous searches
+    // with different entry sets (e.g. different category filters)
+    this.idfCache.clear();
+
     // Build IDF for query terms
     this.buildIDF(queryTerms, entries);
 
@@ -51,15 +55,21 @@ export class LocalEmbeddingProvider implements EmbeddingProvider {
     const k1 = 1.2;
     const b = 0.75;
 
-    // Calculate average document length
-    const avgDl =
-      entries.reduce(
-        (sum, e) => sum + this.tokenize(`${e.key} ${e.value}`).length,
-        0
-      ) / entries.length;
+    // Calculate average document length (must match docText composition below)
+    const totalDl = entries.reduce(
+      (sum, e) => {
+        const metaStr = e.metadata ? JSON.stringify(e.metadata) : "";
+        return sum + this.tokenize(`${e.key} ${e.value} ${e.tags.join(" ")} ${metaStr}`).length;
+      },
+      0
+    );
+    const avgDl = entries.length > 0 ? totalDl / entries.length : 1;
+
+    const now = Date.now();
 
     const scored: ScoredMemory[] = entries.map((entry) => {
-      const docText = `${entry.key} ${entry.value} ${entry.tags.join(" ")}`;
+      const metadataStr = entry.metadata ? JSON.stringify(entry.metadata) : "";
+      const docText = `${entry.key} ${entry.value} ${entry.tags.join(" ")} ${metadataStr}`;
       const docTerms = this.tokenize(docText);
       const dl = docTerms.length;
 
@@ -85,6 +95,12 @@ export class LocalEmbeddingProvider implements EmbeddingProvider {
       if (entry.key.toLowerCase().includes(query.toLowerCase())) {
         score *= 2;
       }
+
+      // Apply temporal decay: 1% per day (capped at 1.0, NaN-safe)
+      const updatedMs = new Date(entry.updatedAt).getTime();
+      const daysSinceUpdate = isNaN(updatedMs) ? 0 : Math.max(0, (now - updatedMs) / (1000 * 60 * 60 * 24));
+      const decayFactor = 1 / (1 + daysSinceUpdate * 0.01);
+      score *= decayFactor;
 
       return { ...entry, score };
     });
@@ -112,7 +128,8 @@ export class LocalEmbeddingProvider implements EmbeddingProvider {
       if (this.idfCache.has(term)) continue;
 
       const df = entries.filter((e) => {
-        const text = `${e.key} ${e.value} ${e.tags.join(" ")}`.toLowerCase();
+        const metaStr = e.metadata ? JSON.stringify(e.metadata) : "";
+        const text = `${e.key} ${e.value} ${e.tags.join(" ")} ${metaStr}`.toLowerCase();
         return text.includes(term);
       }).length;
 

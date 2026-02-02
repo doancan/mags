@@ -21,6 +21,8 @@ export const MAX_SEARCH_RESULTS = 20;
 
 export const MAX_MEMORY_ENTRIES = 1000;
 
+export const MEMORY_WARNING_THRESHOLD = 0.8;
+
 export const PROGRESS_STATUSES = [
   "not_started",
   "in_progress",
