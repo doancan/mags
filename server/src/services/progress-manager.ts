@@ -141,7 +141,7 @@ export class ProgressManager {
     const completedModules = new Set(
       this.progress.modules
         .filter((m) => m.status === "completed")
-        .map((m) => m.name)
+        .map((m) => m.name.toLowerCase())
     );
 
     const actionable: Array<{
@@ -154,9 +154,9 @@ export class ProgressManager {
     for (const mod of this.progress.modules) {
       if (mod.status === "completed") continue;
 
-      // Check dependencies
+      // Check dependencies (case-insensitive)
       const unmetDeps = mod.dependsOn.filter(
-        (dep) => !completedModules.has(dep)
+        (dep) => !completedModules.has(dep.toLowerCase())
       );
       if (unmetDeps.length > 0) continue;
 
@@ -165,13 +165,23 @@ export class ProgressManager {
         (i) => i.status === "not_started" || i.status === "in_progress"
       );
 
-      for (const item of pendingItems) {
+      if (mod.items.length === 0) {
+        // Module with no sub-items is itself actionable
         actionable.push({
           module: mod.name,
-          item: item.name,
+          item: "(module)",
           priority: mod.priority,
           dependsOn: mod.dependsOn,
         });
+      } else {
+        for (const item of pendingItems) {
+          actionable.push({
+            module: mod.name,
+            item: item.name,
+            priority: mod.priority,
+            dependsOn: mod.dependsOn,
+          });
+        }
       }
     }
 
@@ -207,10 +217,10 @@ export class ProgressManager {
     const completedModules = new Set(
       this.progress.modules
         .filter((m) => m.status === "completed")
-        .map((m) => m.name)
+        .map((m) => m.name.toLowerCase())
     );
 
-    return mod.dependsOn.filter((dep) => !completedModules.has(dep));
+    return mod.dependsOn.filter((dep) => !completedModules.has(dep.toLowerCase()));
   }
 
   /**
@@ -284,7 +294,7 @@ export class ProgressManager {
       }
     }
 
-    // Cycle detection via DFS
+    // Cycle detection via DFS (global visited to avoid duplicate warnings)
     const visited = new Set<string>();
     const inStack = new Set<string>();
     const adjMap = new Map<string, string[]>();
@@ -310,8 +320,7 @@ export class ProgressManager {
     };
 
     for (const mod of this.progress.modules) {
-      visited.clear();
-      inStack.clear();
+      if (visited.has(mod.name)) continue;
       if (dfs(mod.name)) {
         warnings.push(`Circular dependency detected involving module "${mod.name}"`);
       }
