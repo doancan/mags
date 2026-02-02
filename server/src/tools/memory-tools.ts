@@ -5,6 +5,7 @@
 
 import { z } from "zod";
 import type { MemoryStore } from "../services/memory-store.js";
+import { DEFAULT_QUERY_LIMIT } from "../config/defaults.js";
 
 export function registerMemoryTools(server: any, memoryStore: MemoryStore) {
   // --- mags_remember ---
@@ -73,7 +74,7 @@ export function registerMemoryTools(server: any, memoryStore: MemoryStore) {
       category?: string | null;
       limit?: number | null;
     }) => {
-      const results = await memoryStore.recall(query ?? "", category ?? undefined, limit ?? 10);
+      const results = await memoryStore.recall(query ?? "", category ?? undefined, limit ?? DEFAULT_QUERY_LIMIT);
       return {
         content: [
           {

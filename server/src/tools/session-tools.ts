@@ -6,6 +6,7 @@
 import { z } from "zod";
 import type { SessionManager } from "../services/session-manager.js";
 import type { MemoryStore } from "../services/memory-store.js";
+import { DEFAULT_QUERY_LIMIT } from "../config/defaults.js";
 
 export function registerSessionTools(
   server: any,
@@ -117,7 +118,7 @@ export function registerSessionTools(
       limit: z.number().nullable().optional().describe("Number of sessions to return (default 10)"),
     },
     async ({ limit }: { limit?: number | null }) => {
-      const sessions = sessionManager.listSessions(limit ?? 10);
+      const sessions = sessionManager.listSessions(limit ?? DEFAULT_QUERY_LIMIT);
 
       return {
         content: [

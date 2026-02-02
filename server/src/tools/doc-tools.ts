@@ -8,6 +8,7 @@ import { writeFileSync, existsSync, mkdirSync, copyFileSync, unlinkSync } from "
 import { join, dirname } from "node:path";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { TemplateEngine } from "../services/template-engine.js";
+import { DEFAULT_QUERY_LIMIT } from "../config/defaults.js";
 
 export function registerDocTools(
   server: any,
@@ -219,7 +220,7 @@ export function registerDocTools(
       limit: z.number().nullable().optional().describe("Max results (default 10)"),
     },
     async ({ query, limit }: { query: string; limit?: number | null }) => {
-      const results = docIndexer.search(query, limit ?? 10);
+      const results = docIndexer.search(query, limit ?? DEFAULT_QUERY_LIMIT);
       return {
         content: [
           {

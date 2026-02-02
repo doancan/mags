@@ -8,6 +8,7 @@ import type { DocIndexer } from "../services/doc-indexer.js";
 import type { ProgressManager } from "../services/progress-manager.js";
 import type { SessionManager } from "../services/session-manager.js";
 import type { MemoryStore } from "../services/memory-store.js";
+import { MAX_MEMORY_ENTRIES } from "../config/defaults.js";
 import type { MagsConfig, ModuleDefinition } from "../types/index.js";
 import { DEFAULT_MODULES } from "../config/defaults.js";
 
@@ -29,7 +30,7 @@ export function registerContextTools(
       const progress = progressManager.getProgress();
       const lastSession = sessionManager.getLatest();
 
-      let memoryCapacity = { total: 1000, used: 0, available: 1000, usagePercent: 0 };
+      let memoryCapacity = { total: MAX_MEMORY_ENTRIES, used: 0, available: MAX_MEMORY_ENTRIES, usagePercent: 0 };
       let recentDecisions: Awaited<ReturnType<typeof memoryStore.recall>> = [];
       try {
         memoryCapacity = memoryStore.getCapacity();

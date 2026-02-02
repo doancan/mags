@@ -7,7 +7,7 @@ import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";
 import { DEFAULT_CONFIG, type MagsConfig } from "../types/index.js";
-import { DEFAULT_LOCALE, DEFAULT_ARCHITECTURE } from "./defaults.js";
+import { DEFAULT_LOCALE } from "./defaults.js";
 
 export function loadConfig(projectRoot: string): MagsConfig {
   const configPaths = [

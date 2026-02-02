@@ -17,7 +17,7 @@ export const DOC_FRONTMATTER_FIELDS = [
 
 export const SESSION_FILE_PREFIX = "session-";
 
-export const MAX_SEARCH_RESULTS = 20;
+export const DEFAULT_QUERY_LIMIT = 10;
 
 export const MAX_MEMORY_ENTRIES = 1000;
 
@@ -33,8 +33,6 @@ export const PROGRESS_STATUSES = [
 export const SUPPORTED_LOCALES = ["en", "tr"] as const;
 
 export const DEFAULT_LOCALE = "en";
-
-export const DEFAULT_ARCHITECTURE = "monolith";
 
 export const DEFAULT_MODULES: ModuleDefinition[] = [
   { name: "auth", aliases: ["auth", "authentication", "login", "register", "jwt", "session"] },

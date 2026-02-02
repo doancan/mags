@@ -4,8 +4,12 @@
 // MCP Server Entry Point
 // ============================================
 
+import { createRequire } from "node:module";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
+
+const require = createRequire(import.meta.url);
+const { version: SERVER_VERSION } = require("../package.json");
 
 import { loadConfig, getDocsPath, getMagsPath } from "./config/loader.js";
 import { DocIndexer } from "./services/doc-indexer.js";
@@ -90,7 +94,7 @@ async function main() {
   // Create MCP server
   const server = new McpServer({
     name: "mags",
-    version: "0.1.0",
+    version: SERVER_VERSION,
   });
 
   // Register all tools
