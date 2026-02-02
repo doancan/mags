@@ -14,21 +14,24 @@ export function registerMemoryTools(server: any, memoryStore: MemoryStore) {
     {
       key: z.string().min(1, "Key cannot be empty").describe("Unique key for the memory (e.g., 'auth_strategy', 'db_choice')"),
       value: z.string().min(1, "Value cannot be empty").describe("Content to remember"),
-      category: z.string().nullable().optional().describe("Category: decisions, conventions, notes, context, bugs"),
+      category: z.string().nullable().optional().describe("Category for organizing memories (e.g., decisions, conventions, notes, context, bugs, or any custom category)"),
       tags: z.array(z.string()).nullable().optional().describe("Tags for filtering"),
+      metadata: z.record(z.unknown()).nullable().optional().describe("Optional structured metadata (e.g., { alternatives: ['a','b'], reason: '...' })"),
     },
     async ({
       key,
       value,
       category,
       tags,
+      metadata,
     }: {
       key: string;
       value: string;
       category?: string | null;
       tags?: string[] | null;
+      metadata?: Record<string, unknown> | null;
     }) => {
-      const entry = await memoryStore.remember(key, value, category ?? undefined, tags ?? undefined);
+      const entry = await memoryStore.remember(key, value, category ?? undefined, tags ?? undefined, metadata ?? undefined);
       return {
         content: [
           {
@@ -76,6 +79,7 @@ export function registerMemoryTools(server: any, memoryStore: MemoryStore) {
                   value: r.value,
                   category: r.category,
                   tags: r.tags,
+                  metadata: r.metadata,
                   score: Math.round(r.score * 100) / 100,
                 })),
                 total: results.length,

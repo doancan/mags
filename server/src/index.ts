@@ -46,7 +46,18 @@ async function main() {
   await docIndexer.indexAsync();
 
   const memoryStore = new MemoryStore(magsPath);
-  memoryStore.load();
+
+  // Graceful shutdown — close SQLite safely
+  const shutdown = () => {
+    try {
+      memoryStore.close();
+    } catch {
+      // DB may already be closed
+    }
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 
   // Set up embedding provider
   if (
