@@ -74,7 +74,7 @@ describe("MemoryStore — Gelişmiş Senaryolar", () => {
   describe("sınır değer analizi", () => {
     beforeEach(() => { dir = tmp(); });
 
-    it("tam 999 → 1000. kayıt başarılı → 1001. kayıt hata verir", async () => {
+    it("tam 999 → 1000. kayıt başarılı → 1001. kayıt auto-prune yapar", async () => {
       store = new MemoryStore(dir);
 
       for (let i = 0; i < 999; i++) {
@@ -86,8 +86,10 @@ describe("MemoryStore — Gelişmiş Senaryolar", () => {
       await expect(store.remember("k-999", "v-999")).resolves.toBeTruthy();
       expect(store.getAll()).toHaveLength(1000);
 
-      // 1001. kayıt — hata vermeli
-      await expect(store.remember("k-1000", "v-1000")).rejects.toThrow("Memory limit reached");
+      // 1001. kayıt — auto-prune ile en eski silinir, hata vermez
+      const result = await store.remember("k-1000", "v-1000");
+      expect(result.pruned).toBe(1);
+      expect(result.warning).toBeDefined();
       expect(store.getAll()).toHaveLength(1000);
     });
 
@@ -99,12 +101,12 @@ describe("MemoryStore — Gelişmiş Senaryolar", () => {
       }
 
       // Mevcut key güncelleme → limit aşılmaz
-      const updated = await store.remember("k-500", "updated-500");
+      const { entry: updated } = await store.remember("k-500", "updated-500");
       expect(updated.value).toBe("updated-500");
       expect(store.getAll()).toHaveLength(1000);
     });
 
-    it("1000 kayıt → 1 sil → 1 yeni ekle → tekrar 1000", async () => {
+    it("1000 kayıt → 1 sil → 1 yeni ekle → tekrar 1000 → auto-prune", async () => {
       store = new MemoryStore(dir);
 
       for (let i = 0; i < 1000; i++) {
@@ -117,8 +119,10 @@ describe("MemoryStore — Gelişmiş Senaryolar", () => {
       await expect(store.remember("k-new", "new-value")).resolves.toBeTruthy();
       expect(store.getAll()).toHaveLength(1000);
 
-      // Tekrar hata
-      await expect(store.remember("k-another", "v")).rejects.toThrow("Memory limit reached");
+      // Auto-prune instead of error
+      const result = await store.remember("k-another", "v");
+      expect(result.pruned).toBe(1);
+      expect(store.getAll()).toHaveLength(1000);
     });
 
     it("tek karakter key çalışır", async () => {
@@ -625,14 +629,15 @@ describe("MemoryStore — Gelişmiş Senaryolar", () => {
       expect(store.get("m2")?.metadata).toBeUndefined();
     });
 
-    it("metadata keyword search'e dahil değil", async () => {
+    it("metadata keyword search'e dahil", async () => {
       await store.remember("hidden_meta", "simple value", "notes", [], {
         secretKeyword: "findme_unique_xyz",
       });
 
-      // "findme_unique_xyz" sadece metadata'da — keyword search bulmamalı
+      // "findme_unique_xyz" metadata'da — keyword search bulmalı
       const results = await store.recall("findme_unique_xyz");
-      expect(results).toHaveLength(0);
+      expect(results).toHaveLength(1);
+      expect(results[0].key).toBe("hidden_meta");
     });
 
     it("metadata'da Array, null, boolean, number karışık tipler", async () => {
@@ -656,18 +661,18 @@ describe("MemoryStore — Gelişmiş Senaryolar", () => {
     });
 
     it("forget → aynı key ile yeni kayıt → yeni id alır", async () => {
-      const first = await store.remember("reborn", "v1");
+      const { entry: first } = await store.remember("reborn", "v1");
       const firstId = first.id;
 
       store.forget("reborn");
-      const second = await store.remember("reborn", "v2");
+      const { entry: second } = await store.remember("reborn", "v2");
 
       expect(second.id).not.toBe(firstId); // Yeni UUID
       expect(second.value).toBe("v2");
     });
 
     it("10 kez güncelle → createdAt hep aynı, updatedAt her seferinde farklı olabilir", async () => {
-      const first = await store.remember("evolve", "v0");
+      const { entry: first } = await store.remember("evolve", "v0");
       const originalCreatedAt = first.createdAt;
 
       for (let i = 1; i <= 10; i++) {

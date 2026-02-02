@@ -58,7 +58,7 @@ describe("MemoryStore", () => {
   describe("CRUD işlemleri", () => {
     it("remember ile kayıt oluşturur", async () => {
       store = new MemoryStore(magsDir);
-      const entry = await store.remember("auth_strategy", "JWT with refresh tokens", "decisions", ["auth", "security"]);
+      const { entry } = await store.remember("auth_strategy", "JWT with refresh tokens", "decisions", ["auth", "security"]);
 
       expect(entry.key).toBe("auth_strategy");
       expect(entry.value).toBe("JWT with refresh tokens");
@@ -72,14 +72,14 @@ describe("MemoryStore", () => {
       store = new MemoryStore(magsDir);
 
       const first = await store.remember("db_choice", "PostgreSQL");
-      const firstId = first.id;
-      const firstCreated = first.createdAt;
+      const firstId = first.entry.id;
+      const firstCreated = first.entry.createdAt;
 
       const second = await store.remember("db_choice", "PostgreSQL with PgBouncer");
 
-      expect(second.id).toBe(firstId);
-      expect(second.createdAt).toBe(firstCreated);
-      expect(second.value).toBe("PostgreSQL with PgBouncer");
+      expect(second.entry.id).toBe(firstId);
+      expect(second.entry.createdAt).toBe(firstCreated);
+      expect(second.entry.value).toBe("PostgreSQL with PgBouncer");
     });
 
     it("get ile kayıt getirir", async () => {
@@ -119,7 +119,7 @@ describe("MemoryStore", () => {
     it("metadata ile kayıt oluşturur", async () => {
       store = new MemoryStore(magsDir);
 
-      const entry = await store.remember(
+      const { entry } = await store.remember(
         "auth_decision",
         "JWT chosen",
         "decisions",
@@ -151,7 +151,7 @@ describe("MemoryStore", () => {
     it("metadata olmadan kayıt → metadata undefined", async () => {
       store = new MemoryStore(magsDir);
 
-      const entry = await store.remember("no_meta", "val");
+      const { entry } = await store.remember("no_meta", "val");
       expect(entry.metadata).toBeUndefined();
     });
 
@@ -252,7 +252,7 @@ describe("MemoryStore", () => {
   // ── Memory limit ─────────────────────────────
 
   describe("memory limit", () => {
-    it("1000 kayıt limitine ulaşınca hata verir", async () => {
+    it("1000 kayıt limitinde auto-prune yapar", async () => {
       store = new MemoryStore(magsDir);
 
       // Bulk insert ile 1000 kayıt ekle
@@ -260,9 +260,12 @@ describe("MemoryStore", () => {
         await store.remember(`key-${i}`, `value-${i}`);
       }
 
-      await expect(
-        store.remember("overflow_key", "should fail")
-      ).rejects.toThrow("Memory limit reached");
+      // Auto-prune: en eski silinir, hata vermez
+      const result = await store.remember("overflow_key", "should succeed");
+      expect(result.pruned).toBe(1);
+      expect(result.entry.key).toBe("overflow_key");
+      expect(result.warning).toBeDefined();
+      expect(store.getAll()).toHaveLength(1000);
     });
 
     it("mevcut key güncelleme limit'i aşmaz", async () => {

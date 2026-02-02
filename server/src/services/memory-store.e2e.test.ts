@@ -69,7 +69,7 @@ describe("MemoryStore — E2E Integration Tests", () => {
       expect(store.get("nonexistent")).toBeUndefined();
 
       // 4. Kayıt ekle
-      const entry = await store.remember(
+      const { entry } = await store.remember(
         "db_choice",
         "PostgreSQL with Prisma",
         "decisions",
@@ -888,7 +888,7 @@ describe("MemoryStore — E2E Integration Tests", () => {
 
       const ids = new Set<string>();
       for (let i = 0; i < 100; i++) {
-        const entry = await store.remember(`unique-${i}`, `val-${i}`);
+        const { entry } = await store.remember(`unique-${i}`, `val-${i}`);
         ids.add(entry.id);
       }
       expect(ids.size).toBe(100);
@@ -898,9 +898,9 @@ describe("MemoryStore — E2E Integration Tests", () => {
       rootDir = tmp();
       store = new MemoryStore(rootDir);
 
-      const first = await store.remember("ts_check", "v1");
+      const { entry: first } = await store.remember("ts_check", "v1");
       await new Promise((r) => setTimeout(r, 5));
-      const second = await store.remember("ts_check", "v2");
+      const { entry: second } = await store.remember("ts_check", "v2");
 
       expect(second.createdAt).toBe(first.createdAt);
       // updatedAt farklı olabilir (ms hassasiyetinde)

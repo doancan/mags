@@ -310,11 +310,11 @@ Line 5`;
     it("updatedAt güncelleme sonrası değişir", async () => {
       store = new MemoryStore(dir);
 
-      const first = await store.remember("timing", "v1");
+      const { entry: first } = await store.remember("timing", "v1");
       const t1 = first.updatedAt;
 
       await new Promise((r) => setTimeout(r, 10));
-      const second = await store.remember("timing", "v2");
+      const { entry: second } = await store.remember("timing", "v2");
       const t2 = second.updatedAt;
 
       expect(second.createdAt).toBe(first.createdAt);
