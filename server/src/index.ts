@@ -96,7 +96,7 @@ async function main() {
   // Register all tools
   registerDocTools(server, docIndexer, templateEngine, docsPath);
   registerMemoryTools(server, memoryStore);
-  registerProgressTools(server, progressManager);
+  registerProgressTools(server, progressManager, memoryStore);
   registerContextTools(
     server,
     docIndexer,
@@ -109,7 +109,7 @@ async function main() {
   registerClaudeMdTools(server, docIndexer, projectRoot, config);
   registerChangelogTools(server, projectRoot);
   registerScaffoldTools(server);
-  registerSessionTools(server, sessionManager);
+  registerSessionTools(server, sessionManager, memoryStore);
   registerStackTools(server, projectRoot);
   registerModuleTools(server, projectRoot, config);
 

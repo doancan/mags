@@ -5,10 +5,12 @@
 
 import { z } from "zod";
 import type { SessionManager } from "../services/session-manager.js";
+import type { MemoryStore } from "../services/memory-store.js";
 
 export function registerSessionTools(
   server: any,
-  sessionManager: SessionManager
+  sessionManager: SessionManager,
+  memoryStore?: MemoryStore
 ) {
   // --- mags_save_session ---
   server.tool(
@@ -42,6 +44,25 @@ export function registerSessionTools(
         blockers: blockers ?? [],
       });
 
+      // Auto-save decisions to memory (using sessionId to prevent duplicates)
+      const memoryUpdates: string[] = [];
+      if (memoryStore && decisions && decisions.length > 0) {
+        for (let i = 0; i < decisions.length; i++) {
+          try {
+            const key = `session_decision_${session.sessionId}_${i}`;
+            await memoryStore.remember(
+              key,
+              decisions[i],
+              "decisions",
+              ["auto-session"],
+            );
+            memoryUpdates.push(key);
+          } catch (err) {
+            console.error(`MAGS: Failed to auto-save decision ${i}:`, err);
+          }
+        }
+      }
+
       return {
         content: [
           {
@@ -50,6 +71,7 @@ export function registerSessionTools(
               saved: true,
               sessionId: session.sessionId,
               date: session.date,
+              memoryUpdates: memoryUpdates.length > 0 ? memoryUpdates : undefined,
             }),
           },
         ],

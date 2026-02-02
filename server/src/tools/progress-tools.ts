@@ -5,10 +5,12 @@
 
 import { z } from "zod";
 import type { ProgressManager } from "../services/progress-manager.js";
+import type { MemoryStore } from "../services/memory-store.js";
 
 export function registerProgressTools(
   server: any,
-  progressManager: ProgressManager
+  progressManager: ProgressManager,
+  memoryStore?: MemoryStore
 ) {
   // --- mags_init_progress ---
   server.tool(
@@ -251,6 +253,20 @@ export function registerProgressTools(
           ],
           isError: true,
         };
+      }
+
+      // Auto-save to memory when module is completed
+      if (memoryStore && status === "completed" && !item) {
+        try {
+          await memoryStore.remember(
+            `module_completed_${module}`,
+            `Module "${module}" completed`,
+            "context",
+            ["auto-progress", module],
+          );
+        } catch (err) {
+          console.error(`MAGS: Failed to auto-save module completion for "${module}":`, err);
+        }
       }
 
       // BUG 3: Dependency warning on update
