@@ -1,7 +1,7 @@
 ---
 title: "{{project_name}}: Inter-Service Communication"
 version: "0.1.0"
-status: DRAFT
+status: draft
 author: "{{author}}"
 last_updated: "{{date}}"
 tags: [architecture, microservices, communication, messaging]

@@ -1,7 +1,7 @@
 ---
 title: "{{project_name}}: Platform Configuration"
 version: "0.1.0"
-status: DRAFT
+status: draft
 author: "{{author}}"
 last_updated: "{{date}}"
 tags: [architecture, mobile, ios, android, configuration]

@@ -1,7 +1,7 @@
 ---
 title: "{{project_name}}: Discovery"
-version: v1.0
-status: DRAFT
+version: "1.0"
+status: draft
 author: {{author}}
 last_updated: {{date}}
 tags: [discovery, research, problem]
@@ -9,36 +9,36 @@ tags: [discovery, research, problem]
 
 # {{project_name}} — Discovery
 
-## Problem Tanımı
+## Problem Definition
 
-<!-- Hangi problemi çözüyoruz? -->
+<!-- What problem are we solving? -->
 
 ## Jobs To Be Done (JTBD)
 
-| Persona | İş | Mevcut Çözüm | Sorun |
-|---------|----|----|------|
+| Persona | Job | Current Solution | Pain Point |
+|---------|-----|------------------|------------|
 | | | | |
 
-## Kullanıcı Segmentleri
+## User Segments
 
-| Segment | Büyüklük | Öncelik | Temel İhtiyaç |
-|---------|----------|---------|---------------|
+| Segment | Size | Priority | Core Need |
+|---------|------|----------|-----------|
 | | | | |
 
-## Rekabet Analizi
+## Competitive Analysis
 
-| Rakip | Güçlü Yön | Zayıf Yön | Fark |
-|-------|-----------|-----------|------|
+| Competitor | Strengths | Weaknesses | Differentiator |
+|------------|-----------|------------|----------------|
 | | | | |
 
-## Risk Analizi
+## Risk Analysis
 
-| Risk | Olasılık | Etki | Azaltma |
-|------|----------|------|---------|
+| Risk | Probability | Impact | Mitigation |
+|------|-------------|--------|------------|
 | | | | |
 
-## Başarı Metrikleri
+## Success Metrics
 
-| Metrik | Hedef | Ölçüm Yöntemi |
-|--------|-------|---------------|
+| Metric | Target | Measurement Method |
+|--------|--------|--------------------|
 | | | |

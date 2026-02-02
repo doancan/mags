@@ -1,7 +1,7 @@
 ---
 title: "{{project_name}}: MVP Scope"
-version: v1.0
-status: DRAFT
+version: "1.0"
+status: draft
 author: {{author}}
 last_updated: {{date}}
 tags: [project, mvp, roadmap]
@@ -11,45 +11,45 @@ tags: [project, mvp, roadmap]
 
 ## Phase 1: Core MVP
 
-### Hedef
-<!-- MVP'nin başarı kriteri -->
+### Goal
+<!-- MVP success criteria -->
 
-### Kapsam
+### Scope
 
-| Modül | Dahil Özellikler |
-|-------|-----------------|
+| Module | Included Features |
+|--------|-------------------|
 | | |
 
-### Metrik Hedefleri
+### Metric Targets
 
-| Metrik | Hedef |
-|--------|-------|
+| Metric | Target |
+|--------|--------|
 | | |
 
 ---
 
 ## Phase 2: Growth
 
-### Kapsam
+### Scope
 
-| Modül | Ek Özellikler |
-|-------|---------------|
+| Module | Additional Features |
+|--------|---------------------|
 | | |
 
 ---
 
 ## Phase 3: Scale
 
-### Kapsam
+### Scope
 
-| Modül | Ek Özellikler |
-|-------|---------------|
+| Module | Additional Features |
+|--------|---------------------|
 | | |
 
 ---
 
-## Karar Logu
+## Decision Log
 
-| Tarih | Karar | Gerekçe |
-|-------|-------|---------|
+| Date | Decision | Rationale |
+|------|----------|-----------|
 | {{date}} | | |

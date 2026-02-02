@@ -1,32 +1,29 @@
 ---
 title: "{{project_name}}: Project Structure"
-version: v1.0
-status: DRAFT
+version: "1.0"
+status: draft
 author: {{author}}
 last_updated: {{date}}
-tags: [architecture, structure, monorepo]
+tags: [architecture, structure]
 ---
 
-# {{project_name}} — Proje Yapısı
+# {{project_name}} — Project Structure
 
-## Genel Yapı
+## General Layout
 
 ```
 {{project_name}}/
-├── apps/
-│   ├── web/                 → Frontend
-│   └── api/                 → Backend
-├── packages/
-│   ├── shared/              → Ortak tipler ve sabitler
-│   └── config/              → Paylaşılan konfigürasyon
-├── docs/                    → Dokümanlar
+├── src/                    → Source code
+├── tests/                  → Test files
+├── docs/                   → Documentation
+├── config/                 → Configuration
 └── package.json
 ```
 
-## Backend Modülleri
+## Source Organization
 
 ```
-apps/api/src/
+src/
 ├── modules/
 │   └── [module-name]/
 │       ├── module.ts
@@ -40,26 +37,14 @@ apps/api/src/
 └── config/
 ```
 
-## Frontend Yapısı
-
-```
-apps/web/src/
-├── routes/
-├── components/
-├── hooks/
-├── api/
-├── stores/
-└── lib/
-```
-
-## Kodlama Kuralları
+## Coding Rules
 
 ### Backend
-1. Controller → Service → Repository katman ayrımı
-2. Her endpoint'te validation (DTO + Zod)
-3. Tenant isolation zorunlu
+1. Controller → Service → Repository layer separation
+2. Validation on every endpoint (DTO + schema)
+3. Proper error handling
 
 ### Frontend
-1. Data fetching: Query library (useEffect ile fetch yasak)
-2. Form: Form library + validation
-3. Her ekranda: loading, error, empty state
+1. Data fetching: Query library (no useEffect fetch)
+2. Forms: Form library + validation
+3. Every screen: loading, error, empty state

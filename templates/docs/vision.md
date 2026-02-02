@@ -1,52 +1,52 @@
 ---
 title: "{{project_name}}: Vision"
-version: v1.0
-status: DRAFT
+version: "1.0"
+status: draft
 author: {{author}}
 last_updated: {{date}}
 tags: [vision, strategy]
 ---
 
-# {{project_name}} — Vizyon
+# {{project_name}} — Vision
 
-## Vizyon Beyanı
+## Vision Statement
 
-<!-- Projenin var oluş amacı: 1-2 cümle -->
+<!-- The reason this project exists: 1-2 sentences -->
 
 ## Problem
 
-<!-- Hangi problemi çözüyoruz? Neden mevcut çözümler yetersiz? -->
+<!-- What problem are we solving? Why are existing solutions insufficient? -->
 
-## Hedef Kitle
+## Target Audience
 
-<!-- Kimin için yapıyoruz? -->
+<!-- Who are we building for? -->
 
-| Segment | Açıklama | Öncelik |
-|---------|----------|---------|
+| Segment | Description | Priority |
+|---------|-------------|----------|
 | | | |
 
-## Temel Direkler
+## Core Pillars
 
-<!-- Ürünün üzerine inşa edildiği 3-5 temel ilke -->
+<!-- 3-5 fundamental principles the product is built on -->
 
-1. **Direk 1** —
-2. **Direk 2** —
-3. **Direk 3** —
+1. **Pillar 1** —
+2. **Pillar 2** —
+3. **Pillar 3** —
 
-## Ölçülebilir Hedefler
+## Measurable Goals
 
-| Metrik | Hedef | Zaman |
-|--------|-------|-------|
+| Metric | Target | Timeline |
+|--------|--------|----------|
 | | | |
 
-## Kapsam
+## Scope
 
-**Dahil:**
+**In scope:**
 -
 
-**Hariç:**
+**Out of scope:**
 -
 
-## Varsayımlar
+## Assumptions
 
 -

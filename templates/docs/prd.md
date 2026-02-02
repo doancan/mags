@@ -1,65 +1,65 @@
 ---
 title: "{{project_name}}: Product Requirements"
-version: v1.0
-status: DRAFT
+version: "1.0"
+status: draft
 author: {{author}}
 last_updated: {{date}}
 tags: [prd, requirements, features]
 ---
 
-# {{project_name}} — Ürün Gereksinimleri (PRD)
+# {{project_name}} — Product Requirements (PRD)
 
-## Genel Bakış
+## Overview
 
-<!-- Ürünün ne yaptığının kısa açıklaması -->
+<!-- Brief description of what the product does -->
 
-## Modüller
+## Modules
 
-### M1: [Modül Adı]
+### M1: [Module Name]
 
-> Modül açıklaması
+> Module description
 
-#### Özellikler
+#### Features
 
-| ID | Özellik | Açıklama | Öncelik | Phase |
+| ID | Feature | Description | Priority | Phase |
 |---|---|---|---|---|
 | M1-001 | | | P0 | 1 |
 | M1-002 | | | P1 | 1 |
 
-#### Kabul Kriterleri
+#### Acceptance Criteria
 
 - [ ]
 - [ ]
 
 ---
 
-### M2: [Modül Adı]
+### M2: [Module Name]
 
-> Modül açıklaması
+> Module description
 
-#### Özellikler
+#### Features
 
-| ID | Özellik | Açıklama | Öncelik | Phase |
+| ID | Feature | Description | Priority | Phase |
 |---|---|---|---|---|
 | M2-001 | | | P0 | 1 |
 
-#### Kabul Kriterleri
+#### Acceptance Criteria
 
 - [ ]
 
 ---
 
-## Phase Özeti
+## Phase Summary
 
-| Phase | Modüller | Hedef |
-|-------|----------|-------|
+| Phase | Modules | Goal |
+|-------|---------|------|
 | 1 | | MVP |
 | 2 | | Growth |
 | 3 | | Scale |
 
-## Teknik Olmayan Gereksinimler
+## Non-Functional Requirements
 
-- **Performans:**
-- **Güvenlik:**
-- **Erişilebilirlik:**
-- **Lokalizasyon:**
+- **Performance:**
+- **Security:**
+- **Accessibility:**
+- **Localization:**

@@ -1,7 +1,7 @@
 ---
 title: "{{project_name}}: Service Catalog"
 version: "0.1.0"
-status: DRAFT
+status: draft
 author: "{{author}}"
 last_updated: "{{date}}"
 tags: [architecture, microservices, services]

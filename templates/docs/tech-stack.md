@@ -1,7 +1,7 @@
 ---
 title: "{{project_name}}: Tech Stack"
-version: v1.0
-status: DRAFT
+version: "1.0"
+status: draft
 author: {{author}}
 last_updated: {{date}}
 tags: [architecture, tech-stack]
@@ -13,7 +13,7 @@ tags: [architecture, tech-stack]
 
 > Brief summary of the tech stack and key architectural decisions.
 
-## Mimari Genel Bakış
+## Architecture Overview
 
 ```
 ┌─────────────┐     ┌──────────────┐     ┌──────────────┐
@@ -24,37 +24,36 @@ tags: [architecture, tech-stack]
 
 ## Backend
 
-| Teknoloji | Versiyon | Amaç | Gerekçe |
-|-----------|----------|------|---------|
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
 | | | | |
 
 ## Frontend
 
-| Teknoloji | Versiyon | Amaç | Gerekçe |
-|-----------|----------|------|---------|
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
 | | | | |
 
-## Veritabanı & Cache
+## Database & Cache
 
-| Teknoloji | Versiyon | Amaç | Gerekçe |
-|-----------|----------|------|---------|
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
 | | | | |
 
-## Altyapı
+## Infrastructure
 
-| Teknoloji | Versiyon | Amaç | Gerekçe |
-|-----------|----------|------|---------|
+| Technology | Version | Purpose | Rationale |
+|------------|---------|---------|-----------|
 | | | | |
 
-## Geliştirme Araçları
+## Development Tools
 
-| Araç | Amaç |
-|------|------|
+| Tool | Purpose |
+|------|---------|
 | | |
 
-## Versiyon Gereksinimleri
+## Version Requirements
 
-| Araç | Minimum |
+| Tool | Minimum |
 |------|---------|
-| Node.js | |
-| pnpm/npm | |
+| | |

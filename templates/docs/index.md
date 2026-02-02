@@ -1,36 +1,36 @@
 ---
 title: "{{project_name}}: Documentation Index"
-version: v1.0
+version: "1.0"
 last_updated: {{date}}
 ---
 
-# {{project_name}} — Doküman Haritası
+# {{project_name}} — Documentation Map
 
-## Doküman Durumları
+## Document Statuses
 
-| Durum | Anlamı |
+| Status | Meaning |
 |---|---|
-| `LOCKED` | Kesinleşmiş, değişiklik için onay gerekir |
-| `DRAFT` | Taslak, aktif olarak güncelleniyor |
-| `REVIEW` | İnceleme bekliyor |
+| `LOCKED` | Finalized, requires approval for changes |
+| `DRAFT` | Work in progress, actively being updated |
+| `REVIEW` | Awaiting review |
 
 ---
 
-## Dokümanlar
+## Documents
 
-| Doküman | Açıklama | Durum |
+| Document | Description | Status |
 |---|---|---|
-| [Vision](./vision.md) | Vizyon ve strateji | `DRAFT` |
-| [Discovery](./discovery.md) | Problem tanımı ve araştırma | `DRAFT` |
-| [PRD](./prd.md) | Ürün gereksinimleri | `DRAFT` |
-| [Tech Stack](./tech-stack.md) | Teknoloji seçimleri | `DRAFT` |
-| [Data Model](./data-model.md) | Veritabanı şeması | `DRAFT` |
-| [API Design](./api-design.md) | API tasarımı | `DRAFT` |
+| [Vision](./vision.md) | Vision and strategy | `DRAFT` |
+| [Discovery](./discovery.md) | Problem definition and research | `DRAFT` |
+| [PRD](./prd.md) | Product requirements | `DRAFT` |
+| [Tech Stack](./tech-stack.md) | Technology choices | `DRAFT` |
+| [Data Model](./data-model.md) | Database schema | `DRAFT` |
+| [API Design](./api-design.md) | API design | `DRAFT` |
 
 ---
 
-## Doküman Kuralları
+## Document Rules
 
-1. Her dokümanın YAML frontmatter'ı olmalı.
-2. `LOCKED` dokümanlar tek taraflı değiştirilemez.
-3. Kod değişikliği doküman değişikliği gerektirebilir.
+1. Every document must have YAML frontmatter.
+2. `LOCKED` documents cannot be changed unilaterally.
+3. Code changes may require documentation updates.

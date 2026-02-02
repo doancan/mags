@@ -1,7 +1,7 @@
 ---
 title: "{{project_name}}: API Design"
-version: v1.0
-status: DRAFT
+version: "1.0"
+status: draft
 author: {{author}}
 last_updated: {{date}}
 tags: [architecture, api, rest]

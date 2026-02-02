@@ -1,7 +1,7 @@
 ---
 title: "{{project_name}}: Data Model"
-version: v1.0
-status: DRAFT
+version: "1.0"
+status: draft
 author: {{author}}
 last_updated: {{date}}
 tags: [architecture, database, schema]
@@ -9,40 +9,40 @@ tags: [architecture, database, schema]
 
 # {{project_name}} — Data Model
 
-## ER Diyagramı
+## ER Diagram
 
 ```
 [Table1] 1──N [Table2] N──1 [Table3]
 ```
 
-## Tablolar
+## Tables
 
 ### table_name
 
-| Kolon | Tip | Açıklama | Kısıtlar |
-|-------|-----|----------|----------|
+| Column | Type | Description | Constraints |
+|--------|------|-------------|-------------|
 | id | UUID | Primary key | PK, DEFAULT uuid_generate_v4() |
-| created_at | TIMESTAMP | Oluşturulma tarihi | NOT NULL, DEFAULT NOW() |
-| updated_at | TIMESTAMP | Güncellenme tarihi | NOT NULL, DEFAULT NOW() |
+| created_at | TIMESTAMP | Created date | NOT NULL, DEFAULT NOW() |
+| updated_at | TIMESTAMP | Updated date | NOT NULL, DEFAULT NOW() |
 
-**İndeksler:**
+**Indexes:**
 - `idx_table_name_created`: (created_at DESC)
 
-**İlişkiler:**
+**Relations:**
 -
 
 ---
 
-## İndeks Stratejisi
+## Index Strategy
 
-| Tip | Kural |
-|-----|-------|
-| Zorunlu | Her tabloda created_at indeksi |
-| Composite | Sık kullanılan filtrelerde |
+| Type | Rule |
+|------|------|
+| Required | created_at index on every table |
+| Composite | Frequently used filter combinations |
 | Partial | Soft delete: WHERE deleted_at IS NULL |
 
-## Migration Stratejisi
+## Migration Strategy
 
-- Her schema değişikliği migration dosyası ile
-- Geri alınabilir (rollback) migration'lar
-- Seed data ayrı dosyada
+- Every schema change via migration file
+- Reversible (rollback) migrations
+- Seed data in separate files

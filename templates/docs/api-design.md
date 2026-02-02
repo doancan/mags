@@ -1,7 +1,7 @@
 ---
 title: "{{project_name}}: API Design"
-version: v1.0
-status: DRAFT
+version: "1.0"
+status: draft
 author: {{author}}
 last_updated: {{date}}
 tags: [architecture, api, rest]
@@ -9,9 +9,9 @@ tags: [architecture, api, rest]
 
 # {{project_name}} — API Design
 
-## Genel Prensipler
+## General Principles
 
-1. **REST** — Resource-based URL yapısı
+1. **REST** — Resource-based URL structure
 2. **JSON** — Request/Response body
 3. **Versioning** — `/api/v1/`
 4. **Pagination** — Cursor-based
@@ -19,10 +19,10 @@ tags: [architecture, api, rest]
 ## Authentication
 
 ```
-POST /api/v1/auth/login → Token al
+POST /api/v1/auth/login → Get token
 ```
 
-## URL Yapısı
+## URL Structure
 
 ```
 /api/v1/{resource}                     → Collection
@@ -35,11 +35,11 @@ POST /api/v1/auth/login → Token al
 ### [Resource 1]
 
 ```
-GET    /api/v1/resources               → Liste
-POST   /api/v1/resources               → Oluştur
-GET    /api/v1/resources/{id}          → Detay
-PATCH  /api/v1/resources/{id}          → Güncelle
-DELETE /api/v1/resources/{id}          → Sil
+GET    /api/v1/resources               → List
+POST   /api/v1/resources               → Create
+GET    /api/v1/resources/{id}          → Detail
+PATCH  /api/v1/resources/{id}          → Update
+DELETE /api/v1/resources/{id}          → Delete
 ```
 
 ## Request/Response Format
@@ -57,14 +57,14 @@ DELETE /api/v1/resources/{id}          → Sil
 }
 ```
 
-### Hata Formatı
+### Error Format
 
 ```json
 {
   "type": "https://example.com/errors/validation",
   "title": "Validation Error",
   "status": 422,
-  "detail": "Açıklama",
+  "detail": "Description",
   "errors": []
 }
 ```
@@ -73,5 +73,5 @@ DELETE /api/v1/resources/{id}          → Sil
 
 | Endpoint | Limit |
 |----------|-------|
-| Auth | 10 req/dakika |
-| API genel | 100 req/dakika |
+| Auth | 10 req/minute |
+| API general | 100 req/minute |
