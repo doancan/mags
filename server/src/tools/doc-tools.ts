@@ -52,31 +52,44 @@ export function registerDocTools(
       section: z.string().nullable().optional().describe("Section heading to extract"),
     },
     async ({ name, section }: { name: string; section?: string | null }) => {
-      const content = docIndexer.getDocContent(name, section ?? undefined);
-
-      if (!content) {
+      const doc = docIndexer.getDoc(name);
+      if (!doc) {
         const available = docIndexer.listDocs().map((d) => d.name);
         return {
           content: [
             {
               type: "text" as const,
-              text: `Document "${name}" not found${section ? ` or section "${section}" not found` : ""}. Available: ${available.join(", ")}`,
+              text: `Document "${name}" not found. Available: ${available.join(", ")}`,
             },
           ],
           isError: true,
         };
       }
 
-      const doc = docIndexer.getDoc(name);
+      const content = docIndexer.getDocContent(name, section ?? undefined);
+
+      if (!content) {
+        const availableSections = doc.sections;
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: `Section "${section}" not found in "${name}". Available sections: ${availableSections.length > 0 ? availableSections.join(", ") : "(none)"}`,
+            },
+          ],
+          isError: true,
+        };
+      }
+
       return {
         content: [
           {
             type: "text" as const,
             text: JSON.stringify(
               {
-                name: doc?.name,
-                title: doc?.title,
-                status: doc?.status,
+                name: doc.name,
+                title: doc.title,
+                status: doc.status,
                 section: section ?? "full",
                 content,
               },
