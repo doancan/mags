@@ -10,6 +10,7 @@ allowed-tools:
   - mcp__mags_mags__mags_update_progress
   - mcp__mags_mags__mags_generate_claude_md
   - mcp__mags_mags__mags_project_summary
+  - mcp__mags_mags__mags_remember
   - Bash
   - Read
   - Glob
@@ -91,7 +92,17 @@ Ask the user: "Would you like me to generate a CLAUDE.md file based on your proj
 
 If yes, call `mags_generate_claude_md` and write the result to the project root.
 
-### 5. Summary
+### 5. Save initial memory
+
+Call `mags_remember` with:
+- key: `project_initialized`
+- value: Brief description of what was set up (e.g., "Project X initialized with N docs, tech stack: ...")
+- category: `context`
+- tags: `["init"]`
+
+This ensures the memory system has at least one entry from the start.
+
+### 6. Summary
 
 Print a summary:
 ```
