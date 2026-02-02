@@ -114,6 +114,7 @@ export interface MemoryEntry {
   value: string;
   category?: string;
   tags: string[];
+  metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;
   embedding?: number[];
