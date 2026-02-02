@@ -15,19 +15,13 @@ export const DOC_FRONTMATTER_FIELDS = [
   "tags",
 ] as const;
 
-export const MEMORY_CATEGORIES = [
-  "decisions",
-  "conventions",
-  "notes",
-  "context",
-  "bugs",
-] as const;
-
 export const SESSION_FILE_PREFIX = "session-";
 
 export const MAX_SEARCH_RESULTS = 20;
 
 export const MAX_MEMORY_ENTRIES = 1000;
+
+export const MEMORY_WARNING_THRESHOLD = 0.8;
 
 export const PROGRESS_STATUSES = [
   "not_started",

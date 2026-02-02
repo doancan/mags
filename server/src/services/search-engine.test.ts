@@ -54,6 +54,7 @@ describe("SearchEngine — Integration Testleri", () => {
   });
 
   afterEach(() => {
+    try { memoryStore?.close(); } catch {}
     rmSync(rootDir, { recursive: true, force: true });
   });
 

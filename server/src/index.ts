@@ -46,7 +46,18 @@ async function main() {
   await docIndexer.indexAsync();
 
   const memoryStore = new MemoryStore(magsPath);
-  memoryStore.load();
+
+  // Graceful shutdown — close SQLite safely
+  const shutdown = () => {
+    try {
+      memoryStore.close();
+    } catch {
+      // DB may already be closed
+    }
+    process.exit(0);
+  };
+  process.on("SIGINT", shutdown);
+  process.on("SIGTERM", shutdown);
 
   // Set up embedding provider
   if (
@@ -85,7 +96,7 @@ async function main() {
   // Register all tools
   registerDocTools(server, docIndexer, templateEngine, docsPath);
   registerMemoryTools(server, memoryStore);
-  registerProgressTools(server, progressManager);
+  registerProgressTools(server, progressManager, memoryStore);
   registerContextTools(
     server,
     docIndexer,
@@ -98,7 +109,7 @@ async function main() {
   registerClaudeMdTools(server, docIndexer, projectRoot, config);
   registerChangelogTools(server, projectRoot);
   registerScaffoldTools(server);
-  registerSessionTools(server, sessionManager);
+  registerSessionTools(server, sessionManager, memoryStore);
   registerStackTools(server, projectRoot);
   registerModuleTools(server, projectRoot, config);
 

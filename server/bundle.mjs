@@ -9,7 +9,10 @@ await build({
   format: "esm",
   minify: true,
   outfile: "dist/mags-server.bundle.mjs",
-  external: builtinModules.flatMap((m) => [m, `node:${m}`]),
+  external: [
+    ...builtinModules.flatMap((m) => [m, `node:${m}`]),
+    "better-sqlite3",
+  ],
   banner: {
     js: "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
   },

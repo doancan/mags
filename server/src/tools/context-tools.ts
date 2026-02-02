@@ -28,7 +28,17 @@ export function registerContextTools(
       const docs = docIndexer.listDocs();
       const progress = progressManager.getProgress();
       const lastSession = sessionManager.getLatest();
-      const recentDecisions = await memoryStore.recall("", "decisions", 5);
+
+      let memoryCapacity = { total: 1000, used: 0, available: 1000, usagePercent: 0 };
+      let recentDecisions: Awaited<ReturnType<typeof memoryStore.recall>> = [];
+      try {
+        memoryCapacity = memoryStore.getCapacity();
+        recentDecisions = await memoryStore.recall("", "decisions", 5);
+      } catch (err) {
+        console.error("MAGS: Failed to load memory context:", err);
+      }
+
+      const isFirstUse = memoryCapacity.used === 0 && !lastSession;
 
       // Build summary
       const sections: string[] = [];
@@ -88,6 +98,27 @@ export function registerContextTools(
       if (recentDecisions.length > 0) {
         sections.push(
           `## Recent Decisions\n${recentDecisions.map((d) => `- ${d.key}: ${d.value}`).join("\n")}`
+        );
+      }
+
+      // Memory stats
+      sections.push(
+        `## Memory\nEntries: ${memoryCapacity.used}/${memoryCapacity.total} (${memoryCapacity.usagePercent}%)`
+      );
+
+      // First use or returning user guidance
+      if (isFirstUse) {
+        sections.push(
+          `## Getting Started\nThis is your first session with MAGS memory system.\n` +
+          `- Use \`mags_remember\` to store decisions, conventions, and context\n` +
+          `- Use \`mags_recall\` to search stored memories\n` +
+          `- Memories persist across sessions and help maintain project continuity\n` +
+          `- Run \`/mags-session save\` at the end of each session to auto-save decisions`
+        );
+      } else if (lastSession) {
+        const decisionCount = recentDecisions.length;
+        sections.push(
+          `## Welcome Back\nLast session: ${lastSession.date} | Stored decisions: ${decisionCount} | Memory entries: ${memoryCapacity.used}`
         );
       }
 
@@ -163,7 +194,12 @@ export function registerContextTools(
       }
 
       // Related memories
-      const memories = await memoryStore.recall(module, undefined, 5);
+      let memories: Awaited<ReturnType<typeof memoryStore.recall>> = [];
+      try {
+        memories = await memoryStore.recall(module, undefined, 5);
+      } catch {
+        // Non-critical: continue without memories
+      }
       if (memories.length > 0) {
         sections.push(
           `## Related Notes\n${memories.map((m) => `- **${m.key}**: ${m.value}`).join("\n")}`
@@ -224,7 +260,7 @@ function extractModuleSection(
       isRelevant = aliases.some(
         (alias) =>
           title.includes(alias) ||
-          (titleClean.length > 0 && alias.includes(titleClean))
+          (titleClean.length > 2 && titleClean.includes(alias))
       );
       currentSection = line + "\n";
     } else {

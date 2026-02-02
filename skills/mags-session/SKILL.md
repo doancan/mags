@@ -38,8 +38,9 @@ Read the argument passed after the command name. Route as follows:
    - What was worked on (files changed, features touched)
    - Current progress state
    - Any open decisions or blockers
-4. Call `mags_save_session` with the assembled session data.
-5. Print confirmation:
+4. Call `mags_save_session` with the assembled session data (decisions will be automatically saved to memory).
+5. If there are important conventions or context beyond decisions, call `mags_remember` to store them separately.
+6. Print confirmation:
    ```
    Session saved.
      Time:     <timestamp>
