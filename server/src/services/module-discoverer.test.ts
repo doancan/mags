@@ -251,4 +251,116 @@ describe("ModuleDiscoverer", () => {
       expect(modules[0].confidence).toBeLessThanOrEqual(100);
     });
   });
+
+  // ── Config override testleri ──────────────────────────
+
+  describe("config module override", () => {
+    it("uses DEFAULT_MODULES when no config provided", () => {
+      const disc = new ModuleDiscoverer();
+      const defs = disc.getModuleDefinitions();
+      expect(defs.length).toBeGreaterThan(0);
+      expect(defs.some((d) => d.name === "auth")).toBe(true);
+    });
+
+    it("merges config modules with defaults", () => {
+      const config = {
+        docsDir: "docs",
+        magsDir: "docs/.mags",
+        templates: "general" as const,
+        autoSessionSave: true,
+        autoSessionLoad: true,
+        docValidation: true,
+        locale: "en",
+        embedding: { provider: "local" as const },
+        modules: [
+          { name: "custom", aliases: ["custom", "my-custom"] },
+        ],
+      };
+
+      const disc = new ModuleDiscoverer(config);
+      const defs = disc.getModuleDefinitions();
+
+      // Should have default modules plus custom
+      expect(defs.some((d) => d.name === "auth")).toBe(true); // default
+      expect(defs.some((d) => d.name === "custom")).toBe(true); // custom
+    });
+
+    it("config module overrides default with same name", () => {
+      const config = {
+        docsDir: "docs",
+        magsDir: "docs/.mags",
+        templates: "general" as const,
+        autoSessionSave: true,
+        autoSessionLoad: true,
+        docValidation: true,
+        locale: "en",
+        embedding: { provider: "local" as const },
+        modules: [
+          { name: "auth", aliases: ["auth", "authentication", "sso", "oauth"] },
+        ],
+      };
+
+      const disc = new ModuleDiscoverer(config);
+      const authDef = disc.findModuleDefinition("auth");
+
+      expect(authDef).toBeDefined();
+      expect(authDef!.aliases).toContain("sso");
+      expect(authDef!.aliases).toContain("oauth");
+    });
+
+    it("config aliases are used in discovery", () => {
+      mkdirSync(join(projectRoot, "src", "modules", "auth"), { recursive: true });
+
+      const config = {
+        docsDir: "docs",
+        magsDir: "docs/.mags",
+        templates: "general" as const,
+        autoSessionSave: true,
+        autoSessionLoad: true,
+        docValidation: true,
+        locale: "en",
+        embedding: { provider: "local" as const },
+        modules: [
+          { name: "auth", aliases: ["auth", "identity", "sso"] },
+        ],
+      };
+
+      const disc = new ModuleDiscoverer(config);
+      const modules = disc.discover(projectRoot);
+
+      const authModule = modules.find((m) => m.name === "auth");
+      expect(authModule).toBeDefined();
+      expect(authModule!.aliases).toContain("identity");
+      expect(authModule!.aliases).toContain("sso");
+    });
+
+    it("empty config.modules uses only defaults", () => {
+      const config = {
+        docsDir: "docs",
+        magsDir: "docs/.mags",
+        templates: "general" as const,
+        autoSessionSave: true,
+        autoSessionLoad: true,
+        docValidation: true,
+        locale: "en",
+        embedding: { provider: "local" as const },
+        modules: [],
+      };
+
+      const disc = new ModuleDiscoverer(config);
+      const defs = disc.getModuleDefinitions();
+
+      expect(defs.length).toBeGreaterThan(0);
+      expect(defs.some((d) => d.name === "auth")).toBe(true);
+    });
+
+    it("findModuleDefinition finds by alias", () => {
+      const disc = new ModuleDiscoverer();
+
+      // "login" is an alias for "auth" in defaults
+      const authDef = disc.findModuleDefinition("login");
+      expect(authDef).toBeDefined();
+      expect(authDef!.name).toBe("auth");
+    });
+  });
 });

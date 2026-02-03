@@ -12,7 +12,8 @@ export function registerModuleTools(
   projectRoot: string,
   config: MagsConfig
 ) {
-  const discoverer = new ModuleDiscoverer();
+  // Pass config to discoverer for custom module definitions
+  const discoverer = new ModuleDiscoverer(config);
 
   // --- mags_discover_modules ---
   server.tool(
@@ -40,7 +41,7 @@ export function registerModuleTools(
       // Format as .mags.yaml suggestion
       const yamlSuggestion = modules.map((m) => ({
         name: m.name,
-        aliases: [m.name],
+        aliases: m.aliases ?? [m.name],
       }));
 
       return {

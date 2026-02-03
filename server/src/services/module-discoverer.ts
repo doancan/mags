@@ -1,20 +1,69 @@
 // ============================================
 // MAGS — Module Discoverer
 // Detects modules from project directory structure
+// with config override support
 // ============================================
 
 import { existsSync, readdirSync, lstatSync } from "node:fs";
 import { join, basename } from "node:path";
-import type { ArchitectureType } from "../types/index.js";
+import type { ArchitectureType, ModuleDefinition, MagsConfig } from "../types/index.js";
+import { DEFAULT_MODULES } from "../config/defaults.js";
 
 export interface DiscoveredModule {
   name: string;
   path: string;
   detectedFrom: string;
   confidence: number;
+  aliases?: string[];
 }
 
 export class ModuleDiscoverer {
+  private moduleDefinitions: ModuleDefinition[];
+
+  constructor(config?: MagsConfig) {
+    // Merge config modules with defaults, config takes precedence
+    this.moduleDefinitions = this.mergeModuleDefinitions(config?.modules);
+  }
+
+  /**
+   * Merge config modules with DEFAULT_MODULES.
+   * Config modules override defaults with the same name.
+   */
+  private mergeModuleDefinitions(configModules?: ModuleDefinition[]): ModuleDefinition[] {
+    if (!configModules || configModules.length === 0) {
+      return [...DEFAULT_MODULES];
+    }
+
+    // Create a map from defaults
+    const moduleMap = new Map<string, ModuleDefinition>(
+      DEFAULT_MODULES.map((m) => [m.name.toLowerCase(), m])
+    );
+
+    // Override/add with config modules
+    for (const configModule of configModules) {
+      moduleMap.set(configModule.name.toLowerCase(), configModule);
+    }
+
+    return Array.from(moduleMap.values());
+  }
+
+  /**
+   * Get all module definitions (for tool info)
+   */
+  getModuleDefinitions(): ModuleDefinition[] {
+    return this.moduleDefinitions;
+  }
+
+  /**
+   * Find a module definition by name or alias
+   */
+  findModuleDefinition(nameOrAlias: string): ModuleDefinition | undefined {
+    const lower = nameOrAlias.toLowerCase();
+    return this.moduleDefinitions.find(
+      (m) => m.name.toLowerCase() === lower || m.aliases.some((a) => a.toLowerCase() === lower)
+    );
+  }
+
   discover(projectRoot: string, architecture?: ArchitectureType): DiscoveredModule[] {
     const arch = architecture ?? "monolith";
     const modules: DiscoveredModule[] = [];
@@ -34,13 +83,22 @@ export class ModuleDiscoverer {
         break;
     }
 
-    // Deduplicate by name
+    // Deduplicate by name and enrich with aliases
     const seen = new Set<string>();
-    return modules.filter((m) => {
-      if (seen.has(m.name)) return false;
-      seen.add(m.name);
-      return true;
-    });
+    return modules
+      .filter((m) => {
+        if (seen.has(m.name)) return false;
+        seen.add(m.name);
+        return true;
+      })
+      .map((m) => {
+        // Try to find matching module definition for aliases
+        const def = this.findModuleDefinition(m.name);
+        if (def) {
+          return { ...m, aliases: def.aliases };
+        }
+        return m;
+      });
   }
 
   private scanMonolith(root: string): DiscoveredModule[] {
