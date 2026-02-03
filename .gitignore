@@ -41,3 +41,4 @@ coverage/
 .idea/
 *.swp
 *.swo
+pnpm-lock.yaml
