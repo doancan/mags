@@ -1,11 +1,12 @@
 // ============================================
 // MAGS — Stack Detector
 // Detects project tech stack from file system
+// with fallback chain: FileSystem → Config → CLAUDE.md → TechDoc
 // ============================================
 
 import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { join } from "node:path";
-import type { DetectedStack } from "../types/index.js";
+import type { DetectedStack, MagsConfig, StackConfig } from "../types/index.js";
 
 export class StackDetector {
   private static readonly frameworkMap: Record<string, string> = {
@@ -475,6 +476,294 @@ export class StackDetector {
       } catch {
         // ignore
       }
+    }
+  }
+
+  // ============================================
+  // Fallback Chain Methods
+  // ============================================
+
+  /**
+   * Check if a DetectedStack is effectively empty (no useful data)
+   */
+  private isEmpty(stack: DetectedStack): boolean {
+    return (
+      stack.languages.length === 0 &&
+      stack.frameworks.length === 0 &&
+      stack.databases.length === 0 &&
+      stack.packageManager === "" &&
+      (stack.apiStyle.length === 0 || (stack.apiStyle.length === 1 && stack.apiStyle[0] === "rest"))
+    );
+  }
+
+  /**
+   * Merge two stacks, preferring values from 'primary' but filling gaps from 'fallback'
+   */
+  private mergeStacks(primary: DetectedStack, fallback: DetectedStack): DetectedStack {
+    return {
+      languages: primary.languages.length > 0 ? primary.languages : fallback.languages,
+      frameworks: [...new Set([...primary.frameworks, ...fallback.frameworks])],
+      databases: [...new Set([...primary.databases, ...fallback.databases])],
+      apiStyle: primary.apiStyle.length > 0 ? primary.apiStyle : fallback.apiStyle,
+      packageManager: primary.packageManager || fallback.packageManager,
+      versions: { ...fallback.versions, ...primary.versions },
+    };
+  }
+
+  /**
+   * Detect stack with fallback chain:
+   * 1. File system detection (package.json, etc.)
+   * 2. .mags.yaml config (always merged to supplement detection)
+   * 3. CLAUDE.md parsing (only if file system detection is empty)
+   * 4. docs/tech-stack.md parsing (only if still empty)
+   */
+  detectWithFallback(projectRoot: string, config?: MagsConfig): DetectedStack {
+    // 1. Primary: File system detection
+    let result = this.detect(projectRoot);
+
+    // 2. Config merge: Always merge config.stack to supplement detection
+    if (config?.stack) {
+      const configStack = this.stackConfigToDetectedStack(config.stack);
+      if (configStack) {
+        result = this.mergeStacks(result, configStack);
+      }
+    }
+
+    // 3. Fallback: CLAUDE.md parsing (only if detection is empty)
+    if (this.isEmpty(result)) {
+      const claudeStack = this.parseFromClaudeMd(projectRoot);
+      if (claudeStack) {
+        result = this.mergeStacks(result, claudeStack);
+      }
+    }
+
+    // 4. Fallback: docs/tech-stack.md parsing (only if still empty)
+    if (this.isEmpty(result)) {
+      const techDocStack = this.parseFromTechStackDoc(projectRoot);
+      if (techDocStack) {
+        result = this.mergeStacks(result, techDocStack);
+      }
+    }
+
+    return result;
+  }
+
+  /**
+   * Convert StackConfig from .mags.yaml to DetectedStack
+   */
+  private stackConfigToDetectedStack(stackConfig: StackConfig): DetectedStack | null {
+    if (!stackConfig) return null;
+
+    const result: DetectedStack = {
+      languages: [],
+      frameworks: [],
+      databases: [],
+      apiStyle: [],
+      packageManager: stackConfig.packageManager ?? "",
+      versions: {},
+    };
+
+    // Primary language
+    if (stackConfig.primaryLanguage) {
+      result.languages.push(stackConfig.primaryLanguage);
+    }
+
+    // Additional languages
+    if (stackConfig.languages) {
+      for (const lang of stackConfig.languages) {
+        if (!result.languages.includes(lang)) {
+          result.languages.push(lang);
+        }
+      }
+    }
+
+    // Frameworks
+    if (stackConfig.frameworks) {
+      result.frameworks.push(...stackConfig.frameworks);
+    }
+
+    // Databases
+    if (stackConfig.databases) {
+      result.databases.push(...stackConfig.databases);
+    }
+
+    // API Style
+    if (stackConfig.apiStyle) {
+      result.apiStyle.push(...stackConfig.apiStyle);
+    }
+
+    return result;
+  }
+
+  /**
+   * Parse tech stack from CLAUDE.md file
+   */
+  parseFromClaudeMd(projectRoot: string): DetectedStack | null {
+    const claudeMdPath = join(projectRoot, "CLAUDE.md");
+    if (!existsSync(claudeMdPath)) return null;
+
+    try {
+      const content = readFileSync(claudeMdPath, "utf-8");
+      return this.parseStackFromMarkdown(content);
+    } catch (err) {
+      console.warn("[StackDetector] Failed to parse CLAUDE.md:", err instanceof Error ? err.message : err);
+      return null;
+    }
+  }
+
+  /**
+   * Parse tech stack from docs/tech-stack.md or docs/architecture/tech-stack.md
+   */
+  parseFromTechStackDoc(projectRoot: string): DetectedStack | null {
+    const possiblePaths = [
+      join(projectRoot, "docs", "tech-stack.md"),
+      join(projectRoot, "docs", "architecture", "tech-stack.md"),
+      join(projectRoot, "docs", "stack.md"),
+    ];
+
+    for (const docPath of possiblePaths) {
+      if (!existsSync(docPath)) continue;
+      try {
+        const content = readFileSync(docPath, "utf-8");
+        return this.parseStackFromMarkdown(content);
+      } catch (err) {
+        console.warn(`[StackDetector] Failed to parse ${docPath}:`, err instanceof Error ? err.message : err);
+      }
+    }
+
+    return null;
+  }
+
+  /**
+   * Parse stack information from markdown content
+   * Looks for "Tech Stack", "Stack", "Backend", "Frontend" sections
+   */
+  private parseStackFromMarkdown(content: string): DetectedStack | null {
+    const result: DetectedStack = {
+      languages: [],
+      frameworks: [],
+      databases: [],
+      apiStyle: [],
+      packageManager: "",
+      versions: {},
+    };
+
+    // Find Tech Stack section
+    const techStackMatch = content.match(/##\s*(Tech Stack|Stack|Technologies)[\s\S]*?(?=\n##\s|\n#\s|$)/i);
+    const backendMatch = content.match(/##\s*(Backend|Server)[\s\S]*?(?=\n##\s|\n#\s|$)/i);
+    const frontendMatch = content.match(/##\s*(Frontend|Client|UI)[\s\S]*?(?=\n##\s|\n#\s|$)/i);
+    const databaseMatch = content.match(/##\s*(Database|Data|Storage)[\s\S]*?(?=\n##\s|\n#\s|$)/i);
+
+    const sections = [
+      techStackMatch?.[0],
+      backendMatch?.[0],
+      frontendMatch?.[0],
+      databaseMatch?.[0],
+    ].filter(Boolean).join("\n");
+
+    if (!sections) {
+      // Try to find inline tech stack mentions
+      const allContent = content;
+      this.extractTechFromText(allContent, result);
+    } else {
+      this.extractTechFromText(sections, result);
+    }
+
+    // Return null if nothing useful was found
+    const hasUsefulData =
+      result.languages.length > 0 ||
+      result.frameworks.length > 0 ||
+      result.databases.length > 0 ||
+      result.packageManager !== "" ||
+      result.apiStyle.length > 0;
+
+    if (!hasUsefulData) return null;
+
+    return result;
+  }
+
+  /**
+   * Extract tech stack items from text using pattern matching
+   */
+  private extractTechFromText(text: string, result: DetectedStack): void {
+    // Framework patterns: "- **Backend:** NestJS" or "Backend: NestJS" or just "NestJS"
+    const frameworkPatterns: [RegExp, string, "framework" | "language" | "database"][] = [
+      // Frameworks
+      [/\bNestJS\b/i, "NestJS", "framework"],
+      [/\bNext\.?js\b/i, "Next.js", "framework"],
+      [/\bReact\b(?!\s*Native)/i, "React", "framework"],
+      [/\bReact\s*Native\b/i, "React Native", "framework"],
+      [/\bVue\.?js?\b/i, "Vue", "framework"],
+      [/\bAngular\b/i, "Angular", "framework"],
+      [/\bSvelte\b/i, "Svelte", "framework"],
+      [/\bExpress\.?js?\b/i, "Express", "framework"],
+      [/\bFastify\b/i, "Fastify", "framework"],
+      [/\bHono\b/i, "Hono", "framework"],
+      [/\bFastAPI\b/i, "FastAPI", "framework"],
+      [/\bDjango\b/i, "Django", "framework"],
+      [/\bFlask\b/i, "Flask", "framework"],
+      [/\bSpring\s*Boot\b/i, "Spring Boot", "framework"],
+      [/\bGin\b/i, "Gin", "framework"],
+      [/\bAstro\b/i, "Astro", "framework"],
+      [/\bRemix\b/i, "Remix", "framework"],
+      [/\bExpo\b/i, "Expo", "framework"],
+      // Languages
+      [/\bTypeScript\b/i, "typescript", "language"],
+      [/\bJavaScript\b/i, "javascript", "language"],
+      [/\bPython\b/i, "python", "language"],
+      [/\bGo(?:lang)?\b/i, "go", "language"],
+      [/\bRust\b/i, "rust", "language"],
+      [/\bJava\b(?!\s*Script)/i, "java", "language"],
+      // Databases
+      [/\bPostgreSQL\b|\bPostgres\b/i, "PostgreSQL", "database"],
+      [/\bMySQL\b/i, "MySQL", "database"],
+      [/\bMongoDB\b/i, "MongoDB", "database"],
+      [/\bRedis\b/i, "Redis", "database"],
+      [/\bSQLite\b/i, "SQLite", "database"],
+      [/\bElasticsearch\b/i, "Elasticsearch", "database"],
+      // ORMs (as database tools)
+      [/\bPrisma\b/i, "Prisma ORM", "database"],
+      [/\bTypeORM\b/i, "TypeORM", "database"],
+      [/\bDrizzle\b/i, "Drizzle ORM", "database"],
+    ];
+
+    for (const [pattern, name, type] of frameworkPatterns) {
+      if (pattern.test(text)) {
+        if (type === "framework" && !result.frameworks.includes(name)) {
+          result.frameworks.push(name);
+        } else if (type === "language" && !result.languages.includes(name)) {
+          result.languages.push(name);
+        } else if (type === "database" && !result.databases.includes(name)) {
+          result.databases.push(name);
+        }
+      }
+    }
+
+    // Package manager detection
+    const pmPatterns: [RegExp, string][] = [
+      [/\bpnpm\b/i, "pnpm"],
+      [/\byarn\b/i, "yarn"],
+      [/\bnpm\b/i, "npm"],
+      [/\bbun\b/i, "bun"],
+      [/\bpoetry\b/i, "poetry"],
+      [/\bcargo\b/i, "cargo"],
+    ];
+
+    for (const [pattern, pm] of pmPatterns) {
+      if (pattern.test(text) && !result.packageManager) {
+        result.packageManager = pm;
+      }
+    }
+
+    // API style detection
+    if (/\bGraphQL\b/i.test(text) && !result.apiStyle.includes("graphql")) {
+      result.apiStyle.push("graphql");
+    }
+    if (/\bgRPC\b/i.test(text) && !result.apiStyle.includes("grpc")) {
+      result.apiStyle.push("grpc");
+    }
+    if (/\bREST\b/i.test(text) && !result.apiStyle.includes("rest")) {
+      result.apiStyle.push("rest");
     }
   }
 }

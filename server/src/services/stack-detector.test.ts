@@ -379,4 +379,300 @@ describe("StackDetector", () => {
       expect(result.apiStyle).toContain("rest");
     });
   });
+
+  // ============================================
+  // Fallback Chain Tests
+  // ============================================
+
+  describe("detectWithFallback", () => {
+    describe("with .mags.yaml config", () => {
+      it("uses stack config when no package files exist", () => {
+        // Empty directory, but config provided
+        const config = {
+          docsDir: "docs",
+          magsDir: "docs/.mags",
+          templates: "general" as const,
+          autoSessionSave: true,
+          autoSessionLoad: true,
+          docValidation: true,
+          locale: "en",
+          embedding: { provider: "local" as const },
+          stack: {
+            primaryLanguage: "typescript",
+            frameworks: ["NestJS", "React"],
+            databases: ["PostgreSQL"],
+            apiStyle: ["rest"],
+            packageManager: "pnpm",
+          },
+        };
+
+        const result = detector.detectWithFallback(projectRoot, config);
+        expect(result.languages).toContain("typescript");
+        expect(result.frameworks).toContain("NestJS");
+        expect(result.frameworks).toContain("React");
+        expect(result.databases).toContain("PostgreSQL");
+        expect(result.packageManager).toBe("pnpm");
+      });
+
+      it("merges config stack with detected stack", () => {
+        // Has package.json with React
+        writeFileSync(
+          join(projectRoot, "package.json"),
+          JSON.stringify({ dependencies: { react: "^18.0.0" } }),
+          "utf-8"
+        );
+
+        const config = {
+          docsDir: "docs",
+          magsDir: "docs/.mags",
+          templates: "general" as const,
+          autoSessionSave: true,
+          autoSessionLoad: true,
+          docValidation: true,
+          locale: "en",
+          embedding: { provider: "local" as const },
+          stack: {
+            databases: ["MongoDB"], // Additional from config
+          },
+        };
+
+        const result = detector.detectWithFallback(projectRoot, config);
+        expect(result.frameworks).toContain("React"); // From detection
+        expect(result.databases).toContain("MongoDB"); // From config
+      });
+    });
+
+    describe("with CLAUDE.md", () => {
+      it("parses Tech Stack section from CLAUDE.md", () => {
+        // No package files, but CLAUDE.md exists
+        const claudeMd = `# My Project
+
+## Tech Stack
+
+- **Backend:** NestJS
+- **Frontend:** React
+- **Database:** PostgreSQL
+- **Package Manager:** pnpm
+`;
+        writeFileSync(join(projectRoot, "CLAUDE.md"), claudeMd, "utf-8");
+
+        const result = detector.detectWithFallback(projectRoot);
+        expect(result.frameworks).toContain("NestJS");
+        expect(result.frameworks).toContain("React");
+        expect(result.databases).toContain("PostgreSQL");
+        expect(result.packageManager).toBe("pnpm");
+      });
+
+      it("extracts frameworks from various CLAUDE.md formats", () => {
+        const claudeMd = `# Project
+
+## Backend
+We use **Express.js** with TypeScript.
+
+## Frontend
+The frontend is built with Vue.js.
+`;
+        writeFileSync(join(projectRoot, "CLAUDE.md"), claudeMd, "utf-8");
+
+        const result = detector.detectWithFallback(projectRoot);
+        expect(result.frameworks).toContain("Express");
+        expect(result.frameworks).toContain("Vue");
+        expect(result.languages).toContain("typescript");
+      });
+
+      it("handles missing Tech Stack section gracefully", () => {
+        const claudeMd = `# Project
+
+## Rules
+- Follow coding standards
+`;
+        writeFileSync(join(projectRoot, "CLAUDE.md"), claudeMd, "utf-8");
+
+        const result = detector.detectWithFallback(projectRoot);
+        // Should return default empty-ish result
+        expect(result.apiStyle).toContain("rest");
+      });
+    });
+
+    describe("with docs/tech-stack.md", () => {
+      it("parses tech-stack.md when other sources unavailable", () => {
+        mkdirSync(join(projectRoot, "docs"), { recursive: true });
+        const techDoc = `# Tech Stack
+
+## Stack
+- **Languages:** TypeScript, Python
+- **Backend:** FastAPI
+- **Frontend:** Next.js
+- **Databases:** MongoDB, Redis
+`;
+        writeFileSync(join(projectRoot, "docs", "tech-stack.md"), techDoc, "utf-8");
+
+        const result = detector.detectWithFallback(projectRoot);
+        // Note: parseStackFromMarkdown extracts these via pattern matching
+        expect(result.languages.map(l => l.toLowerCase())).toContain("typescript");
+        expect(result.languages.map(l => l.toLowerCase())).toContain("python");
+        expect(result.frameworks).toContain("FastAPI");
+        expect(result.frameworks).toContain("Next.js");
+        expect(result.databases).toContain("MongoDB");
+        expect(result.databases).toContain("Redis");
+      });
+
+      it("checks docs/architecture/tech-stack.md as alternative path", () => {
+        mkdirSync(join(projectRoot, "docs", "architecture"), { recursive: true });
+        const techDoc = `# Technology Stack
+
+## Backend
+- Go with Gin framework
+
+## Database
+- PostgreSQL
+`;
+        writeFileSync(join(projectRoot, "docs", "architecture", "tech-stack.md"), techDoc, "utf-8");
+
+        const result = detector.detectWithFallback(projectRoot);
+        expect(result.languages).toContain("go");
+        expect(result.frameworks).toContain("Gin");
+        expect(result.databases).toContain("PostgreSQL");
+      });
+    });
+
+    describe("fallback priority", () => {
+      it("prefers file system detection over config", () => {
+        // package.json says React
+        writeFileSync(
+          join(projectRoot, "package.json"),
+          JSON.stringify({ dependencies: { react: "^18.0.0", next: "^14.0.0" } }),
+          "utf-8"
+        );
+
+        // Config says Vue
+        const config = {
+          docsDir: "docs",
+          magsDir: "docs/.mags",
+          templates: "general" as const,
+          autoSessionSave: true,
+          autoSessionLoad: true,
+          docValidation: true,
+          locale: "en",
+          embedding: { provider: "local" as const },
+          stack: {
+            frameworks: ["Vue"],
+          },
+        };
+
+        const result = detector.detectWithFallback(projectRoot, config);
+        // Should have React and Next.js from file system, Vue merged from config
+        expect(result.frameworks).toContain("React");
+        expect(result.frameworks).toContain("Next.js");
+        expect(result.frameworks).toContain("Vue");
+      });
+
+      it("uses CLAUDE.md when no package files and no config", () => {
+        const claudeMd = `## Tech Stack
+- Django
+- PostgreSQL
+`;
+        writeFileSync(join(projectRoot, "CLAUDE.md"), claudeMd, "utf-8");
+
+        const result = detector.detectWithFallback(projectRoot);
+        expect(result.frameworks).toContain("Django");
+        expect(result.databases).toContain("PostgreSQL");
+      });
+
+      it("uses tech-stack.md as last resort", () => {
+        mkdirSync(join(projectRoot, "docs"), { recursive: true });
+        writeFileSync(
+          join(projectRoot, "docs", "tech-stack.md"),
+          "## Stack\n- Rust\n- Actix Web",
+          "utf-8"
+        );
+
+        const result = detector.detectWithFallback(projectRoot);
+        expect(result.languages).toContain("rust");
+      });
+    });
+
+    describe("backward compatibility", () => {
+      it("detect() still works without config parameter", () => {
+        writeFileSync(
+          join(projectRoot, "package.json"),
+          JSON.stringify({ dependencies: { express: "^4.18.0" } }),
+          "utf-8"
+        );
+
+        const result = detector.detect(projectRoot);
+        expect(result.frameworks).toContain("Express");
+      });
+
+      it("detectWithFallback returns same result as detect for standard projects", () => {
+        writeFileSync(
+          join(projectRoot, "package.json"),
+          JSON.stringify({
+            dependencies: { react: "^18.0.0", pg: "^8.0.0" },
+            devDependencies: { typescript: "^5.0.0" },
+          }),
+          "utf-8"
+        );
+        writeFileSync(join(projectRoot, "pnpm-lock.yaml"), "", "utf-8");
+
+        const detectResult = detector.detect(projectRoot);
+        const fallbackResult = detector.detectWithFallback(projectRoot);
+
+        expect(fallbackResult.languages).toEqual(detectResult.languages);
+        expect(fallbackResult.frameworks).toEqual(detectResult.frameworks);
+        expect(fallbackResult.databases).toEqual(detectResult.databases);
+        expect(fallbackResult.packageManager).toEqual(detectResult.packageManager);
+      });
+    });
+
+    describe("parseFromClaudeMd", () => {
+      it("returns null when CLAUDE.md does not exist", () => {
+        const result = detector.parseFromClaudeMd(projectRoot);
+        expect(result).toBeNull();
+      });
+
+      it("parses React Native correctly", () => {
+        writeFileSync(
+          join(projectRoot, "CLAUDE.md"),
+          "## Stack\n- React Native with Expo",
+          "utf-8"
+        );
+        const result = detector.parseFromClaudeMd(projectRoot);
+        expect(result?.frameworks).toContain("React Native");
+        expect(result?.frameworks).toContain("Expo");
+      });
+
+      it("handles GraphQL API style", () => {
+        writeFileSync(
+          join(projectRoot, "CLAUDE.md"),
+          "## Stack\n- GraphQL API\n- Apollo Server",
+          "utf-8"
+        );
+        const result = detector.parseFromClaudeMd(projectRoot);
+        expect(result).not.toBeNull();
+        expect(result!.apiStyle).toContain("graphql");
+      });
+    });
+
+    describe("parseFromTechStackDoc", () => {
+      it("returns null when no tech doc exists", () => {
+        const result = detector.parseFromTechStackDoc(projectRoot);
+        expect(result).toBeNull();
+      });
+
+      it("checks multiple possible paths", () => {
+        // Only docs/stack.md exists (alternative path)
+        mkdirSync(join(projectRoot, "docs"), { recursive: true });
+        writeFileSync(
+          join(projectRoot, "docs", "stack.md"),
+          "## Technologies\n- Spring Boot\n- Java",
+          "utf-8"
+        );
+
+        const result = detector.parseFromTechStackDoc(projectRoot);
+        expect(result?.frameworks).toContain("Spring Boot");
+        expect(result?.languages).toContain("java");
+      });
+    });
+  });
 });
