@@ -597,4 +597,140 @@ title: Türkçe Doküman
       expect(docs[0].sections).toContain("Özellikler");
     });
   });
+
+  // ── Reindex testleri ──────────────────────────
+
+  describe("reindex", () => {
+    it("detects newly added documents", () => {
+      const indexer = new DocIndexer(docsDir);
+
+      // Initial index with one doc
+      writeDoc(docsDir, "first.md", "# First\n\nContent");
+      indexer.index();
+
+      // Add another doc
+      writeDoc(docsDir, "second.md", "# Second\n\nMore content");
+
+      const result = indexer.reindex();
+
+      expect(result.added).toContain("second");
+      expect(result.removed).toHaveLength(0);
+      expect(result.total).toBe(2);
+    });
+
+    it("detects removed documents", () => {
+      const indexer = new DocIndexer(docsDir);
+
+      // Initial index with two docs
+      writeDoc(docsDir, "keep.md", "# Keep\n\nStays here");
+      writeDoc(docsDir, "remove.md", "# Remove\n\nWill be deleted");
+      indexer.index();
+
+      // Remove one doc
+      rmSync(join(docsDir, "remove.md"));
+
+      const result = indexer.reindex();
+
+      expect(result.removed).toContain("remove");
+      expect(result.added).toHaveLength(0);
+      expect(result.total).toBe(1);
+    });
+
+    it("detects modified documents by word count change", () => {
+      const indexer = new DocIndexer(docsDir);
+
+      // Initial index
+      writeDoc(docsDir, "changing.md", "# Doc\n\nShort content");
+      indexer.index();
+
+      // Modify the doc (add more words)
+      writeDoc(docsDir, "changing.md", "# Doc\n\nMuch longer content with many more words added here");
+
+      const result = indexer.reindex();
+
+      expect(result.updated).toContain("changing");
+      expect(result.added).toHaveLength(0);
+      expect(result.removed).toHaveLength(0);
+    });
+
+    it("returns accurate change counts", () => {
+      const indexer = new DocIndexer(docsDir);
+
+      // Initial: 3 docs
+      writeDoc(docsDir, "a.md", "# A\n\nContent A");
+      writeDoc(docsDir, "b.md", "# B\n\nContent B");
+      writeDoc(docsDir, "c.md", "# C\n\nContent C");
+      indexer.index();
+
+      // Changes: remove a, add d, modify b
+      rmSync(join(docsDir, "a.md"));
+      writeDoc(docsDir, "d.md", "# D\n\nNew document");
+      writeDoc(docsDir, "b.md", "# B\n\nContent B with much more text added to change word count");
+
+      const result = indexer.reindex();
+
+      expect(result.added).toEqual(["d"]);
+      expect(result.removed).toEqual(["a"]);
+      expect(result.updated).toEqual(["b"]);
+      expect(result.total).toBe(3);
+    });
+
+    it("maintains index consistency after reindex", () => {
+      const indexer = new DocIndexer(docsDir);
+
+      writeDoc(docsDir, "test.md", "# Test\n\nInitial content");
+      indexer.index();
+
+      // Verify initial state
+      expect(indexer.listDocs()).toHaveLength(1);
+
+      // Add new doc and reindex
+      writeDoc(docsDir, "new.md", "# New\n\nNew content");
+      indexer.reindex();
+
+      // Verify both docs are accessible
+      const docs = indexer.listDocs();
+      expect(docs).toHaveLength(2);
+      expect(docs.map((d) => d.name).sort()).toEqual(["new", "test"]);
+
+      // Verify content is readable
+      const newContent = indexer.getDocContent("new");
+      expect(newContent).toContain("New content");
+    });
+
+    it("returns duration in milliseconds", () => {
+      const indexer = new DocIndexer(docsDir);
+      writeDoc(docsDir, "test.md", "# Test\n\nContent");
+      indexer.index();
+
+      const result = indexer.reindex();
+
+      expect(typeof result.duration).toBe("number");
+      expect(result.duration).toBeGreaterThanOrEqual(0);
+    });
+
+    it("works when no changes detected", () => {
+      const indexer = new DocIndexer(docsDir);
+      writeDoc(docsDir, "stable.md", "# Stable\n\nNo changes here");
+      indexer.index();
+
+      const result = indexer.reindex();
+
+      expect(result.added).toHaveLength(0);
+      expect(result.removed).toHaveLength(0);
+      expect(result.updated).toHaveLength(0);
+      expect(result.total).toBe(1);
+    });
+
+    it("handles empty docs directory", () => {
+      const indexer = new DocIndexer(docsDir);
+      indexer.index();
+
+      const result = indexer.reindex();
+
+      expect(result.added).toHaveLength(0);
+      expect(result.removed).toHaveLength(0);
+      expect(result.total).toBe(0);
+    });
+  });
 });

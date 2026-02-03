@@ -232,6 +232,43 @@ export function registerDocTools(
     }
   );
 
+  // --- mags_reindex ---
+  server.tool(
+    "mags_reindex",
+    "Refresh the document index. Use after adding, removing, or modifying documents outside of MAGS tools.",
+    {},
+    async () => {
+      const result = docIndexer.reindex();
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify(
+              {
+                success: true,
+                changes: {
+                  added: result.added,
+                  removed: result.removed,
+                  updated: result.updated,
+                },
+                summary: {
+                  addedCount: result.added.length,
+                  removedCount: result.removed.length,
+                  updatedCount: result.updated.length,
+                  totalDocs: result.total,
+                  durationMs: result.duration,
+                },
+              },
+              null,
+              2
+            ),
+          },
+        ],
+      };
+    }
+  );
+
   // --- mags_create_doc ---
   server.tool(
     "mags_create_doc",

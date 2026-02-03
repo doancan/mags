@@ -355,6 +355,64 @@ export class DocIndexer {
       )
     );
   }
+
+  /**
+   * Reindex documents and return change summary
+   */
+  reindex(): ReindexResult {
+    const startTime = Date.now();
+
+    // Save current state for comparison
+    const oldDocs = new Map(this.docs.map((d) => [d.path, d]));
+    const oldPaths = new Set(this.docs.map((d) => d.path));
+
+    // Perform fresh index
+    this.index();
+
+    // Calculate changes
+    const newPaths = new Set(this.docs.map((d) => d.path));
+
+    // Added: in new but not in old
+    const added = this.docs.filter((d) => !oldPaths.has(d.path)).map((d) => d.name);
+
+    // Removed: in old but not in new
+    const removed: string[] = [];
+    for (const [path, doc] of oldDocs) {
+      if (!newPaths.has(path)) {
+        removed.push(doc.name);
+      }
+    }
+
+    // Updated: same path but different content (by word count as proxy)
+    const updated: string[] = [];
+    for (const doc of this.docs) {
+      const oldDoc = oldDocs.get(doc.path);
+      if (oldDoc && oldDoc.wordCount !== doc.wordCount) {
+        updated.push(doc.name);
+      }
+    }
+
+    const duration = Date.now() - startTime;
+
+    return {
+      added,
+      removed,
+      updated,
+      total: this.docs.length,
+      duration,
+    };
+  }
+}
+
+/**
+ * Result of a reindex operation
+ */
+export interface ReindexResult {
+  added: string[];
+  removed: string[];
+  updated: string[];
+  total: number;
+  duration: number;
 }
 
 function escapeRegex(str: string): string {
