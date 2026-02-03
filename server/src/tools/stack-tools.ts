@@ -3,10 +3,10 @@
 // MCP tool handlers for stack detection
 // ============================================
 
-import { z } from "zod";
 import { StackDetector } from "../services/stack-detector.js";
+import type { MagsConfig } from "../types/index.js";
 
-export function registerStackTools(server: any, projectRoot: string) {
+export function registerStackTools(server: any, projectRoot: string, config?: MagsConfig) {
   const detector = new StackDetector();
 
   // --- mags_detect_stack ---
@@ -15,6 +15,35 @@ export function registerStackTools(server: any, projectRoot: string) {
     "Detect the project's tech stack by scanning project files. Returns detected languages, frameworks, databases, API style, and package manager.",
     {},
     async () => {
+      // First check if stack is pre-configured in .mags.yaml
+      if (config?.stack && Object.keys(config.stack).length > 0) {
+        const configStack = config.stack;
+        return {
+          content: [
+            {
+              type: "text" as const,
+              text: JSON.stringify(
+                {
+                  detected: false,
+                  source: "config",
+                  stack: {
+                    languages: configStack.languages || (configStack.primaryLanguage ? [configStack.primaryLanguage] : []),
+                    frameworks: configStack.frameworks || [],
+                    databases: configStack.databases || [],
+                    apiStyle: configStack.apiStyle || [],
+                    packageManager: configStack.packageManager || "",
+                  },
+                  note: "Stack loaded from .mags.yaml configuration.",
+                },
+                null,
+                2
+              ),
+            },
+          ],
+        };
+      }
+
+      // Fallback: detect from filesystem
       const result = detector.detect(projectRoot);
 
       return {
@@ -24,6 +53,7 @@ export function registerStackTools(server: any, projectRoot: string) {
             text: JSON.stringify(
               {
                 detected: true,
+                source: "filesystem",
                 stack: result,
                 suggestion: "Add this to your .mags.yaml under the 'stack' key to persist the detection.",
                 yamlSnippet: formatYamlSnippet(result),

@@ -117,7 +117,7 @@ async function main() {
   registerChangelogTools(server, projectRoot);
   registerScaffoldTools(server);
   registerSessionTools(server, sessionManager, memoryStore);
-  registerStackTools(server, projectRoot);
+  registerStackTools(server, projectRoot, config);
   registerModuleTools(server, projectRoot, config);
 
   // Start server

@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **doc-indexer**: Silent error swallowing now logs warnings with file path and error message
+- **validation-tools**: Broken link false positives fixed with `existsSync` fallback for files not in index
+- **claude-md-tools**: Case-insensitive detection for "rule", "convention", "standard" keywords in audit
+- **stack-tools**: Config integration - pre-configured stack from `.mags.yaml` takes priority over filesystem detection
+
+### Added
+
+- Bug fix validation test suite (22 new tests covering all 4 fixes)
+
 ## [0.2.0] - 2026-02-02
 
 ### Added

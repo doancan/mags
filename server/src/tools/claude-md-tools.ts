@@ -223,11 +223,12 @@ export function registerClaudeMdTools(
         suggestions.push("Add docs/ reference so Claude knows where to find documentation");
       }
 
-      // Check for coding rules
+      // Check for coding rules (case-insensitive)
+      const claudeMdLower = claudeMd.toLowerCase();
       const hasRules =
-        claudeMd.includes("rule") ||
-        claudeMd.includes("convention") ||
-        claudeMd.includes("standard");
+        claudeMdLower.includes("rule") ||
+        claudeMdLower.includes("convention") ||
+        claudeMdLower.includes("standard");
       if (!hasRules) {
         issues.push({
           type: "missing_section",

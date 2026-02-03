@@ -142,7 +142,8 @@ export class DocIndexer {
     try {
       const raw = await readFile(filePath, "utf-8");
       return this.parseRaw(filePath, raw);
-    } catch {
+    } catch (err) {
+      console.warn(`[DocIndexer] Failed to read ${filePath}:`, err instanceof Error ? err.message : err);
       return null;
     }
   }
@@ -151,7 +152,8 @@ export class DocIndexer {
     try {
       const raw = readFileSync(filePath, "utf-8");
       return this.parseRaw(filePath, raw);
-    } catch {
+    } catch (err) {
+      console.warn(`[DocIndexer] Failed to read ${filePath}:`, err instanceof Error ? err.message : err);
       return null;
     }
   }
@@ -182,7 +184,8 @@ export class DocIndexer {
           sections: parsed.sections,
           metadata,
         };
-      } catch {
+      } catch (err) {
+        console.warn(`[DocIndexer] Failed to parse ${ext} file ${filePath}:`, err instanceof Error ? err.message : err);
         return null;
       }
     }

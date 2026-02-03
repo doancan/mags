@@ -4,6 +4,8 @@
 // ============================================
 
 import { z } from "zod";
+import { existsSync } from "node:fs";
+import { join, dirname } from "node:path";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { MemoryStore } from "../services/memory-store.js";
 import type { ProgressManager } from "../services/progress-manager.js";
@@ -105,12 +107,19 @@ export function registerValidationTools(
         const linkRegex = /\[.*?\]\(\.\/(.+?\.md)\)/g;
         let match: RegExpExecArray | null;
         while ((match = linkRegex.exec(content)) !== null) {
-          const linkedFile = match[1].replace(".md", "").split("/").pop();
-          if (linkedFile && !docNames.has(linkedFile)) {
+          const linkedPath = match[1];
+          const linkedFile = linkedPath.replace(".md", "").split("/").pop();
+
+          // First check if document is indexed
+          if (linkedFile && docNames.has(linkedFile)) continue;
+
+          // Fallback: check if file exists on filesystem
+          const fullPath = join(dirname(doc.path), linkedPath);
+          if (!existsSync(fullPath)) {
             issues.push({
               type: "broken_link",
               doc: doc.name,
-              detail: `Broken link to "${match[1]}"`,
+              detail: `Broken link to "${linkedPath}"`,
               severity: "error",
             });
           }
