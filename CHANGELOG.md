@@ -5,7 +5,7 @@ All notable changes to MAGS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.2.1] - 2026-02-03
 
 ### Fixed
 
@@ -13,10 +13,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **validation-tools**: Broken link false positives fixed with `existsSync` fallback for files not in index
 - **claude-md-tools**: Case-insensitive detection for "rule", "convention", "standard" keywords in audit
 - **stack-tools**: Config integration - pre-configured stack from `.mags.yaml` takes priority over filesystem detection
+- **placeholder-detection**: Context-aware detection eliminates false positives (structural vs contextual mentions)
 
 ### Added
 
-- Bug fix validation test suite (22 new tests covering all 4 fixes)
+- **stack-detector**: Fallback chain for pre-code projects (FileSystem → Config → CLAUDE.md → tech-stack.md)
+- **doc-indexer**: `reindex()` method with change detection (added/removed/updated tracking)
+- **mags_reindex**: New MCP tool to refresh document index dynamically
+- **module-discoverer**: Config-based module override support via `.mags.yaml`
+- 60+ new tests covering fallback chain, placeholder detection, reindex, and module override
 
 ## [0.2.0] - 2026-02-02
 
