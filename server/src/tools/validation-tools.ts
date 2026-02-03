@@ -72,15 +72,17 @@ export function registerValidationTools(
             });
           }
 
-          // Check for TODO/FIXME/placeholder markers
-          const todoMatches = content.match(
-            /(?:TODO|FIXME|PLACEHOLDER|TBD|XXX)[\s:]/gi
-          );
-          if (todoMatches) {
+          // Check for structural placeholders (context-aware)
+          const placeholderMatches = detectPlaceholders(content);
+          if (placeholderMatches.length > 0) {
+            const examples = placeholderMatches
+              .slice(0, 3)
+              .map((p) => `L${p.line}: ${p.text.slice(0, 40)}${p.text.length > 40 ? "..." : ""}`)
+              .join("; ");
             issues.push({
               type: "placeholder",
               doc: doc.name,
-              detail: `Found ${todoMatches.length} placeholder(s): ${todoMatches.slice(0, 3).join(", ")}`,
+              detail: `Found ${placeholderMatches.length} placeholder(s): ${examples}`,
               severity: "warning",
             });
           }
@@ -242,4 +244,105 @@ function findEmptySections(content: string): string[] {
   }
 
   return emptySections;
+}
+
+/**
+ * Placeholder match result
+ */
+export interface PlaceholderMatch {
+  line: number;
+  text: string;
+  type: "heading" | "checklist" | "blockquote" | "standalone" | "comment";
+}
+
+/**
+ * Context-aware placeholder detection.
+ * Only detects structural placeholders, not contextual mentions.
+ *
+ * Detects:
+ * - TODO/TBD/FIXME in headings: "## TODO: Complete this"
+ * - TODO/TBD in checklists: "- [ ] TODO: implement"
+ * - PLACEHOLDER in blockquotes: "> PLACEHOLDER"
+ * - Standalone markers: "TODO:" on its own line
+ * - HTML comments: "<!-- TODO -->"
+ *
+ * Does NOT detect:
+ * - Contextual mentions: "placeholder for Phase 2"
+ * - Code examples: "// TODO pattern example"
+ * - Inside code fences
+ */
+export function detectPlaceholders(content: string): PlaceholderMatch[] {
+  const placeholders: PlaceholderMatch[] = [];
+  const lines = content.split("\n");
+  let inCodeFence = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+    const trimmed = line.trim();
+
+    // Track code fences - skip detection inside them
+    if (trimmed.startsWith("```")) {
+      inCodeFence = !inCodeFence;
+      continue;
+    }
+    if (inCodeFence) continue;
+
+    // 1. Heading with placeholder: "## TODO: Complete this" or "## TBD"
+    const headingMatch = trimmed.match(/^(#{1,6})\s+(TODO|TBD|FIXME|PLACEHOLDER|XXX)[\s:]/i);
+    if (headingMatch) {
+      placeholders.push({
+        line: i + 1,
+        text: trimmed,
+        type: "heading",
+      });
+      continue;
+    }
+
+    // 2. Checklist item with placeholder: "- [ ] TODO" or "- [x] TBD: done"
+    const checklistMatch = trimmed.match(/^-\s*\[[\sx]\]\s*(TODO|TBD|FIXME|PLACEHOLDER|XXX)[\s:]/i);
+    if (checklistMatch) {
+      placeholders.push({
+        line: i + 1,
+        text: trimmed,
+        type: "checklist",
+      });
+      continue;
+    }
+
+    // 3. Blockquote with placeholder: "> TODO" or "> PLACEHOLDER"
+    const blockquoteMatch = trimmed.match(/^>\s*(TODO|TBD|FIXME|PLACEHOLDER|XXX)[\s:]/i);
+    if (blockquoteMatch) {
+      placeholders.push({
+        line: i + 1,
+        text: trimmed,
+        type: "blockquote",
+      });
+      continue;
+    }
+
+    // 4. Standalone marker (entire line or line starts with marker)
+    // Matches: "TODO:", "TODO: fix this", "TBD", but NOT "This is a TODO task"
+    const standaloneMatch = trimmed.match(/^(TODO|TBD|FIXME|PLACEHOLDER|XXX)([\s:]|$)/i);
+    if (standaloneMatch) {
+      placeholders.push({
+        line: i + 1,
+        text: trimmed,
+        type: "standalone",
+      });
+      continue;
+    }
+
+    // 5. HTML comment placeholder: "<!-- TODO -->" or "<!-- FIXME: something -->"
+    const commentMatch = trimmed.match(/<!--\s*(TODO|TBD|FIXME|PLACEHOLDER|XXX)[\s:]/i);
+    if (commentMatch) {
+      placeholders.push({
+        line: i + 1,
+        text: trimmed,
+        type: "comment",
+      });
+      continue;
+    }
+  }
+
+  return placeholders;
 }
