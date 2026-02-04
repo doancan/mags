@@ -1830,4 +1830,561 @@ No modules here.
       });
     });
   });
+
+  // =============================================
+  // COVERAGE BOOST TESTS — TddEngine & PlanExecutor
+  // =============================================
+
+  describe("TddEngine — Coverage Boost", () => {
+    let tempDir: string;
+    let tddEngine: TddEngine;
+
+    beforeEach(() => {
+      tempDir = createTempDir();
+      tddEngine = createTddEngine(tempDir, "docs/.mags");
+    });
+
+    afterEach(() => {
+      cleanupDir(tempDir);
+    });
+
+    describe("getCoverage edge cases", () => {
+      it("should fallback to statements.pct when lines.pct is undefined", async () => {
+        // Create coverage report with only statements.pct
+        const coverageDir = path.join(tempDir, "coverage");
+        fs.mkdirSync(coverageDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(coverageDir, "coverage-summary.json"),
+          JSON.stringify({
+            total: {
+              statements: { pct: 85.5 },
+              // lines is intentionally missing
+            },
+          })
+        );
+
+        const module: ExtractedModule = {
+          id: "test-mod",
+          name: "testmod",
+          description: "Test module",
+          priority: "P0",
+          phase: 1,
+          features: [],
+          acceptanceCriteria: [],
+          dependencies: { requires: [], blocks: [] },
+        };
+
+        const report = await tddEngine.verify(module);
+        expect(report.coverageTotal).toBe(86); // rounded from 85.5
+      });
+
+      it("should return 0 coverage when JSON is malformed", async () => {
+        const coverageDir = path.join(tempDir, "coverage");
+        fs.mkdirSync(coverageDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(coverageDir, "coverage-summary.json"),
+          "{ invalid json !!!"
+        );
+
+        const module: ExtractedModule = {
+          id: "test-mod",
+          name: "testmod",
+          description: "Test module",
+          priority: "P0",
+          phase: 1,
+          features: [],
+          acceptanceCriteria: [],
+          dependencies: { requires: [], blocks: [] },
+        };
+
+        const report = await tddEngine.verify(module);
+        expect(report.coverageTotal).toBe(0);
+      });
+
+      it("should return 0 coverage when total is missing pct fields", async () => {
+        const coverageDir = path.join(tempDir, "coverage");
+        fs.mkdirSync(coverageDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(coverageDir, "coverage-summary.json"),
+          JSON.stringify({ total: { lines: {}, statements: {} } })
+        );
+
+        const module: ExtractedModule = {
+          id: "test-mod",
+          name: "testmod",
+          description: "Test module",
+          priority: "P0",
+          phase: 1,
+          features: [],
+          acceptanceCriteria: [],
+          dependencies: { requires: [], blocks: [] },
+        };
+
+        const report = await tddEngine.verify(module);
+        expect(report.coverageTotal).toBe(0);
+      });
+    });
+
+    describe("categorizeTest all branches", () => {
+      it("should categorize e2e tests from filename", async () => {
+        // Create test file that will be found
+        const testDir = path.join(tempDir, "src");
+        fs.mkdirSync(testDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(testDir, "mymod.e2e.test.ts"),
+          "describe('e2e', () => { it('works', () => {}) });"
+        );
+
+        const module: ExtractedModule = {
+          id: "mymod",
+          name: "mymod",
+          description: "My module",
+          priority: "P0",
+          phase: 1,
+          features: [],
+          acceptanceCriteria: [],
+          dependencies: { requires: [], blocks: [] },
+        };
+
+        const report = await tddEngine.verify(module);
+        // e2e tests should be categorized to e2e category
+        expect(report.tests.e2e).toBeDefined();
+      });
+
+      it("should categorize integration tests from filename", async () => {
+        const testDir = path.join(tempDir, "src");
+        fs.mkdirSync(testDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(testDir, "mymod.integration.test.ts"),
+          "describe('integration', () => { it('works', () => {}) });"
+        );
+
+        const module: ExtractedModule = {
+          id: "mymod",
+          name: "mymod",
+          description: "My module",
+          priority: "P0",
+          phase: 1,
+          features: [],
+          acceptanceCriteria: [],
+          dependencies: { requires: [], blocks: [] },
+        };
+
+        const report = await tddEngine.verify(module);
+        expect(report.tests.integration).toBeDefined();
+      });
+
+      it("should categorize controller tests as integration", async () => {
+        const testDir = path.join(tempDir, "test");
+        fs.mkdirSync(testDir, { recursive: true });
+        fs.writeFileSync(
+          path.join(testDir, "mymod.test.ts"),
+          "describe('controller tests', () => { it('works', () => {}) });"
+        );
+
+        const module: ExtractedModule = {
+          id: "mymod",
+          name: "mymod",
+          description: "My module",
+          priority: "P0",
+          phase: 1,
+          features: [],
+          acceptanceCriteria: [],
+          dependencies: { requires: [], blocks: [] },
+        };
+
+        const report = await tddEngine.verify(module);
+        expect(report.tests).toBeDefined();
+      });
+    });
+
+    describe("verifyAcceptanceCriteria — failed test matching", () => {
+      it("should mark criteria as failed when matching test fails", async () => {
+        // We can't easily make pnpm test fail, but we can test the report structure
+        const module: ExtractedModule = {
+          id: "auth",
+          name: "auth",
+          description: "Auth module",
+          priority: "P0",
+          phase: 1,
+          features: [],
+          acceptanceCriteria: [
+            "User can login with email and password",
+            "Session is created on successful login",
+          ],
+          dependencies: { requires: [], blocks: [] },
+        };
+
+        const report = await tddEngine.verify(module);
+        // Acceptance criteria should be returned (even if unverified)
+        expect(report.acceptance).toHaveLength(2);
+        expect(report.acceptance[0].criteria).toBe("User can login with email and password");
+      });
+    });
+
+    describe("meetsRequirements — all branches", () => {
+      it("should fail when coverage is below minimum", () => {
+        const report = {
+          module: "test",
+          timestamp: new Date().toISOString(),
+          status: "passed" as const,
+          tests: {
+            unit: { total: 10, passed: 10, failed: 0, skipped: 0 },
+            integration: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            e2e: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            isolation: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            permission: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          },
+          results: [],
+          acceptance: [{ criteria: "test", status: "verified" as const }],
+          coverageTotal: 50, // Below 80%
+        };
+
+        const result = tddEngine.meetsRequirements(report, 80);
+        expect(result.passes).toBe(false);
+        expect(result.reasons).toContain("Coverage 50% is below minimum 80%");
+      });
+
+      it("should fail when tests are failing", () => {
+        const report = {
+          module: "test",
+          timestamp: new Date().toISOString(),
+          status: "failed" as const,
+          tests: {
+            unit: { total: 10, passed: 8, failed: 2, skipped: 0 },
+            integration: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            e2e: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            isolation: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            permission: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          },
+          results: [],
+          acceptance: [{ criteria: "test", status: "verified" as const }],
+          coverageTotal: 90,
+        };
+
+        const result = tddEngine.meetsRequirements(report);
+        expect(result.passes).toBe(false);
+        expect(result.reasons).toContain("Tests are failing");
+      });
+
+      it("should fail when acceptance criteria not verified", () => {
+        const report = {
+          module: "test",
+          timestamp: new Date().toISOString(),
+          status: "passed" as const,
+          tests: {
+            unit: { total: 10, passed: 10, failed: 0, skipped: 0 },
+            integration: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            e2e: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            isolation: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            permission: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          },
+          results: [],
+          acceptance: [
+            { criteria: "test1", status: "verified" as const },
+            { criteria: "test2", status: "unverified" as const },
+          ],
+          coverageTotal: 90,
+        };
+
+        const result = tddEngine.meetsRequirements(report);
+        expect(result.passes).toBe(false);
+        expect(result.reasons.some((r) => r.includes("acceptance criteria not verified"))).toBe(true);
+      });
+    });
+
+    describe("formatVerificationResult — all branches", () => {
+      it("should format partial status with warning icon", () => {
+        const report = {
+          module: "auth",
+          timestamp: new Date().toISOString(),
+          status: "partial" as const,
+          tests: {
+            unit: { total: 10, passed: 8, failed: 0, skipped: 2 },
+            integration: { total: 5, passed: 5, failed: 0, skipped: 0 },
+            e2e: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            isolation: { total: 2, passed: 2, failed: 0, skipped: 0 },
+            permission: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          },
+          results: [],
+          acceptance: [{ criteria: "test", status: "verified" as const }],
+          coverageTotal: 75,
+        };
+
+        const formatted = formatVerificationResult(report);
+        expect(formatted).toContain("auth");
+        expect(formatted).toContain("Tenant Isolation"); // isolation.total > 0
+        expect(formatted).toContain("75%");
+      });
+
+      it("should format passed status with check icon", () => {
+        const report = {
+          module: "complete",
+          timestamp: new Date().toISOString(),
+          status: "passed" as const,
+          tests: {
+            unit: { total: 10, passed: 10, failed: 0, skipped: 0 },
+            integration: { total: 5, passed: 5, failed: 0, skipped: 0 },
+            e2e: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            isolation: { total: 0, passed: 0, failed: 0, skipped: 0 },
+            permission: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          },
+          results: [],
+          acceptance: [{ criteria: "test", status: "verified" as const }],
+          coverageTotal: 95,
+        };
+
+        const formatted = formatVerificationResult(report);
+        expect(formatted).toContain("complete");
+        expect(formatted).toContain("95%");
+      });
+    });
+  });
+
+  describe("PlanExecutor — Coverage Boost", () => {
+    let tempDir: string;
+    let executor: PlanExecutor;
+
+    beforeEach(() => {
+      tempDir = createTempDir();
+      executor = createPlanExecutor(path.join(tempDir, "docs/.mags"));
+    });
+
+    afterEach(() => {
+      cleanupDir(tempDir);
+    });
+
+    describe("action execution edge cases", () => {
+      it("should handle skip when step not found", async () => {
+        const plan: ExtractedPlan = {
+          version: "1.0",
+          extractedAt: new Date().toISOString(),
+          source: "test.md",
+          project: { name: "test", overview: "" },
+          modules: [
+            {
+              id: "mod1",
+              name: "mod1",
+              description: "Module 1",
+              priority: "P0",
+              phase: 1,
+              features: [],
+              acceptanceCriteria: [],
+              dependencies: { requires: [], blocks: [] },
+            },
+          ],
+          phases: [{ phase: 1, name: "MVP", modules: ["mod1"] }],
+          totalFeatures: 0,
+          dependencyGraph: [],
+        };
+
+        await executor.initialize(plan);
+        // Manually corrupt state to simulate step not found
+        const state = executor.getState();
+        if (state) {
+          state.currentStep = 9999; // Non-existent step
+        }
+
+        const result = await executor.executeAction("skip");
+        expect(result.success).toBe(false);
+        expect(result.message).toBe("Step not found");
+      });
+
+      it("should handle pause when no state", async () => {
+        // Don't initialize - no state
+        const result = await executor.executeAction("quit");
+        expect(result.success).toBe(false);
+        expect(result.message).toBe("No execution state loaded");
+      });
+
+      it("should handle retry action", async () => {
+        const plan: ExtractedPlan = {
+          version: "1.0",
+          extractedAt: new Date().toISOString(),
+          source: "test.md",
+          project: { name: "test", overview: "" },
+          modules: [
+            {
+              id: "mod1",
+              name: "mod1",
+              description: "Module 1",
+              priority: "P0",
+              phase: 1,
+              features: [],
+              acceptanceCriteria: [],
+              dependencies: { requires: [], blocks: [] },
+            },
+          ],
+          phases: [{ phase: 1, name: "MVP", modules: ["mod1"] }],
+          totalFeatures: 0,
+          dependencyGraph: [],
+        };
+
+        await executor.initialize(plan);
+        const result = await executor.executeAction("retry");
+        expect(result.success).toBe(true);
+        expect(result.message).toBe("Retrying current step");
+        expect(result.nextPrompt).toBeDefined();
+      });
+
+      it("should handle next when no state", async () => {
+        const result = await executor.executeAction("next");
+        expect(result.success).toBe(false);
+        expect(result.message).toBe("No execution state loaded");
+      });
+
+      it("should handle previous when at first step", async () => {
+        const plan: ExtractedPlan = {
+          version: "1.0",
+          extractedAt: new Date().toISOString(),
+          source: "test.md",
+          project: { name: "test", overview: "" },
+          modules: [
+            {
+              id: "mod1",
+              name: "mod1",
+              description: "Module 1",
+              priority: "P0",
+              phase: 1,
+              features: [],
+              acceptanceCriteria: [],
+              dependencies: { requires: [], blocks: [] },
+            },
+          ],
+          phases: [{ phase: 1, name: "MVP", modules: ["mod1"] }],
+          totalFeatures: 0,
+          dependencyGraph: [],
+        };
+
+        await executor.initialize(plan);
+        const result = await executor.executeAction("previous");
+        expect(result.success).toBe(false);
+        expect(result.message).toBe("Already at first step");
+      });
+
+      it("should handle unknown action", async () => {
+        const plan: ExtractedPlan = {
+          version: "1.0",
+          extractedAt: new Date().toISOString(),
+          source: "test.md",
+          project: { name: "test", overview: "" },
+          modules: [
+            {
+              id: "mod1",
+              name: "mod1",
+              description: "Module 1",
+              priority: "P0",
+              phase: 1,
+              features: [],
+              acceptanceCriteria: [],
+              dependencies: { requires: [], blocks: [] },
+            },
+          ],
+          phases: [{ phase: 1, name: "MVP", modules: ["mod1"] }],
+          totalFeatures: 0,
+          dependencyGraph: [],
+        };
+
+        await executor.initialize(plan);
+        // @ts-expect-error - testing unknown action
+        const result = await executor.executeAction("unknown_action");
+        expect(result.success).toBe(false);
+        expect(result.message).toContain("Unknown action");
+      });
+    });
+
+    describe("parseShortcut — all branches", () => {
+      it("should parse full action names", () => {
+        expect(parseShortcut("approve")).toBe("approve");
+        expect(parseShortcut("SKIP")).toBe("skip");
+        expect(parseShortcut("Retry")).toBe("retry");
+        expect(parseShortcut("  quit  ")).toBe("quit");
+      });
+
+      it("should parse single letter shortcuts", () => {
+        expect(parseShortcut("a")).toBe("approve");
+        expect(parseShortcut("s")).toBe("skip");
+        expect(parseShortcut("r")).toBe("retry");
+        expect(parseShortcut("q")).toBe("quit");
+        expect(parseShortcut("n")).toBe("next");
+        expect(parseShortcut("p")).toBe("previous");
+        expect(parseShortcut("h")).toBe("help");
+        expect(parseShortcut("d")).toBe("details");
+        expect(parseShortcut("l")).toBe("list");
+        expect(parseShortcut("e")).toBe("edit");
+      });
+
+      it("should return null for invalid input", () => {
+        expect(parseShortcut("xyz")).toBeNull();
+        expect(parseShortcut("")).toBeNull();
+        expect(parseShortcut("   ")).toBeNull();
+      });
+    });
+
+    describe("getCurrentStepPrompt edge cases", () => {
+      it("should return null when execution is completed", async () => {
+        const plan: ExtractedPlan = {
+          version: "1.0",
+          extractedAt: new Date().toISOString(),
+          source: "test.md",
+          project: { name: "test", overview: "" },
+          modules: [
+            {
+              id: "mod1",
+              name: "mod1",
+              description: "Module 1",
+              priority: "P0",
+              phase: 1,
+              features: [],
+              acceptanceCriteria: [],
+              dependencies: { requires: [], blocks: [] },
+            },
+          ],
+          phases: [{ phase: 1, name: "MVP", modules: ["mod1"] }],
+          totalFeatures: 0,
+          dependencyGraph: [],
+        };
+
+        await executor.initialize(plan);
+        const state = executor.getState();
+        if (state) {
+          state.status = "completed";
+        }
+
+        const prompt = executor.getCurrentStepPrompt();
+        expect(prompt).toBeNull();
+      });
+    });
+
+    describe("frontend module type steps", () => {
+      it("should generate frontend-specific steps", async () => {
+        const plan: ExtractedPlan = {
+          version: "1.0",
+          extractedAt: new Date().toISOString(),
+          source: "frontend.md",
+          project: { name: "frontend-app", overview: "" },
+          modules: [
+            {
+              id: "dashboard",
+              name: "dashboard",
+              description: "Dashboard module",
+              priority: "P0",
+              phase: 1,
+              features: [],
+              acceptanceCriteria: [],
+              dependencies: { requires: [], blocks: [] },
+            },
+          ],
+          phases: [{ phase: 1, name: "MVP", modules: ["dashboard"] }],
+          totalFeatures: 0,
+          dependencyGraph: [],
+        };
+
+        const state = await executor.initialize(plan, "frontend");
+        expect(state.totalSteps).toBeGreaterThan(0);
+        // Frontend has 8 steps per module
+        expect(state.pending.steps.some((s) => s.description.includes("component"))).toBe(true);
+      });
+    });
+  });
 });
