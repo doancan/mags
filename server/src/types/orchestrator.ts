@@ -299,7 +299,7 @@ export interface DiscoveredModule {
 }
 
 export interface TechDebtItem {
-  type: "todo" | "fixme" | "deprecated" | "unused";
+  type: "todo" | "fixme" | "deprecated" | "unused" | "hack" | "xxx" | "bug";
   message: string;
   file: string;
   line: number;
