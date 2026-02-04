@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import { mkdirSync, writeFileSync, rmSync, unlinkSync } from "node:fs";
+import { mkdirSync, writeFileSync, rmSync, unlinkSync, symlinkSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { randomUUID } from "node:crypto";
@@ -983,7 +983,6 @@ Content.
   // ── Symlink handling ────────────────────────
   describe("symlink ve cycle handling", () => {
     it("handles symlink to file", () => {
-      const { symlinkSync } = require("node:fs");
       writeDoc(docsDir, "original.md", "# Original\n\nContent");
 
       try {
@@ -1004,8 +1003,6 @@ Content.
     });
 
     it("prevents infinite loop from directory symlink cycle", () => {
-      const { symlinkSync } = require("node:fs");
-
       // Create subdirectory with a doc
       writeDoc(docsDir, "doc.md", "# Doc", "subdir");
 
@@ -1028,8 +1025,6 @@ Content.
     });
 
     it("async: prevents infinite loop from directory symlink cycle", async () => {
-      const { symlinkSync } = require("node:fs");
-
       writeDoc(docsDir, "async-doc.md", "# Async Doc", "asyncdir");
 
       try {
