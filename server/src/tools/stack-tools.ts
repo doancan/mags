@@ -43,8 +43,9 @@ export function registerStackTools(server: any, projectRoot: string, config?: Ma
         };
       }
 
-      // Fallback: detect from filesystem
-      const result = detector.detect(projectRoot);
+      // Fallback: detect from filesystem with full fallback chain
+      // Uses: FileSystem → Config → CLAUDE.md → TechDoc
+      const result = detector.detectWithFallback(projectRoot, config);
 
       return {
         content: [
