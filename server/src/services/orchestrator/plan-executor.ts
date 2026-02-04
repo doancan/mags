@@ -582,7 +582,28 @@ export const ACTION_SHORTCUTS: Record<string, UserAction> = {
   l: "list",
 };
 
+// Valid user actions for direct matching
+const VALID_ACTIONS: Set<UserAction> = new Set([
+  "approve",
+  "edit",
+  "skip",
+  "retry",
+  "next",
+  "previous",
+  "quit",
+  "help",
+  "details",
+  "list",
+]);
+
 export function parseShortcut(input: string): UserAction | null {
   const normalized = input.toLowerCase().trim();
+
+  // First check if it's a valid action name directly
+  if (VALID_ACTIONS.has(normalized as UserAction)) {
+    return normalized as UserAction;
+  }
+
+  // Then check shortcuts
   return ACTION_SHORTCUTS[normalized] || null;
 }
