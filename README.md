@@ -124,7 +124,7 @@ Module-based progress with items, dependencies, and priorities. Status flows: `n
 
 When all items in a module are completed, the module auto-completes. `mags_get_next` recommends what to work on based on dependencies.
 
-## MCP Tools (24 tools)
+## MCP Tools (36 tools)
 
 ### Documents
 | Tool | Description |
@@ -134,6 +134,7 @@ When all items in a module are completed, the module auto-completes. `mags_get_n
 | `mags_update_doc` | Update a document section |
 | `mags_search_docs` | Full-text fuzzy search across all docs |
 | `mags_create_doc` | Create a new document from a template |
+| `mags_reindex` | Reindex all documents (useful after external changes) |
 
 ### Memory
 | Tool | Description |
@@ -141,6 +142,7 @@ When all items in a module are completed, the module auto-completes. `mags_get_n
 | `mags_remember` | Store a key-value memory entry with category and tags |
 | `mags_recall` | Search memories by keyword or semantically |
 | `mags_forget` | Delete a memory entry |
+| `mags_promote_memory` | Suggest promoting frequently used memory to CLAUDE.md |
 
 ### Progress
 | Tool | Description |
@@ -177,6 +179,20 @@ When all items in a module are completed, the module auto-completes. `mags_get_n
 | `mags_save_session` | Save session with summary, decisions, next steps |
 | `mags_get_last_session` | Load the most recent session |
 | `mags_list_sessions` | List session history |
+
+### Orchestration (Advanced)
+| Tool | Description |
+|------|-------------|
+| `mags_parse_prd` | Parse PRD document to extract features, modules, and requirements |
+| `mags_generate_skill` | Generate a skill definition from PRD content |
+| `mags_generate_agent` | Generate an agent definition from PRD content |
+| `mags_analyze_codebase` | Analyze codebase for tech debt, endpoints, and schema |
+| `mags_init_execution` | Initialize execution plan from parsed PRD |
+| `mags_execute_step` | Execute the next step in the execution plan |
+| `mags_get_current_step` | Get the current step in execution |
+| `mags_get_execution_status` | Get overall execution status and progress |
+| `mags_resume_execution` | Resume paused or failed execution |
+| `mags_verify_module` | Verify module implementation against requirements |
 
 ## Document Templates
 
@@ -253,7 +269,7 @@ mags/
 │   ├── src/
 │   │   ├── index.ts          # Entry point
 │   │   ├── config/           # Configuration loading
-│   │   ├── services/         # Core services (13)
+│   │   ├── services/         # Core services (15+)
 │   │   │   ├── doc-indexer.ts
 │   │   │   ├── doc-parser.ts
 │   │   │   ├── memory-store.ts
@@ -268,7 +284,7 @@ mags/
 │   │   │   ├── claude-md-rules.ts
 │   │   │   ├── consistency-checker.ts
 │   │   │   └── embedding/    # Pluggable embedding providers
-│   │   ├── tools/            # MCP tool registrations (24 tools)
+│   │   ├── tools/            # MCP tool registrations (36 tools)
 │   │   └── types/            # TypeScript type definitions
 │   └── dist/
 │       └── mags-server.bundle.mjs  # Pre-built bundle (no build step needed)
@@ -283,7 +299,8 @@ mags/
 - [Getting Started](./docs/getting-started.md) — Installation, first use, core concepts
 - [Skills Reference](./docs/skills-reference.md) — All 14 skills (7 slash commands + 7 guidance)
 - [Commands Reference](./docs/commands-reference.md) — All 7 slash commands in detail
-- [MCP Tools Reference](./docs/tools-reference.md) — All 24 MCP tools with parameters
+- [MCP Tools Reference](./docs/tools-reference.md) — All 36 MCP tools with parameters
+- [Orchestrator Guide](./docs/orchestrator-guide.md) — PRD-driven development and code analysis
 - [Workflows](./docs/workflows.md) — Common usage scenarios and patterns
 - [Configuration](./docs/configuration.md) — Settings, embedding providers, customization
 
