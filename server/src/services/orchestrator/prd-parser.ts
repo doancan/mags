@@ -138,7 +138,7 @@ export class PrdParser {
     // Try H1 header
     const h1 = lines.find((l) => l.startsWith("# "));
     if (h1) {
-      return h1.replace(/^#\s+/, "").replace(/[—\-].+$/, "").trim();
+      return h1.replace(/^#\s+/, "").replace(/[—-].+$/, "").trim();
     }
 
     this.warnings.push({

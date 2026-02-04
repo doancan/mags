@@ -30,7 +30,7 @@ export function registerClaudeMdTools(
       let projectName = "Project";
       if (visionDoc) {
         const titleMatch = visionDoc.match(/^#\s+(.+)/m);
-        if (titleMatch) projectName = titleMatch[1].replace(/[—\-].*/, "").trim();
+        if (titleMatch) projectName = titleMatch[1].replace(/[—-].*/, "").trim();
       }
 
       sections.push(`# ${projectName} — Claude Code Rules\n`);
