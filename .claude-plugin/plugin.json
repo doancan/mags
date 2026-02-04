@@ -1,6 +1,6 @@
 {
   "name": "mags",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Memory And Guidance System — Project documentation memory, session persistence, and development guidance for Claude Code",
   "author": {
     "name": "Dogancan",

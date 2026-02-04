@@ -9,7 +9,7 @@
     {
       "name": "mags",
       "description": "Memory And Guidance System — Documentation, memory, session persistence, and development guidance for Claude Code",
-      "version": "0.2.1",
+      "version": "0.3.0",
       "author": {
         "name": "Dogancan"
       },

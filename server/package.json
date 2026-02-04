@@ -1,6 +1,6 @@
 {
   "name": "@mags/server",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "MAGS MCP Server — Document indexing, memory, and session management",
   "type": "module",
   "main": "dist/index.js",
