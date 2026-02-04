@@ -50,8 +50,14 @@ That's it. MAGS will scan your `docs/` directory (or help you create one from te
 |---------|-------------|
 | `/mags-init` | Set up MAGS for your project — scan docs or scaffold from templates |
 | `/mags-status` | Dashboard — progress bars, doc health score, next steps |
-| `/mags-docs` | List, create, validate, or search your documentation |
-| `/mags-session` | Save, load, or review session history |
+| `/mags-docs` | List all project documents |
+| `/mags-docs-create <template>` | Create a new document from template |
+| `/mags-docs-validate` | Run document validation checks |
+| `/mags-docs-search <query>` | Search across all documents |
+| `/mags-session` | Show session status overview |
+| `/mags-session-save` | Save current session state |
+| `/mags-session-load` | Load and restore last session |
+| `/mags-session-history` | List all saved sessions |
 | `/mags-changelog` | Generate a changelog from git history |
 | `/mags-setup` | Analyze your project and recommend Claude Code configuration |
 | `/mags-legacy` | Initialize MAGS for a legacy/brownfield project with stack detection and tech debt tracking |
@@ -288,7 +294,7 @@ mags/
 │   │   └── types/            # TypeScript type definitions
 │   └── dist/
 │       └── mags-server.bundle.mjs  # Pre-built bundle (no build step needed)
-├── skills/                   # 14 skills (7 guidance + 7 slash commands)
+├── skills/                   # 20 skills (7 guidance + 13 slash commands)
 ├── agents/                   # 2 specialized agents
 ├── hooks/                    # 3 event-driven hooks
 └── templates/                # Document and project templates

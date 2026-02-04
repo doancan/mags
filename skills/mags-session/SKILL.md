@@ -1,88 +1,32 @@
 ---
 name: mags-session
-description: Save, load, or review sessions
-argument-hint: "[save|load|history]"
+description: Show session status overview
 version: 1.0.0
 user-invocable: true
 allowed-tools:
-  - mcp__mags_mags__mags_save_session
   - mcp__mags_mags__mags_get_last_session
-  - mcp__mags_mags__mags_list_sessions
   - mcp__mags_mags__mags_get_progress
-  - mcp__mags_mags__mags_recall
-  - mcp__mags_mags__mags_remember
 ---
 
 # MAGS Session
 
-Manage work sessions. Parse the argument to determine subcommand.
+Show session status overview with last session summary and current progress.
 
-## Subcommand routing
+## Usage
 
-Read the argument passed after the command name. Route as follows:
+```
+/mags-session
+```
 
-| Argument | Action |
-|----------|--------|
-| `save`   | Save current session |
-| `load`   | Load and restore last session |
-| `history`| List all saved sessions |
-| _(none)_ | Show last session summary + current status |
+## Related Commands
 
----
+| Command | Purpose |
+|---------|---------|
+| `/mags-session-save` | Save current session state |
+| `/mags-session-load` | Load and restore last session |
+| `/mags-session-history` | List all saved sessions |
 
-## Subcommand: save
-
-1. Call `mags_get_progress` to capture current progress state.
-2. Call `mags_recall` with query "current session work" to gather recent context.
-3. Build a session summary from the gathered data. Include:
-   - What was worked on (files changed, features touched)
-   - Current progress state
-   - Any open decisions or blockers
-4. Call `mags_save_session` with the assembled session data (decisions will be automatically saved to memory).
-5. If there are important conventions or context beyond decisions, call `mags_remember` to store them separately.
-6. Print confirmation:
-   ```
-   Session saved.
-     Time:     <timestamp>
-     Summary:  <brief one-line summary>
-     Progress: <N> modules tracked
-   ```
-
----
-
-## Subcommand: load
-
-1. Call `mags_get_last_session` to retrieve the most recent session.
-2. If no session exists, say "No saved sessions found. Run `/mags-session save` after doing some work."
-3. If a session exists, display:
-   ```
-   == Last Session ==
-     Saved:    <timestamp>
-     Summary:  <session summary>
-     Progress: <progress snapshot>
-     Context:  <key decisions/notes>
-   ```
-4. Call `mags_remember` to store key context from the loaded session as active memory, so it is available during the current conversation.
-5. Say: "Session context restored. I have the previous session's context loaded."
-
----
-
-## Subcommand: history
-
-1. Call `mags_list_sessions` to get all sessions.
-2. If empty, say "No sessions recorded yet."
-3. Otherwise, display as a table:
-   ```
-   #   Date                 Summary
-   1   2025-01-15 14:30     Added auth module, wrote tests
-   2   2025-01-14 09:00     Initial project setup
-   3   2025-01-13 16:45     Database schema design
-   ```
-4. Say: "Run `/mags-session load` to restore the most recent session."
-
----
-
-## Default (no argument)
+## Steps
 
 1. Call `mags_get_last_session` and `mags_get_progress` in parallel.
 2. Display last session summary (brief) and current progress side by side:
@@ -96,5 +40,5 @@ Read the argument passed after the command name. Route as follows:
      <progress overview>
      <N> tasks pending
 
-   Tip: Use "save" to snapshot, "load" to restore context.
+   Tip: Use `/mags-session-save` to snapshot, `/mags-session-load` to restore context.
    ```

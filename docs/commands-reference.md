@@ -46,27 +46,36 @@ Shows a project status dashboard.
 
 ## /mags-docs
 
-Document management.
+List all project documents.
 
 **Usage:**
 ```
-/mags-docs              # List documents
-/mags-docs list         # List documents
-/mags-docs create prd   # Create a new document from template
-/mags-docs validate     # Validate documents
-/mags-docs search xyz   # Search across documents
+/mags-docs
 ```
 
-### Subcommands
+**Displays:**
+- All documents in a tree structure grouped by directory
+- Path and brief description for each document
 
-| Subcommand | Description |
-|------------|-------------|
-| `list` | Lists all documents in a tree structure |
-| `create <template>` | Creates a new document from a template |
-| `validate` | Runs frontmatter, section, and cross-ref checks |
-| `search <query>` | Full-text fuzzy search |
+**Related commands:**
+| Command | Description |
+|---------|-------------|
+| `/mags-docs-create <template>` | Create a new document from template |
+| `/mags-docs-validate` | Run document validation checks |
+| `/mags-docs-search <query>` | Search across all documents |
 
-### Available Templates
+---
+
+## /mags-docs-create
+
+Create a new document from a template.
+
+**Usage:**
+```
+/mags-docs-create <template>
+```
+
+**Available Templates:**
 
 | Template | What it creates |
 |----------|----------------|
@@ -84,28 +93,114 @@ Document management.
 
 ---
 
-## /mags-session
+## /mags-docs-validate
 
-Session management.
+Run validation checks on all project documents.
 
 **Usage:**
 ```
-/mags-session           # Show last session + current status
-/mags-session save      # Save current session
-/mags-session load      # Load last session
-/mags-session history   # List all session history
+/mags-docs-validate
 ```
 
-### Subcommands
+**What it checks:**
+- YAML frontmatter validity
+- Required sections
+- Internal cross-references
+- Document freshness
 
-| Subcommand | Description |
-|------------|-------------|
-| _(empty)_ | Shows last session + current progress side by side |
-| `save` | Gathers progress and memory, saves the session |
-| `load` | Loads the last session and restores context |
-| `history` | Lists all sessions with dates, summaries, and counts |
+**Output:**
+- Errors (must fix)
+- Warnings (should fix)
+- Health score
 
-**Note:** Sessions are typically managed automatically by hooks. Manual save is only needed in special cases.
+---
+
+## /mags-docs-search
+
+Search across all project documents.
+
+**Usage:**
+```
+/mags-docs-search <query>
+```
+
+**Features:**
+- Full-text fuzzy search
+- Results ranked by relevance
+- Matching excerpts with context
+
+---
+
+## /mags-session
+
+Show session status overview.
+
+**Usage:**
+```
+/mags-session
+```
+
+**Displays:**
+- Last session summary (timestamp, summary)
+- Current progress state
+- Number of pending tasks
+
+**Related commands:**
+| Command | Description |
+|---------|-------------|
+| `/mags-session-save` | Save current session state |
+| `/mags-session-load` | Load and restore last session |
+| `/mags-session-history` | List all saved sessions |
+
+**Note:** Sessions are typically managed automatically by hooks. Manual commands are for special cases.
+
+---
+
+## /mags-session-save
+
+Save the current session state.
+
+**Usage:**
+```
+/mags-session-save
+```
+
+**What it saves:**
+- Current progress state
+- Recent work context
+- Open decisions or blockers
+
+---
+
+## /mags-session-load
+
+Load and restore the most recent session context.
+
+**Usage:**
+```
+/mags-session-load
+```
+
+**What it does:**
+1. Retrieves the last saved session
+2. Displays session details (timestamp, summary, progress, context)
+3. Restores context into active memory
+
+---
+
+## /mags-session-history
+
+List all saved sessions.
+
+**Usage:**
+```
+/mags-session-history
+```
+
+**Displays:**
+- Session number
+- Date and time
+- Brief summary
 
 ---
 

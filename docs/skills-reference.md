@@ -1,6 +1,6 @@
 # Skills Reference
 
-MAGS provides 14 skills organized in two categories: **slash commands** (user-invocable) and **auto-activating skills** (guidance that Claude applies automatically when relevant).
+MAGS provides 20 skills organized in two categories: **slash commands** (user-invocable) and **auto-activating skills** (guidance that Claude applies automatically when relevant).
 
 All skills are located under `skills/<name>/SKILL.md`.
 
@@ -8,7 +8,7 @@ All skills are located under `skills/<name>/SKILL.md`.
 
 | Type | Count | Trigger | Example |
 |------|-------|---------|---------|
-| Slash Command | 7 | User types `/mags-<name>` | `/mags-init` |
+| Slash Command | 13 | User types `/mags-<name>` | `/mags-init` |
 | Auto-Activating | 7 | Claude detects a relevant context | Working on documentation triggers `doc-management` |
 
 ---
@@ -26,11 +26,39 @@ All skills are located under `skills/<name>/SKILL.md`.
 
 ### /mags-docs
 
-- **Description:** List, create, validate, or search project documents
-- **Arguments:** `[list|create <template>|validate|search <query>]`
+- **Description:** List all project documents
 - **Location:** `skills/mags-docs/SKILL.md`
-- **Tools Used:** `mags_list_docs`, `mags_get_doc`, `mags_create_doc`, `mags_search_docs`, `mags_validate_docs`, `mags_update_doc`
-- **Example Scenario:** Run `/mags-docs validate` before a PR to check document health. Run `/mags-docs create adr` to create a new Architecture Decision Record. Run `/mags-docs search auth` to find all documentation related to authentication.
+- **Tools Used:** `mags_list_docs`, `mags_get_doc`
+- **Example Scenario:** Run `/mags-docs` to see all indexed project documents in a tree structure.
+
+---
+
+### /mags-docs-create
+
+- **Description:** Create a new document from template
+- **Arguments:** `<template>`
+- **Location:** `skills/mags-docs-create/SKILL.md`
+- **Tools Used:** `mags_create_doc`
+- **Example Scenario:** Run `/mags-docs-create adr` to create a new Architecture Decision Record.
+
+---
+
+### /mags-docs-validate
+
+- **Description:** Run document validation checks
+- **Location:** `skills/mags-docs-validate/SKILL.md`
+- **Tools Used:** `mags_validate_docs`, `mags_get_doc`, `mags_update_doc`
+- **Example Scenario:** Run `/mags-docs-validate` before a PR to check document health and fix errors.
+
+---
+
+### /mags-docs-search
+
+- **Description:** Search across all project documents
+- **Arguments:** `<query>`
+- **Location:** `skills/mags-docs-search/SKILL.md`
+- **Tools Used:** `mags_search_docs`
+- **Example Scenario:** Run `/mags-docs-search auth` to find all documentation related to authentication.
 
 ---
 
@@ -45,11 +73,37 @@ All skills are located under `skills/<name>/SKILL.md`.
 
 ### /mags-session
 
-- **Description:** Save, load, or review sessions
-- **Arguments:** `[save|load|history]`
+- **Description:** Show session status overview
 - **Location:** `skills/mags-session/SKILL.md`
-- **Tools Used:** `mags_save_session`, `mags_get_last_session`, `mags_list_sessions`, `mags_get_progress`, `mags_recall`, `mags_remember`
-- **Example Scenario:** Before ending your work, run `/mags-session save` to snapshot progress. Next time, run `/mags-session load` to restore context. Use `/mags-session history` to see all past sessions.
+- **Tools Used:** `mags_get_last_session`, `mags_get_progress`
+- **Example Scenario:** Run `/mags-session` to see last session summary and current progress side by side.
+
+---
+
+### /mags-session-save
+
+- **Description:** Save current session state
+- **Location:** `skills/mags-session-save/SKILL.md`
+- **Tools Used:** `mags_save_session`, `mags_get_progress`, `mags_recall`, `mags_remember`
+- **Example Scenario:** Before ending your work, run `/mags-session-save` to snapshot progress.
+
+---
+
+### /mags-session-load
+
+- **Description:** Load and restore last session context
+- **Location:** `skills/mags-session-load/SKILL.md`
+- **Tools Used:** `mags_get_last_session`, `mags_remember`
+- **Example Scenario:** Run `/mags-session-load` at the start of a session to restore context.
+
+---
+
+### /mags-session-history
+
+- **Description:** List all saved sessions
+- **Location:** `skills/mags-session-history/SKILL.md`
+- **Tools Used:** `mags_list_sessions`
+- **Example Scenario:** Run `/mags-session-history` to see all past sessions with dates and summaries.
 
 ---
 
