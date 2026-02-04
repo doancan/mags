@@ -34,6 +34,7 @@ import { registerScaffoldTools } from "./tools/scaffold-tools.js";
 import { registerSessionTools } from "./tools/session-tools.js";
 import { registerStackTools } from "./tools/stack-tools.js";
 import { registerModuleTools } from "./tools/module-tools.js";
+import { registerOrchestratorTools } from "./tools/orchestrator-tools.js";
 
 async function main() {
   // Resolve project root
@@ -119,6 +120,7 @@ async function main() {
   registerSessionTools(server, sessionManager, memoryStore);
   registerStackTools(server, projectRoot, config);
   registerModuleTools(server, projectRoot, config);
+  registerOrchestratorTools(server, config);
 
   // Start server
   const transport = new StdioServerTransport();
