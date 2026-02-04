@@ -223,16 +223,20 @@ export function registerClaudeMdTools(
         suggestions.push("Add docs/ reference so Claude knows where to find documentation");
       }
 
-      // Check for coding rules (case-insensitive)
-      const claudeMdLower = claudeMd.toLowerCase();
-      const hasRules =
-        claudeMdLower.includes("rule") ||
-        claudeMdLower.includes("convention") ||
-        claudeMdLower.includes("standard");
-      if (!hasRules) {
+      // Check for coding rules section (look for section header, not just keyword)
+      // Match "## Rules", "### Coding Standards", "## Conventions", etc.
+      const hasRulesSection =
+        /^#{1,3}\s+(rules?|conventions?|standards?|guidelines?|coding\s+(rules?|standards?|guidelines?))/im.test(claudeMd);
+      // Also check for inline rules if no section header
+      const hasInlineRules =
+        claudeMd.toLowerCase().includes("- no `any`") ||
+        claudeMd.toLowerCase().includes("follow ") ||
+        claudeMd.toLowerCase().includes("must ") ||
+        claudeMd.toLowerCase().includes("always ");
+      if (!hasRulesSection && !hasInlineRules) {
         issues.push({
           type: "missing_section",
-          detail: "No coding rules or conventions found",
+          detail: "No coding rules section or conventions found",
           severity: "warning",
         });
       }
