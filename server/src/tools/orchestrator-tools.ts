@@ -3,6 +3,7 @@
 // ============================================
 
 import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   createOrchestrator,
   createPrdParser,
@@ -25,7 +26,7 @@ function getOrchestrator(config?: { projectRoot?: string; magsDir?: string }) {
   return orchestratorInstance;
 }
 
-export function registerOrchestratorTools(server: any, config: MagsConfig) {
+export function registerOrchestratorTools(server: McpServer, config: MagsConfig) {
   const magsDir = config.magsDir;
 
   // --- mags_parse_prd ---

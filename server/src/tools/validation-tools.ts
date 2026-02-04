@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { MemoryStore } from "../services/memory-store.js";
 import type { ProgressManager } from "../services/progress-manager.js";
@@ -14,7 +15,7 @@ import { ConsistencyChecker } from "../services/consistency-checker.js";
 import type { ValidationIssue, ValidationResult } from "../types/index.js";
 
 export function registerValidationTools(
-  server: any,
+  server: McpServer,
   docIndexer: DocIndexer,
   memoryStore: MemoryStore,
   progressManager: ProgressManager,

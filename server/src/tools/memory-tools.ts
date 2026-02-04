@@ -4,10 +4,11 @@
 // ============================================
 
 import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { MemoryStore } from "../services/memory-store.js";
 import { DEFAULT_QUERY_LIMIT } from "../config/defaults.js";
 
-export function registerMemoryTools(server: any, memoryStore: MemoryStore) {
+export function registerMemoryTools(server: McpServer, memoryStore: MemoryStore) {
   // --- mags_remember ---
   server.tool(
     "mags_remember",

@@ -4,6 +4,7 @@
 // ============================================
 
 import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ScaffoldFile } from "../types/index.js";
 import { DEFAULT_LOCALE } from "../config/defaults.js";
 
@@ -60,7 +61,7 @@ function getLabels(locale?: string | null): Record<string, string> {
   return SCAFFOLD_LABELS[locale ?? DEFAULT_LOCALE] ?? SCAFFOLD_LABELS[DEFAULT_LOCALE];
 }
 
-export function registerScaffoldTools(server: any) {
+export function registerScaffoldTools(server: McpServer) {
   // --- mags_scaffold_module ---
   server.tool(
     "mags_scaffold_module",

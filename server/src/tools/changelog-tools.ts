@@ -5,9 +5,10 @@
 
 import { z } from "zod";
 import { execSync } from "node:child_process";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ChangelogEntry } from "../types/index.js";
 
-export function registerChangelogTools(server: any, projectRoot: string) {
+export function registerChangelogTools(server: McpServer, projectRoot: string) {
   // --- mags_generate_changelog ---
   server.tool(
     "mags_generate_changelog",
@@ -115,7 +116,8 @@ function getLastTag(cwd: string): string | null {
       cwd,
       encoding: "utf-8",
     }).trim();
-  } catch {
+  } catch (err) {
+    console.warn("[ChangelogTools] Failed to get last tag:", err instanceof Error ? err.message : err);
     return null;
   }
 }
