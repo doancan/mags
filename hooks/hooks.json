@@ -12,6 +12,18 @@
         ]
       }
     ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "Context window is being compacted. Save current session state using mags_save_session tool with a brief summary of the current state. Respond with: {\"ok\": true}",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
