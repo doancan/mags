@@ -17,11 +17,15 @@ import type {
 // --- Patterns ---
 
 const PATTERNS = {
-  // Module directories
+  // Module directories - common patterns in various project structures
   moduleDirs: [
     "src/modules",
     "src/features",
     "src/domains",
+    "src/legacy",      // Legacy code directories
+    "src/components",  // Frontend components
+    "src/services",    // Service-based architecture
+    "src/api",         // API modules
     "lib",
     "packages",
     "apps",
@@ -39,8 +43,8 @@ const PATTERNS = {
     typeorm: /@Entity\s*\([^)]*\)\s*(?:export\s+)?class\s+(\w+)/g,
   },
 
-  // Tech debt markers
-  techDebt: /\/\/\s*(TODO|FIXME|HACK|XXX|BUG|DEPRECATED)[\s:]*(.+)/gi,
+  // Tech debt markers (no global flag - we process line by line)
+  techDebt: /\/\/\s*(TODO|FIXME|HACK|XXX|BUG|DEPRECATED)[\s:]*(.+)/i,
 
   // Import analysis
   imports: /import\s+.*\s+from\s+['"`]([^'"`]+)['"`]/g,
@@ -244,12 +248,19 @@ export class CodeAnalyzer {
     try {
       const content = fs.readFileSync(file, "utf-8");
 
+      // Extract NestJS Controller prefix if present
+      const controllerMatch = content.match(/@Controller\s*\(\s*['"`]([^'"`]*)['"`]\s*\)/);
+      const controllerPrefix = controllerMatch?.[1] || "";
+
       // NestJS
       const nestMatches = [...content.matchAll(PATTERNS.endpoints.nestjs)];
       for (const match of nestMatches) {
+        const routePath = match[2] || "";
+        // Combine controller prefix with route path
+        const fullPath = this.combineNestPaths(controllerPrefix, routePath);
         endpoints.push({
           method: match[1].toUpperCase(),
-          path: match[2] || "/",
+          path: fullPath,
           file: path.relative(this.projectRoot, file),
           line: this.getLineNumber(content, match.index || 0),
           handler: this.extractHandlerName(content, match.index || 0),
@@ -388,6 +399,24 @@ export class CodeAnalyzer {
     const after = content.substring(index);
     const match = after.match(/\)\s*\n?\s*(?:async\s+)?(\w+)\s*\(/);
     return match?.[1] || "handler";
+  }
+
+  private combineNestPaths(prefix: string, routePath: string): string {
+    // Normalize paths - remove leading/trailing slashes
+    const cleanPrefix = prefix.replace(/^\/+|\/+$/g, "");
+    const cleanRoute = routePath.replace(/^\/+|\/+$/g, "");
+
+    // Combine paths
+    if (!cleanPrefix && !cleanRoute) {
+      return "/";
+    }
+    if (!cleanPrefix) {
+      return "/" + cleanRoute;
+    }
+    if (!cleanRoute) {
+      return "/" + cleanPrefix;
+    }
+    return "/" + cleanPrefix + "/" + cleanRoute;
   }
 
   private detectPatterns(modules: DiscoveredModule[]): string[] {

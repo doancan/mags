@@ -49,7 +49,24 @@ export class PrdParser {
     }
 
     const content = fs.readFileSync(prdPath, "utf-8");
-    const { data: frontmatter, content: body } = matter(content);
+
+    // Parse frontmatter safely
+    let frontmatter: Record<string, unknown> = {};
+    let body: string = content;
+
+    try {
+      const parsed = matter(content);
+      frontmatter = parsed.data;
+      body = parsed.content;
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : "Unknown YAML error";
+      this.errors.push({
+        type: "format",
+        message: `Invalid YAML frontmatter: ${errorMsg}`,
+        suggestion: "Check YAML syntax in frontmatter section",
+      });
+      return null;
+    }
 
     // Parse sections
     const lines = body.split("\n");
