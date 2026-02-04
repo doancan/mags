@@ -4,11 +4,13 @@
 // ============================================
 
 import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ProgressManager } from "../services/progress-manager.js";
 import type { MemoryStore } from "../services/memory-store.js";
+import type { ProjectProgress } from "../types/index.js";
 
 export function registerProgressTools(
-  server: any,
+  server: McpServer,
   progressManager: ProgressManager,
   memoryStore?: MemoryStore
 ) {
@@ -84,7 +86,7 @@ export function registerProgressTools(
       // Re-init guard
       const existing = progressManager.getProgress();
       if (existing && !force) {
-        const proj = "project" in existing ? (existing as any).project : "unknown";
+        const proj = "project" in existing ? (existing as ProjectProgress).project : "unknown";
         return {
           content: [
             {
@@ -116,7 +118,7 @@ export function registerProgressTools(
         0
       );
 
-      const warnings = "warnings" in progress ? (progress as any).warnings as string[] : undefined;
+      const warnings = "warnings" in progress ? (progress as ProjectProgress & { warnings?: string[] }).warnings : undefined;
 
       const result: Record<string, unknown> = {
         initialized: true,
@@ -157,7 +159,7 @@ export function registerProgressTools(
         const filtered = {
           ...progress,
           modules: progress.modules.filter(
-            (m) => (m as any).category === category
+            (m) => m.category === category
           ),
         };
         progress = filtered;

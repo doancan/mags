@@ -9,11 +9,12 @@ import {
 } from "node:fs";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerClaudeMdTools } from "./claude-md-tools.js";
 import { DocIndexer } from "../services/doc-indexer.js";
 import type { MagsConfig } from "../types/index.js";
 
-// Mock MCP server
+// Mock MCP server - cast to McpServer for type compatibility
 function createMockServer() {
   const tools: Map<string, { description: string; handler: () => Promise<unknown> }> = new Map();
 
@@ -32,7 +33,7 @@ function createMockServer() {
       if (!tool) throw new Error(`Tool ${name} not found`);
       return tool.handler();
     },
-  };
+  } as unknown as McpServer & { getTools: () => Map<string, { description: string; handler: () => Promise<unknown> }>; callTool: (name: string) => Promise<unknown> };
 }
 
 function makeTmpDir(): string {

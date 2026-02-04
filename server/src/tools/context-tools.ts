@@ -4,6 +4,7 @@
 // ============================================
 
 import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { ProgressManager } from "../services/progress-manager.js";
 import type { SessionManager } from "../services/session-manager.js";
@@ -13,7 +14,7 @@ import type { MagsConfig, ModuleDefinition } from "../types/index.js";
 import { DEFAULT_MODULES } from "../config/defaults.js";
 
 export function registerContextTools(
-  server: any,
+  server: McpServer,
   docIndexer: DocIndexer,
   progressManager: ProgressManager,
   sessionManager: SessionManager,

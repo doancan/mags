@@ -6,12 +6,13 @@
 import { z } from "zod";
 import { writeFileSync, existsSync, mkdirSync, copyFileSync, unlinkSync } from "node:fs";
 import { join, dirname } from "node:path";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { TemplateEngine } from "../services/template-engine.js";
 import { DEFAULT_QUERY_LIMIT } from "../config/defaults.js";
 
 export function registerDocTools(
-  server: any,
+  server: McpServer,
   docIndexer: DocIndexer,
   templateEngine: TemplateEngine,
   docsPath: string
