@@ -33,7 +33,8 @@ export class ProgressManager {
       this.progress = YAML.parse(raw) as ProjectProgress;
       this.recalculateCompletions();
       return this.progress;
-    } catch {
+    } catch (err) {
+      console.warn("[ProgressManager] Failed to load progress file:", err instanceof Error ? err.message : err);
       return null;
     }
   }
@@ -155,7 +156,8 @@ export class ProgressManager {
       if (mod.status === "completed") continue;
 
       // Check dependencies (case-insensitive)
-      const unmetDeps = mod.dependsOn.filter(
+      const moduleDeps = mod.dependsOn ?? [];
+      const unmetDeps = moduleDeps.filter(
         (dep) => !completedModules.has(dep.toLowerCase())
       );
       if (unmetDeps.length > 0) continue;
@@ -171,7 +173,7 @@ export class ProgressManager {
           module: mod.name,
           item: "(module)",
           priority: mod.priority,
-          dependsOn: mod.dependsOn,
+          dependsOn: moduleDeps,
         });
       } else {
         for (const item of pendingItems) {
@@ -179,7 +181,7 @@ export class ProgressManager {
             module: mod.name,
             item: item.name,
             priority: mod.priority,
-            dependsOn: mod.dependsOn,
+            dependsOn: moduleDeps,
           });
         }
       }
@@ -220,7 +222,7 @@ export class ProgressManager {
         .map((m) => m.name.toLowerCase())
     );
 
-    return mod.dependsOn.filter((dep) => !completedModules.has(dep.toLowerCase()));
+    return (mod.dependsOn ?? []).filter((dep) => !completedModules.has(dep.toLowerCase()));
   }
 
   /**
@@ -287,7 +289,8 @@ export class ProgressManager {
 
     // Orphan dependency check
     for (const mod of this.progress.modules) {
-      for (const dep of mod.dependsOn) {
+      const deps = mod.dependsOn ?? [];
+      for (const dep of deps) {
         if (!moduleNames.has(dep)) {
           warnings.push(`Module "${mod.name}" depends on "${dep}" which does not exist`);
         }
@@ -299,7 +302,7 @@ export class ProgressManager {
     const inStack = new Set<string>();
     const adjMap = new Map<string, string[]>();
     for (const mod of this.progress.modules) {
-      adjMap.set(mod.name, mod.dependsOn);
+      adjMap.set(mod.name, mod.dependsOn ?? []);
     }
 
     const dfs = (node: string): boolean => {

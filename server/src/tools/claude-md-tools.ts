@@ -3,15 +3,15 @@
 // MCP tool handlers for CLAUDE.md management
 // ============================================
 
-import { z } from "zod";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { MagsConfig } from "../types/index.js";
 import { getStackRules, getArchitectureGuidance } from "../services/claude-md-rules.js";
 
 export function registerClaudeMdTools(
-  server: any,
+  server: McpServer,
   docIndexer: DocIndexer,
   projectRoot: string,
   config?: MagsConfig
@@ -30,7 +30,7 @@ export function registerClaudeMdTools(
       let projectName = "Project";
       if (visionDoc) {
         const titleMatch = visionDoc.match(/^#\s+(.+)/m);
-        if (titleMatch) projectName = titleMatch[1].replace(/[—\-].*/, "").trim();
+        if (titleMatch) projectName = titleMatch[1].replace(/[—-].*/, "").trim();
       }
 
       sections.push(`# ${projectName} — Claude Code Rules\n`);
@@ -186,7 +186,6 @@ export function registerClaudeMdTools(
       }
 
       const claudeMd = readFileSync(claudeMdPath, "utf-8");
-      const docs = docIndexer.listDocs();
 
       // Check for tech stack reference
       if (
@@ -223,16 +222,20 @@ export function registerClaudeMdTools(
         suggestions.push("Add docs/ reference so Claude knows where to find documentation");
       }
 
-      // Check for coding rules (case-insensitive)
-      const claudeMdLower = claudeMd.toLowerCase();
-      const hasRules =
-        claudeMdLower.includes("rule") ||
-        claudeMdLower.includes("convention") ||
-        claudeMdLower.includes("standard");
-      if (!hasRules) {
+      // Check for coding rules section (look for section header, not just keyword)
+      // Match "## Rules", "### Coding Standards", "## Conventions", etc.
+      const hasRulesSection =
+        /^#{1,3}\s+(rules?|conventions?|standards?|guidelines?|coding\s+(rules?|standards?|guidelines?))/im.test(claudeMd);
+      // Also check for inline rules if no section header
+      const hasInlineRules =
+        claudeMd.toLowerCase().includes("- no `any`") ||
+        claudeMd.toLowerCase().includes("follow ") ||
+        claudeMd.toLowerCase().includes("must ") ||
+        claudeMd.toLowerCase().includes("always ");
+      if (!hasRulesSection && !hasInlineRules) {
         issues.push({
           type: "missing_section",
-          detail: "No coding rules or conventions found",
+          detail: "No coding rules section or conventions found",
           severity: "warning",
         });
       }

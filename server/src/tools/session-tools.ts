@@ -4,12 +4,13 @@
 // ============================================
 
 import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { SessionManager } from "../services/session-manager.js";
 import type { MemoryStore } from "../services/memory-store.js";
 import { DEFAULT_QUERY_LIMIT } from "../config/defaults.js";
 
 export function registerSessionTools(
-  server: any,
+  server: McpServer,
   sessionManager: SessionManager,
   memoryStore?: MemoryStore
 ) {

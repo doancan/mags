@@ -3,10 +3,11 @@
 // MCP tool handlers for stack detection
 // ============================================
 
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StackDetector } from "../services/stack-detector.js";
 import type { MagsConfig } from "../types/index.js";
 
-export function registerStackTools(server: any, projectRoot: string, config?: MagsConfig) {
+export function registerStackTools(server: McpServer, projectRoot: string, config?: MagsConfig) {
   const detector = new StackDetector();
 
   // --- mags_detect_stack ---
@@ -43,8 +44,9 @@ export function registerStackTools(server: any, projectRoot: string, config?: Ma
         };
       }
 
-      // Fallback: detect from filesystem
-      const result = detector.detect(projectRoot);
+      // Fallback: detect from filesystem with full fallback chain
+      // Uses: FileSystem → Config → CLAUDE.md → TechDoc
+      const result = detector.detectWithFallback(projectRoot, config);
 
       return {
         content: [

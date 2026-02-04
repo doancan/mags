@@ -76,8 +76,8 @@ export class StackDetector {
           versions[name] = StackDetector.cleanVersion(ver);
         }
       }
-    } catch {
-      // Invalid package.json
+    } catch (err) {
+      console.warn("[StackDetector] Failed to parse package.json:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -103,8 +103,8 @@ export class StackDetector {
           versions[name] = StackDetector.cleanVersion(match[1]);
         }
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[StackDetector] Failed to parse pyproject.toml:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -128,8 +128,8 @@ export class StackDetector {
           versions[name] = match[1];
         }
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[StackDetector] Failed to parse go.mod:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -235,8 +235,8 @@ export class StackDetector {
           result.databases.push(name);
         }
       }
-    } catch {
-      // Invalid package.json
+    } catch (err) {
+      console.warn("[StackDetector] Failed to detect Node stack:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -275,8 +275,8 @@ export class StackDetector {
             result.frameworks.push(name);
           }
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        console.warn("[StackDetector] Failed to parse pyproject.toml for frameworks:", err instanceof Error ? err.message : err);
       }
     }
 
@@ -295,8 +295,8 @@ export class StackDetector {
             result.frameworks.push(name);
           }
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        console.warn("[StackDetector] Failed to parse requirements.txt:", err instanceof Error ? err.message : err);
       }
     }
   }
@@ -322,8 +322,8 @@ export class StackDetector {
           result.frameworks.push(name);
         }
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[StackDetector] Failed to parse go.mod for frameworks:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -350,8 +350,8 @@ export class StackDetector {
           result.frameworks.push(name);
         }
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[StackDetector] Failed to parse Cargo.toml:", err instanceof Error ? err.message : err);
     }
   }
 
@@ -384,8 +384,8 @@ export class StackDetector {
             result.frameworks.push(name);
           }
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        console.warn(`[StackDetector] Failed to parse Java build file ${filePath}:`, err instanceof Error ? err.message : err);
       }
     }
   }
@@ -419,8 +419,8 @@ export class StackDetector {
         if (allDeps.kafkajs || allDeps.amqplib || allDeps.bullmq) {
           if (!result.apiStyle.includes("event-driven")) result.apiStyle.push("event-driven");
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        console.warn("[StackDetector] Failed to detect API style from package.json:", err instanceof Error ? err.message : err);
       }
     }
 
@@ -430,8 +430,8 @@ export class StackDetector {
       if (files.some((f: string) => f.endsWith(".proto"))) {
         if (!result.apiStyle.includes("grpc")) result.apiStyle.push("grpc");
       }
-    } catch {
-      // ignore
+    } catch (err) {
+      console.warn("[StackDetector] Failed to scan for proto files:", err instanceof Error ? err.message : err);
     }
 
     // Docker compose for microservices signal
@@ -473,8 +473,8 @@ export class StackDetector {
             result.databases.push(name);
           }
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        console.warn(`[StackDetector] Failed to parse docker-compose at ${composePath}:`, err instanceof Error ? err.message : err);
       }
     }
   }

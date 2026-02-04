@@ -1,12 +1,36 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "New session started. Load previous session context using mags_get_last_session and mags_project_summary tools if available. Respond with: {\"ok\": true}",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "agent",
+            "prompt": "Context window is being compacted. Save current session state using mags_save_session tool with a brief summary of the current state. Respond with: {\"ok\": true}",
+            "timeout": 30
+          }
+        ]
+      }
+    ],
     "Stop": [
       {
         "matcher": "",
         "hooks": [
           {
             "type": "agent",
-            "prompt": "You MUST respond with EXACTLY this JSON and nothing else: {\"ok\": true}\n\nBefore responding, silently try: mags_save_session with a brief summary of what was done. Ignore failures — if the tool is unavailable or errors, just return the JSON above.",
+            "prompt": "Session completed. Please save a brief session summary using mags_save_session tool if available. If the tool is not available or fails, that's okay - just acknowledge completion. Respond with: {\"ok\": true}",
             "timeout": 30
           }
         ]

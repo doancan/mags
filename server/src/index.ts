@@ -16,7 +16,6 @@ import { DocIndexer } from "./services/doc-indexer.js";
 import { MemoryStore } from "./services/memory-store.js";
 import { ProgressManager } from "./services/progress-manager.js";
 import { SessionManager } from "./services/session-manager.js";
-import { SearchEngine } from "./services/search-engine.js";
 import { TemplateEngine } from "./services/template-engine.js";
 import { LocalEmbeddingProvider } from "./services/embedding/local.js";
 import { OpenAIEmbeddingProvider } from "./services/embedding/openai.js";
@@ -34,6 +33,7 @@ import { registerScaffoldTools } from "./tools/scaffold-tools.js";
 import { registerSessionTools } from "./tools/session-tools.js";
 import { registerStackTools } from "./tools/stack-tools.js";
 import { registerModuleTools } from "./tools/module-tools.js";
+import { registerOrchestratorTools } from "./tools/orchestrator-tools.js";
 
 async function main() {
   // Resolve project root
@@ -57,8 +57,8 @@ async function main() {
   const shutdown = () => {
     try {
       memoryStore.close();
-    } catch {
-      // DB may already be closed
+    } catch (err) {
+      console.warn("[MAGS] Error during shutdown:", err instanceof Error ? err.message : err);
     }
     process.exit(0);
   };
@@ -119,6 +119,7 @@ async function main() {
   registerSessionTools(server, sessionManager, memoryStore);
   registerStackTools(server, projectRoot, config);
   registerModuleTools(server, projectRoot, config);
+  registerOrchestratorTools(server, config);
 
   // Start server
   const transport = new StdioServerTransport();

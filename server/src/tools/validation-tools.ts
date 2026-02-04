@@ -6,6 +6,7 @@
 import { z } from "zod";
 import { existsSync } from "node:fs";
 import { join, dirname } from "node:path";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { MemoryStore } from "../services/memory-store.js";
 import type { ProgressManager } from "../services/progress-manager.js";
@@ -14,7 +15,7 @@ import { ConsistencyChecker } from "../services/consistency-checker.js";
 import type { ValidationIssue, ValidationResult } from "../types/index.js";
 
 export function registerValidationTools(
-  server: any,
+  server: McpServer,
   docIndexer: DocIndexer,
   memoryStore: MemoryStore,
   progressManager: ProgressManager,
@@ -100,7 +101,6 @@ export function registerValidationTools(
       }
 
       // Cross-reference checks
-      const docNames = new Set(docs.map((d) => d.name));
       for (const doc of docs) {
         const content = docIndexer.getDocContent(doc.name);
         if (!content) continue;
@@ -110,13 +110,9 @@ export function registerValidationTools(
         let match: RegExpExecArray | null;
         while ((match = linkRegex.exec(content)) !== null) {
           const linkedPath = match[1];
-          const linkedFile = linkedPath.replace(".md", "").split("/").pop();
-
-          // First check if document is indexed
-          if (linkedFile && docNames.has(linkedFile)) continue;
-
-          // Fallback: check if file exists on filesystem
           const fullPath = join(dirname(doc.path), linkedPath);
+
+          // Always verify file exists on filesystem (index may be stale)
           if (!existsSync(fullPath)) {
             issues.push({
               type: "broken_link",

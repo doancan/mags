@@ -22,8 +22,8 @@ export function loadConfig(projectRoot: string): MagsConfig {
         const raw = readFileSync(configPath, "utf-8");
         const parsed = YAML.parse(raw) as Partial<MagsConfig>;
         return mergeConfig(parsed);
-      } catch {
-        // Fall through to defaults
+      } catch (err) {
+        console.warn(`[ConfigLoader] Failed to parse config at ${configPath}:`, err instanceof Error ? err.message : err);
       }
     }
   }

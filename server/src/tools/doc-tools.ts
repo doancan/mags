@@ -6,12 +6,13 @@
 import { z } from "zod";
 import { writeFileSync, existsSync, mkdirSync, copyFileSync, unlinkSync } from "node:fs";
 import { join, dirname } from "node:path";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { TemplateEngine } from "../services/template-engine.js";
 import { DEFAULT_QUERY_LIMIT } from "../config/defaults.js";
 
 export function registerDocTools(
-  server: any,
+  server: McpServer,
   docIndexer: DocIndexer,
   templateEngine: TemplateEngine,
   docsPath: string
@@ -177,14 +178,14 @@ export function registerDocTools(
       const bakPath = doc.path + ".bak";
       try {
         copyFileSync(doc.path, bakPath);
-      } catch {
-        // If backup fails, proceed anyway (file might not exist yet)
+      } catch (err) {
+        console.warn(`[DocTools] Failed to create backup at ${bakPath}:`, err instanceof Error ? err.message : err);
       }
 
       try {
         writeFileSync(doc.path, newContent, "utf-8");
         // Success — remove backup
-        try { unlinkSync(bakPath); } catch { /* ignore if .bak doesn't exist */ }
+        try { unlinkSync(bakPath); } catch (err) { console.warn(`[DocTools] Failed to remove backup ${bakPath}:`, err instanceof Error ? err.message : err); }
       } catch (err) {
         return {
           content: [{ type: "text" as const, text: `Failed to write "${doc.relativePath}": ${err instanceof Error ? err.message : String(err)}. Backup saved at ${bakPath}` }],

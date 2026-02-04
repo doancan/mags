@@ -345,7 +345,6 @@ export class ConsistencyChecker {
     if (!progress) return issues;
 
     const docs = this.docIndexer.listDocs();
-    const docNames = docs.map((d) => d.name.toLowerCase());
 
     for (const mod of progress.modules) {
       const moduleName = mod.name.toLowerCase();

@@ -8,7 +8,11 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       include: ["src/services/**", "src/config/**"],
-      exclude: ["src/tools/**", "src/index.ts"],
+      exclude: [
+        "src/tools/**",
+        "src/index.ts",
+        "src/services/embedding/provider.ts", // Type-only re-export, no runtime code
+      ],
     },
   },
 });

@@ -19,7 +19,8 @@ export class TemplatePackLoader {
       const manifest = YAML.parse(raw) as TemplatePackManifest;
       if (!manifest?.id || !manifest?.name) return null;
       return manifest;
-    } catch {
+    } catch (err) {
+      console.warn(`[TemplatePackLoader] Failed to load pack from ${packPath}:`, err instanceof Error ? err.message : err);
       return null;
     }
   }
@@ -92,8 +93,8 @@ export class TemplatePackLoader {
             variables: this.extractVariables(content),
             content,
           });
-        } catch {
-          // Skip unreadable files
+        } catch (err) {
+          console.warn(`[TemplatePackLoader] Failed to read template ${file}:`, err instanceof Error ? err.message : err);
         }
       }
 
@@ -117,8 +118,8 @@ export class TemplatePackLoader {
             scanDir(join(dir, entry.name));
           }
         }
-      } catch {
-        // ignore
+      } catch (err) {
+        console.warn(`[TemplatePackLoader] Failed to scan directory ${dir}:`, err instanceof Error ? err.message : err);
       }
     };
     scanDir(packPath);

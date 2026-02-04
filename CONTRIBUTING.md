@@ -11,7 +11,9 @@ MAGS follows strict SSOT principles to avoid drift between components:
 
 ## Service Architecture
 
-The MCP server (`server/src/`) contains 12 core services:
+The MCP server (`server/src/`) contains 15+ core services organized in layers:
+
+### Core Services
 
 | Service | File | Responsibility |
 |---------|------|----------------|
@@ -27,8 +29,30 @@ The MCP server (`server/src/`) contains 12 core services:
 | Module Discoverer | `module-discoverer.ts` | Discovers project modules by scanning directory structure |
 | Architecture Adapter | `architecture-adapter.ts` | Provides architecture-specific templates and guidance rules |
 | Claude MD Rules | `claude-md-rules.ts` | Generates stack-aware rules for CLAUDE.md |
+| Consistency Checker | `consistency-checker.ts` | Validates code-documentation drift and deep consistency |
 
-Tools are registered in `server/src/tools/` (24 MCP tools total). Each tool file maps to one or more services.
+### Embedding Providers
+
+| Provider | File | Responsibility |
+|----------|------|----------------|
+| Local Embedding | `embedding/local.ts` | TF-IDF based offline semantic search |
+| OpenAI Embedding | `embedding/openai.ts` | OpenAI API-based semantic embeddings |
+
+### Orchestrator Subsystem
+
+The orchestrator (`services/orchestrator/`) provides advanced project management:
+
+| Service | File | Responsibility |
+|---------|------|----------------|
+| Project Orchestrator | `index.ts` | Coordinates PRD parsing, skill generation, and execution |
+| PRD Parser | `prd-parser.ts` | Extracts features, modules, and requirements from PRD |
+| Skill Generator | `skill-generator.ts` | Auto-generates skills from PRD requirements |
+| Agent Generator | `agent-generator.ts` | Generates agent definitions from PRD |
+| Plan Executor | `plan-executor.ts` | Executes implementation plans step-by-step |
+| Code Analyzer | `code-analyzer.ts` | Analyzes codebase for tech debt, endpoints, schema |
+| TDD Engine | `tdd-engine.ts` | Runs test suites and verifies coverage |
+
+Tools are registered in `server/src/tools/` (36 MCP tools total). Each tool file maps to one or more services.
 
 ## Adding a New MCP Tool
 

@@ -1,6 +1,6 @@
 # MCP Tools Reference
 
-MAGS provides 24 MCP tools. These tools are called automatically by Claude Code or can be triggered directly.
+MAGS provides 36 MCP tools. These tools are called automatically by Claude Code or can be triggered directly.
 
 ## Document Tools
 
@@ -68,6 +68,33 @@ Creates a new document from a template.
 
 ---
 
+### mags_reindex
+
+Refreshes the document index. Use after adding, removing, or modifying documents outside of MAGS tools.
+
+**No parameters.**
+
+**Returns:**
+```json
+{
+  "success": true,
+  "changes": {
+    "added": ["new-doc"],
+    "removed": ["deleted-doc"],
+    "updated": ["modified-doc"]
+  },
+  "summary": {
+    "totalDocs": 15,
+    "addedCount": 1,
+    "removedCount": 1,
+    "updatedCount": 1,
+    "durationMs": 42
+  }
+}
+```
+
+---
+
 ## Memory Tools
 
 ### mags_remember
@@ -111,6 +138,31 @@ Deletes a memory entry by key.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `key` | string | Yes | Key of the entry to delete |
+
+---
+
+### mags_promote_memory
+
+Suggests promoting a frequently accessed or high-value memory to CLAUDE.md or project docs for permanent reference.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `key` | string | Yes | Memory key to evaluate for promotion |
+| `target` | enum | Yes | Promotion target: `claude_md` or `doc` |
+
+**Returns:**
+```json
+{
+  "key": "auth_strategy",
+  "value": "Use JWT with refresh tokens",
+  "category": "decisions",
+  "ageInDays": 30,
+  "target": "claude_md",
+  "recommendation": "Add to CLAUDE.md under a relevant section",
+  "suggestedContent": "- **auth_strategy**: Use JWT with refresh tokens",
+  "action": "Review the suggestion above and manually add it to the target if appropriate."
+}
+```
 
 ---
 
@@ -402,3 +454,271 @@ Lists session history.
 | Parameter | Type | Required | Description |
 |-----------|------|----------|-------------|
 | `limit` | number | No | Max results (default 10) |
+
+---
+
+## Orchestration Tools (Advanced)
+
+These tools provide advanced project orchestration capabilities for PRD-driven development.
+
+### mags_parse_prd
+
+Parses a PRD document and extracts a plan with modules, features, and dependencies.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prdPath` | string | Yes | Path to PRD markdown file |
+| `validateOnly` | boolean | No | Only validate, don't extract plan |
+
+**Returns (parse):**
+```json
+{
+  "success": true,
+  "project": "my-project",
+  "totalModules": 5,
+  "totalFeatures": 23,
+  "phases": 3,
+  "modules": [
+    { "id": "auth", "name": "auth", "features": 5, "priority": 1, "phase": 1, "dependencies": [] }
+  ],
+  "dependencyGraph": { "auth": [], "api": ["auth"] }
+}
+```
+
+**Returns (validateOnly):**
+```json
+{
+  "valid": true,
+  "errors": [],
+  "warnings": ["Missing optional field: team"]
+}
+```
+
+---
+
+### mags_analyze_codebase
+
+Deep analysis of existing codebase. Discovers modules, endpoints, tables, patterns, and tech debt.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `projectRoot` | string | No | Project root directory (default: current) |
+| `generateReversePrd` | boolean | No | Also generate reverse PRD from code |
+
+**Returns:**
+```json
+{
+  "success": true,
+  "projectName": "my-app",
+  "stack": { "languages": ["typescript"], "frameworks": ["nestjs"] },
+  "modules": [
+    { "name": "auth", "confidence": 95, "endpoints": 8, "files": 12 }
+  ],
+  "totalEndpoints": 45,
+  "totalTables": 12,
+  "techDebtItems": 8,
+  "testCoverage": { "lines": 78, "branches": 65 },
+  "patterns": ["repository", "service-layer", "dto"]
+}
+```
+
+---
+
+### mags_generate_skill
+
+Generates a development skill for a module based on PRD requirements.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `moduleName` | string | Yes | Module name to generate skill for |
+| `prdPath` | string | Yes | Path to PRD file |
+
+**Returns:**
+```json
+{
+  "success": true,
+  "skill": {
+    "name": "auth-development",
+    "path": "skills/auth-development/SKILL.md",
+    "features": ["login", "logout", "register"],
+    "contentPreview": "---\nname: auth-development\n..."
+  },
+  "fullContent": "..."
+}
+```
+
+---
+
+### mags_generate_agent
+
+Generates a builder agent for a module based on PRD requirements.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `moduleName` | string | Yes | Module name to generate agent for |
+| `prdPath` | string | Yes | Path to PRD file |
+
+**Returns:**
+```json
+{
+  "success": true,
+  "agent": {
+    "name": "auth-builder",
+    "path": "agents/auth-builder.md",
+    "type": "module-builder",
+    "contentPreview": "---\nname: auth-builder\n..."
+  },
+  "fullContent": "..."
+}
+```
+
+---
+
+### mags_init_execution
+
+Initializes plan execution from a PRD. Creates execution state and step sequence.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `prdPath` | string | Yes | Path to PRD file |
+| `moduleType` | enum | No | Type of modules: `backend` or `frontend` |
+
+**Returns:**
+```json
+{
+  "success": true,
+  "initialized": true,
+  "totalSteps": 45,
+  "modules": ["auth", "api", "database"],
+  "firstStep": {
+    "step": 1,
+    "title": "Create auth module structure",
+    "description": "..."
+  }
+}
+```
+
+---
+
+### mags_execute_step
+
+Executes an action on the current step.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `action` | string | Yes | Action shortcut: `a` (approve), `s` (skip), `r` (retry), `q` (quit), `n` (next), `p` (previous) |
+
+**Returns:**
+```json
+{
+  "success": true,
+  "message": "Step approved",
+  "nextStep": { "step": 2, "title": "Implement login endpoint" },
+  "status": { "progress": 5, "currentStep": 2, "totalSteps": 45 }
+}
+```
+
+---
+
+### mags_get_current_step
+
+Gets the current execution step details and available actions.
+
+**No parameters.**
+
+**Returns:**
+```json
+{
+  "hasStep": true,
+  "step": 5,
+  "totalSteps": 45,
+  "title": "Implement JWT middleware",
+  "description": "Create authentication middleware using JWT",
+  "file": "src/middleware/auth.ts",
+  "actions": ["approve", "skip", "retry", "quit"],
+  "shortcuts": { "a": "approve", "s": "skip", "r": "retry", "q": "quit", "d": "details" },
+  "progress": { "status": "in_progress", "progress": 11 }
+}
+```
+
+---
+
+### mags_get_execution_status
+
+Gets current execution status and progress.
+
+**No parameters.**
+
+**Returns:**
+```json
+{
+  "hasState": true,
+  "status": "in_progress",
+  "progress": "25%",
+  "currentModule": "auth",
+  "currentStep": 12,
+  "totalSteps": 45,
+  "completedModules": ["database"],
+  "completedSteps": 11,
+  "pendingSteps": 34,
+  "errors": 0,
+  "blockers": 0
+}
+```
+
+---
+
+### mags_resume_execution
+
+Resumes execution from saved state.
+
+**No parameters.**
+
+**Returns:**
+```json
+{
+  "success": true,
+  "resumed": true,
+  "status": "in_progress",
+  "currentStep": 12,
+  "currentModule": "auth",
+  "nextPrompt": "Continue with: Implement JWT middleware"
+}
+```
+
+---
+
+### mags_verify_module
+
+Runs TDD verification for a module. Checks tests, coverage, and acceptance criteria.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `moduleName` | string | Yes | Module name to verify |
+| `prdPath` | string | No | Path to PRD file for acceptance criteria |
+
+**Returns (quick verify):**
+```json
+{
+  "success": true,
+  "module": "auth",
+  "passed": 25,
+  "total": 28,
+  "failed": 3,
+  "errors": ["Test timeout in login.test.ts"]
+}
+```
+
+**Returns (full verify with PRD):**
+```json
+{
+  "success": true,
+  "module": "auth",
+  "status": "partial",
+  "meetsRequirements": false,
+  "reasons": ["Coverage below 80%", "2 acceptance criteria not met"],
+  "coverage": 72,
+  "tests": { "passed": 25, "failed": 3, "total": 28 },
+  "acceptance": { "met": 8, "total": 10 },
+  "formatted": "## Verification Report\n..."
+}

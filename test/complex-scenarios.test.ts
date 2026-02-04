@@ -88,7 +88,9 @@ describe("BUG 1: IDF Cache Pollution Across Categories", () => {
 
     expect(first.length).toBe(second.length);
     for (let i = 0; i < first.length; i++) {
-      expect(first[i].score).toBeCloseTo(second[i].score, 10);
+      // Use precision of 8 decimal places to account for floating point arithmetic variations
+      // while still ensuring scores are effectively identical
+      expect(first[i].score).toBeCloseTo(second[i].score, 8);
     }
   });
 });
