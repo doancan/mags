@@ -191,7 +191,26 @@ export class DocIndexer {
     }
 
     // Default: markdown/mdx with gray-matter
-    const { data, content } = matter(raw);
+    let data: Record<string, unknown> = {};
+    let content: string = raw;
+
+    try {
+      const parsed = matter(raw);
+      data = parsed.data;
+      content = parsed.content;
+    } catch (err) {
+      // Log YAML parse error but continue with raw content
+      console.warn(
+        `[DocIndexer] Failed to parse YAML frontmatter in ${filePath}:`,
+        err instanceof Error ? err.message : err
+      );
+      // Strip potential broken frontmatter and use raw content
+      const fmMatch = raw.match(/^---\r?\n[\s\S]*?\r?\n---\r?\n?/);
+      if (fmMatch) {
+        content = raw.slice(fmMatch[0].length);
+      }
+    }
+
     const metadata = data as DocMetadata;
 
     const sections = this.extractSections(content);
