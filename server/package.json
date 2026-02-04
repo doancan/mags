@@ -12,6 +12,7 @@
   },
   "license": "MIT",
   "scripts": {
+    "postinstall": "npm rebuild better-sqlite3 2>/dev/null || true",
     "build": "tsc",
     "bundle": "node bundle.mjs",
     "dev": "tsx watch src/index.ts",
