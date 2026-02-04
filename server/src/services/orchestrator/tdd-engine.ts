@@ -237,7 +237,7 @@ export class TddEngine {
     return files;
   }
 
-  private async getCoverage(moduleName: string): Promise<number> {
+  private async getCoverage(_moduleName: string): Promise<number> {
     try {
       // Try to get coverage from existing report
       const coveragePath = path.join(this.projectRoot, "coverage", "coverage-summary.json");

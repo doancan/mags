@@ -10,9 +10,7 @@ import {
   createCodeAnalyzer,
   createSkillGenerator,
   createAgentGenerator,
-  createPlanExecutor,
   createTddEngine,
-  parseShortcut,
   formatVerificationResult,
 } from "../services/orchestrator/index.js";
 import type { MagsConfig } from "../types/index.js";
@@ -128,7 +126,7 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
       const analyzer = createCodeAnalyzer(projectRoot);
       const analysis = await analyzer.analyze();
 
-      const result: any = {
+      const result: Record<string, unknown> = {
         success: true,
         projectName: analysis.projectName,
         stack: analysis.stack,
@@ -304,7 +302,7 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
       prdPath: z.string().describe("Path to PRD file"),
       moduleType: z.enum(["backend", "frontend"]).optional().describe("Type of modules (default: backend)"),
     },
-    async ({ prdPath, moduleType }: { prdPath: string; moduleType?: "backend" | "frontend" }) => {
+    async ({ prdPath, moduleType: _moduleType }: { prdPath: string; moduleType?: "backend" | "frontend" }) => {
       const orchestrator = getOrchestrator({ magsDir });
       const result = await orchestrator.initializeFromPrd(prdPath);
 

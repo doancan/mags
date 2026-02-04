@@ -3,12 +3,12 @@
 // MCP tool handlers for module discovery
 // ============================================
 
-import { z } from "zod";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { ModuleDiscoverer } from "../services/module-discoverer.js";
 import type { MagsConfig } from "../types/index.js";
 
 export function registerModuleTools(
-  server: any,
+  server: McpServer,
   projectRoot: string,
   config: MagsConfig
 ) {

@@ -16,7 +16,6 @@ import { DocIndexer } from "./services/doc-indexer.js";
 import { MemoryStore } from "./services/memory-store.js";
 import { ProgressManager } from "./services/progress-manager.js";
 import { SessionManager } from "./services/session-manager.js";
-import { SearchEngine } from "./services/search-engine.js";
 import { TemplateEngine } from "./services/template-engine.js";
 import { LocalEmbeddingProvider } from "./services/embedding/local.js";
 import { OpenAIEmbeddingProvider } from "./services/embedding/openai.js";

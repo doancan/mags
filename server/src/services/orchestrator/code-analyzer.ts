@@ -285,7 +285,7 @@ export class CodeAnalyzer {
     return endpoints;
   }
 
-  private async findTablesInFiles(files: string[]): Promise<DiscoveredTable[]> {
+  private async findTablesInFiles(_files: string[]): Promise<DiscoveredTable[]> {
     // Tables are usually in schema files, not module files
     return [];
   }
@@ -359,7 +359,7 @@ export class CodeAnalyzer {
   private calculateConfidence(
     files: string[],
     endpoints: DiscoveredEndpoint[],
-    tables: DiscoveredTable[]
+    _tables: DiscoveredTable[]
   ): number {
     let score = 50; // Base score
 

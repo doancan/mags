@@ -101,7 +101,6 @@ export function registerValidationTools(
       }
 
       // Cross-reference checks
-      const docNames = new Set(docs.map((d) => d.name));
       for (const doc of docs) {
         const content = docIndexer.getDocContent(doc.name);
         if (!content) continue;

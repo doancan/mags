@@ -5,7 +5,6 @@
 
 import type { DocIndexer } from "./doc-indexer.js";
 import type { MemoryStore } from "./memory-store.js";
-import type { DocSearchResult, ScoredMemory } from "../types/index.js";
 
 export interface UnifiedSearchResult {
   type: "doc" | "memory";

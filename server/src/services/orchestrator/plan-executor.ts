@@ -14,8 +14,6 @@ import type {
   StepType,
   StepPrompt,
   UserAction,
-  ExecutionStatus,
-  PhaseNumber,
 } from "../../types/orchestrator.js";
 
 // --- Step Templates ---

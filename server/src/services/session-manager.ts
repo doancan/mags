@@ -9,7 +9,6 @@ import {
   existsSync,
   mkdirSync,
   readdirSync,
-  copyFileSync,
 } from "node:fs";
 import { join } from "node:path";
 import YAML from "yaml";

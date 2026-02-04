@@ -3,7 +3,6 @@
 // ============================================
 
 import * as fs from "fs";
-import * as path from "path";
 import matter from "gray-matter";
 import type {
   ExtractedPlan,
@@ -129,9 +128,9 @@ export class PrdParser {
 
   // --- Private Methods ---
 
-  private extractProjectName(lines: string[], frontmatter: any): string {
+  private extractProjectName(lines: string[], frontmatter: Record<string, unknown>): string {
     // Try frontmatter first
-    if (frontmatter?.title) {
+    if (frontmatter?.title && typeof frontmatter.title === "string") {
       return frontmatter.title.replace(/[—\-:].+$/, "").trim();
     }
 

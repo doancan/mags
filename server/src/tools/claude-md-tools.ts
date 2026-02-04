@@ -3,15 +3,15 @@
 // MCP tool handlers for CLAUDE.md management
 // ============================================
 
-import { z } from "zod";
 import { readFileSync, existsSync } from "node:fs";
 import { join } from "node:path";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { MagsConfig } from "../types/index.js";
 import { getStackRules, getArchitectureGuidance } from "../services/claude-md-rules.js";
 
 export function registerClaudeMdTools(
-  server: any,
+  server: McpServer,
   docIndexer: DocIndexer,
   projectRoot: string,
   config?: MagsConfig
@@ -186,7 +186,6 @@ export function registerClaudeMdTools(
       }
 
       const claudeMd = readFileSync(claudeMdPath, "utf-8");
-      const docs = docIndexer.listDocs();
 
       // Check for tech stack reference
       if (
