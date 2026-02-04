@@ -13,8 +13,8 @@ import { SkillGenerator, createSkillGenerator } from "./skill-generator.js";
 import { AgentGenerator, createAgentGenerator } from "./agent-generator.js";
 import { PlanExecutor, createPlanExecutor, parseShortcut } from "./plan-executor.js";
 import { CodeAnalyzer, createCodeAnalyzer } from "./code-analyzer.js";
-import { TddEngine, createTddEngine } from "./tdd-engine.js";
-import { createOrchestrator, Orchestrator } from "./index.js";
+import { TddEngine, createTddEngine, formatVerificationResult } from "./tdd-engine.js";
+import { createOrchestrator, Orchestrator, quickStartGreenfield, quickStartBrownfield } from "./index.js";
 import type { ExtractedPlan, ExtractedModule } from "../../types/orchestrator.js";
 
 // --- Test Helpers ---
@@ -441,6 +441,116 @@ No modules defined.
       expect(agent.content).toContain("M1-001");
       expect(agent.content).toContain("Login");
       expect(agent.content).toContain("RBAC");
+    });
+
+    it("should enhance core agent content with NestJS stack", async () => {
+      const generator = createAgentGenerator();
+      const stack = {
+        languages: ["typescript"],
+        frameworks: ["nestjs"],
+        databases: ["postgresql"],
+        apiStyle: ["rest"] as ("rest" | "graphql" | "grpc" | "event-driven")[],
+        packageManager: "npm" as const,
+        versions: {},
+      };
+
+      const agents = await generator.generateAll(plan, stack);
+
+      // Core agents should be enhanced with NestJS
+      const backendBuilder = agents.find((a) => a.name === "backend-builder");
+      expect(backendBuilder).toBeDefined();
+      expect(backendBuilder!.content).toContain("NestJS Notes");
+    });
+
+    it("should add Prisma comment when Prisma is in stack", async () => {
+      const generator = createAgentGenerator();
+      const stack = {
+        languages: ["typescript"],
+        frameworks: ["nestjs", "prisma"],
+        databases: ["postgresql"],
+        apiStyle: ["rest"] as ("rest" | "graphql" | "grpc" | "event-driven")[],
+        packageManager: "npm" as const,
+        versions: {},
+      };
+
+      const agent = await generator.generateModuleAgent(
+        plan.modules.find((m) => m.name === "auth")!,
+        plan,
+        stack
+      );
+
+      // Module agent should include Prisma comment in tools section
+      expect(agent.content).toContain("Prisma");
+    });
+
+    it("should generate all agents with stack parameter", async () => {
+      const generator = createAgentGenerator();
+      const stack = {
+        languages: ["typescript"],
+        frameworks: ["nestjs", "prisma"],
+        databases: ["postgresql"],
+        apiStyle: ["rest"] as ("rest" | "graphql" | "grpc" | "event-driven")[],
+        packageManager: "npm" as const,
+        versions: {},
+      };
+
+      const agents = await generator.generateAll(plan, stack);
+
+      expect(agents.length).toBeGreaterThan(0);
+
+      // Module agents should exist
+      const authAgent = agents.find((a) => a.name === "auth-builder");
+      expect(authAgent).toBeDefined();
+      expect(authAgent!.type).toBe("module");
+
+      // Core agents should have NestJS enhancement
+      const coreAgent = agents.find((a) => a.name === "backend-builder");
+      expect(coreAgent).toBeDefined();
+      expect(coreAgent!.content).toContain("NestJS");
+    });
+
+    it("should include acceptance criteria in agent content", async () => {
+      const generator = createAgentGenerator();
+      const module = plan.modules.find((m) => m.name === "auth")!;
+
+      const agent = await generator.generateModuleAgent(module, plan);
+
+      // Should contain acceptance criteria section
+      expect(agent.content).toContain("Acceptance Criteria");
+      // Should contain some acceptance criterion
+      expect(agent.content).toContain("[ ]");
+    });
+
+    it("should include dependency information in agent content", async () => {
+      const generator = createAgentGenerator();
+      const module = plan.modules.find((m) => m.name === "crm")!;
+
+      const agent = await generator.generateModuleAgent(module, plan);
+
+      // CRM depends on auth, should mention it
+      expect(agent.content).toContain("auth");
+    });
+
+    it("should handle module without acceptance criteria", async () => {
+      const minimalPrd = `# Minimal Test
+
+### M1: simple
+> Simple module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Feature | A feature | P0 | 1 |
+`;
+      const minimalPrdPath = writeFile(tempDir, "minimal-prd.md", minimalPrd);
+      const parser = createPrdParser();
+      const minimalPlan = (await parser.parse(minimalPrdPath))!;
+
+      const generator = createAgentGenerator();
+      const agent = await generator.generateModuleAgent(minimalPlan.modules[0], minimalPlan);
+
+      expect(agent.content).toBeDefined();
+      expect(agent.name).toBe("simple-builder");
     });
   });
 
@@ -1076,6 +1186,113 @@ No modules here.
     });
   });
 
+  describe("formatVerificationResult()", () => {
+    it("should format passed report correctly", () => {
+      const report = {
+        module: "auth",
+        timestamp: new Date().toISOString(),
+        status: "passed" as const,
+        tests: {
+          unit: { total: 10, passed: 10, failed: 0, skipped: 0, coverage: 90 },
+          integration: { total: 5, passed: 5, failed: 0, skipped: 0 },
+          e2e: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          isolation: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          permission: { total: 0, passed: 0, failed: 0, skipped: 0 },
+        },
+        results: [],
+        acceptance: [
+          { criteria: "User can login", status: "verified" as const, testFile: "auth.test.ts", testName: "login test" },
+        ],
+        coverageTotal: 90,
+      };
+
+      const output = formatVerificationResult(report);
+
+      expect(output).toContain("TEST RESULTS: auth");
+      expect(output).toContain("Unit Tests:");
+      expect(output).toContain("10/10");
+      expect(output).toContain("Integration:");
+      expect(output).toContain("5/5");
+      expect(output).toContain("Coverage:");
+      expect(output).toContain("90%");
+      expect(output).toContain("Acceptance Criteria: 1/1");
+    });
+
+    it("should format failed report correctly", () => {
+      const report = {
+        module: "payments",
+        timestamp: new Date().toISOString(),
+        status: "failed" as const,
+        tests: {
+          unit: { total: 10, passed: 7, failed: 3, skipped: 0, coverage: 60 },
+          integration: { total: 3, passed: 2, failed: 1, skipped: 0 },
+          e2e: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          isolation: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          permission: { total: 0, passed: 0, failed: 0, skipped: 0 },
+        },
+        results: [],
+        acceptance: [
+          { criteria: "Process payment", status: "failed" as const, testFile: "pay.test.ts", testName: "pay test" },
+          { criteria: "Refund payment", status: "unverified" as const },
+        ],
+        coverageTotal: 60,
+      };
+
+      const output = formatVerificationResult(report);
+
+      expect(output).toContain("TEST RESULTS: payments");
+      expect(output).toContain("7/10");
+      expect(output).toContain("60%");
+      expect(output).toContain("Acceptance Criteria: 0/2");
+    });
+
+    it("should include tenant isolation stats when present", () => {
+      const report = {
+        module: "multi-tenant",
+        timestamp: new Date().toISOString(),
+        status: "passed" as const,
+        tests: {
+          unit: { total: 5, passed: 5, failed: 0, skipped: 0, coverage: 85 },
+          integration: { total: 3, passed: 3, failed: 0, skipped: 0 },
+          e2e: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          isolation: { total: 4, passed: 4, failed: 0, skipped: 0 },
+          permission: { total: 0, passed: 0, failed: 0, skipped: 0 },
+        },
+        results: [],
+        acceptance: [],
+        coverageTotal: 85,
+      };
+
+      const output = formatVerificationResult(report);
+
+      expect(output).toContain("Tenant Isolation:");
+      expect(output).toContain("4/4");
+    });
+
+    it("should show warning for low coverage", () => {
+      const report = {
+        module: "low-cov",
+        timestamp: new Date().toISOString(),
+        status: "passed" as const,
+        tests: {
+          unit: { total: 5, passed: 5, failed: 0, skipped: 0, coverage: 50 },
+          integration: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          e2e: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          isolation: { total: 0, passed: 0, failed: 0, skipped: 0 },
+          permission: { total: 0, passed: 0, failed: 0, skipped: 0 },
+        },
+        results: [],
+        acceptance: [],
+        coverageTotal: 50,
+      };
+
+      const output = formatVerificationResult(report);
+
+      expect(output).toContain("50%");
+      expect(output).toContain("⚠️");
+    });
+  });
+
   describe("Code Analyzer — Edge Cases", () => {
     it("should handle empty project gracefully", async () => {
       // Just create package.json, nothing else
@@ -1245,6 +1462,372 @@ No modules here.
 
       // Check dependency order
       expect(plan!.dependencyGraph[9].dependsOn).toContain("m9");
+    });
+  });
+
+  describe("Orchestrator Class — Additional Coverage", () => {
+    let tempDir: string;
+    let orchestrator: Orchestrator;
+
+    beforeEach(() => {
+      tempDir = createTempDir();
+      orchestrator = createOrchestrator({
+        projectRoot: tempDir,
+        magsDir: path.join(tempDir, "docs/.mags"),
+      });
+    });
+
+    afterEach(() => {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    describe("generateArtifacts()", () => {
+      it("throws error when no plan is loaded", async () => {
+        await expect(orchestrator.generateArtifacts()).rejects.toThrow(
+          "No plan loaded. Call initializeFromPrd first."
+        );
+      });
+
+      it("generates skills and agents when plan is loaded", async () => {
+        const prd = `# Test Project
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        await orchestrator.initializeFromPrd(prdPath);
+        const result = await orchestrator.generateArtifacts();
+
+        expect(result.skills).toBeDefined();
+        expect(result.agents).toBeDefined();
+      });
+    });
+
+    describe("verifyCurrentModule()", () => {
+      it("returns null when no state exists", async () => {
+        const result = await orchestrator.verifyCurrentModule();
+        expect(result).toBeNull();
+      });
+
+      it("returns null when no plan exists", async () => {
+        const result = await orchestrator.verifyCurrentModule();
+        expect(result).toBeNull();
+      });
+    });
+
+    describe("getStatus()", () => {
+      it("returns null when no state exists", () => {
+        const status = orchestrator.getStatus();
+        expect(status).toBeNull();
+      });
+
+      it("returns status after initialization", async () => {
+        const prd = `# Test Project
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        await orchestrator.initializeFromPrd(prdPath);
+        const status = orchestrator.getStatus();
+
+        expect(status).not.toBeNull();
+        expect(["idle", "pending", "in_progress"]).toContain(status!.status);
+        expect(status!.currentStep).toBeGreaterThanOrEqual(1);
+      });
+    });
+
+    describe("isComplete()", () => {
+      it("returns false when no execution started", () => {
+        expect(orchestrator.isComplete()).toBe(false);
+      });
+    });
+
+    describe("Getters", () => {
+      it("getPlan() returns null initially", () => {
+        expect(orchestrator.getPlan()).toBeNull();
+      });
+
+      it("getStack() returns null initially", () => {
+        expect(orchestrator.getStack()).toBeNull();
+      });
+
+      it("getExecutionState() returns null initially", () => {
+        expect(orchestrator.getExecutionState()).toBeNull();
+      });
+
+      it("getPlan() returns plan after initialization", async () => {
+        const prd = `# Test Project
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        await orchestrator.initializeFromPrd(prdPath);
+
+        expect(orchestrator.getPlan()).not.toBeNull();
+        expect(orchestrator.getPlan()!.project.name).toBe("Test Project");
+      });
+
+      it("getStack() returns stack when provided", async () => {
+        const prd = `# Test Project
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        const stack = {
+          languages: ["typescript"],
+          frameworks: ["nestjs"],
+          databases: ["postgresql"],
+          apiStyle: ["rest"] as ("rest" | "graphql" | "grpc" | "event-driven")[],
+          packageManager: "pnpm" as const,
+        versions: {},
+        };
+
+        await orchestrator.initializeFromPrd(prdPath, stack);
+
+        expect(orchestrator.getStack()).not.toBeNull();
+        expect(orchestrator.getStack()!.languages).toContain("typescript");
+      });
+    });
+
+    describe("executeAction()", () => {
+      it("handles unknown action shortcut", async () => {
+        const prd = `# Test Project
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        await orchestrator.initializeFromPrd(prdPath);
+        const result = await orchestrator.executeAction("xyz");
+
+        expect(result.success).toBe(false);
+        expect(result.message).toContain("Unknown action");
+      });
+
+      it("accepts shortcut string and executes", async () => {
+        const prd = `# Test Project
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        await orchestrator.initializeFromPrd(prdPath);
+        const result = await orchestrator.executeAction("s"); // skip
+
+        expect(result.success).toBe(true);
+      });
+    });
+
+    describe("resume()", () => {
+      it("returns success false when no saved state", async () => {
+        const result = await orchestrator.resume();
+        expect(result.success).toBe(false);
+      });
+    });
+
+    describe("analyzeCodebase()", () => {
+      it("analyzes empty project", async () => {
+        const result = await orchestrator.analyzeCodebase();
+
+        expect(result).toBeDefined();
+        expect(result.modules).toBeDefined();
+      });
+    });
+
+    describe("generateReversePrd()", () => {
+      it("generates reverse PRD from empty project", async () => {
+        const result = await orchestrator.generateReversePrd();
+
+        expect(result).toBeDefined();
+        expect(result.source).toBe("analysis");
+        expect(result.project).toBeDefined();
+      });
+    });
+
+    describe("getCurrentStep()", () => {
+      it("returns null when no execution started", () => {
+        expect(orchestrator.getCurrentStep()).toBeNull();
+      });
+
+      it("returns step prompt after initialization", async () => {
+        const prd = `# Test Project
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        await orchestrator.initializeFromPrd(prdPath);
+        const step = orchestrator.getCurrentStep();
+
+        expect(step).not.toBeNull();
+        expect(step!.step).toBe(1);
+      });
+    });
+
+    describe("verifyCurrentModule() — module not found", () => {
+      it("returns null when module is not in plan", async () => {
+        const prd = `# Test Project
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        await orchestrator.initializeFromPrd(prdPath);
+
+        // Manually change currentModule to a non-existent one
+        const state = orchestrator.getExecutionState();
+        if (state) {
+          state.currentModule = "nonexistent";
+        }
+
+        const result = await orchestrator.verifyCurrentModule();
+        expect(result).toBeNull();
+      });
+    });
+  });
+
+  describe("Quick Start Helpers", () => {
+    let tempDir: string;
+
+    beforeEach(() => {
+      tempDir = createTempDir();
+    });
+
+    afterEach(() => {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    });
+
+    describe("quickStartGreenfield()", () => {
+      it("creates orchestrator and initializes from PRD", async () => {
+        const prd = `# Quick Start Test
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        const orch = await quickStartGreenfield(prdPath);
+
+        expect(orch).toBeDefined();
+        expect(orch.getPlan()).not.toBeNull();
+        expect(orch.getPlan()!.project.name).toBe("Quick Start Test");
+      });
+
+      it("accepts optional stack parameter", async () => {
+        const prd = `# Quick Start Test
+
+### M1: auth
+> Authentication module
+
+#### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | User login | P0 | 1 |
+`;
+        const prdPath = path.join(tempDir, "prd.md");
+        fs.writeFileSync(prdPath, prd);
+
+        const stack = {
+          languages: ["typescript"],
+          frameworks: ["express"],
+          databases: ["mongodb"],
+          apiStyle: ["rest"] as ("rest" | "graphql" | "grpc" | "event-driven")[],
+          packageManager: "npm" as const,
+        versions: {},
+        };
+
+        const orch = await quickStartGreenfield(prdPath, stack);
+
+        expect(orch.getStack()).not.toBeNull();
+        expect(orch.getStack()!.frameworks).toContain("express");
+      });
+    });
+
+    describe("quickStartBrownfield()", () => {
+      it("creates orchestrator, analyzes codebase, and generates reverse PRD", async () => {
+        // Create a minimal project structure
+        fs.mkdirSync(path.join(tempDir, "src", "modules", "auth"), { recursive: true });
+        fs.writeFileSync(
+          path.join(tempDir, "src", "modules", "auth", "index.ts"),
+          "export const login = () => {};"
+        );
+        fs.writeFileSync(
+          path.join(tempDir, "package.json"),
+          JSON.stringify({ name: "test", dependencies: { express: "^4.0.0" } })
+        );
+
+        const result = await quickStartBrownfield(tempDir);
+
+        expect(result.orchestrator).toBeDefined();
+        expect(result.analysis).toBeDefined();
+        expect(result.reversePrd).toBeDefined();
+        expect(result.reversePrd.source).toBe("analysis");
+      });
     });
   });
 });

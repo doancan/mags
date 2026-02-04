@@ -169,8 +169,6 @@ This is a revolutionary new product that will change the world.
 
     it("includes last session information", async () => {
       sessionManager.save({
-        sessionId: "test-session",
-        date: "2025-01-15",
         summary: "Worked on auth module",
         decisions: ["Use JWT"],
         completed: ["Login form"],
@@ -183,7 +181,8 @@ This is a revolutionary new product that will change the world.
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
       expect(result.content[0].text).toContain("## Last Session");
-      expect(result.content[0].text).toContain("2025-01-15");
+      // Date is auto-generated, check format instead of fixed value
+      expect(result.content[0].text).toMatch(/## Last Session \(\d{4}-\d{2}-\d{2}\)/);
       expect(result.content[0].text).toContain("Worked on auth module");
       expect(result.content[0].text).toContain("Next steps:");
       expect(result.content[0].text).toContain("- Add validation");
@@ -219,8 +218,6 @@ This is a revolutionary new product that will change the world.
     it("includes welcome back message for returning users", async () => {
       // Add a session to indicate returning user
       sessionManager.save({
-        sessionId: "prev-session",
-        date: "2025-01-14",
         summary: "Previous work",
         decisions: [],
         completed: [],
@@ -234,7 +231,8 @@ This is a revolutionary new product that will change the world.
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
       expect(result.content[0].text).toContain("## Welcome Back");
-      expect(result.content[0].text).toContain("2025-01-14");
+      // Date is auto-generated, check format instead of fixed value
+      expect(result.content[0].text).toMatch(/Last session: \d{4}-\d{2}-\d{2}/);
     });
 
     it("shows document status counts", async () => {
