@@ -58,8 +58,8 @@ async function main() {
   const shutdown = () => {
     try {
       memoryStore.close();
-    } catch {
-      // DB may already be closed
+    } catch (err) {
+      console.warn("[MAGS] Error during shutdown:", err instanceof Error ? err.message : err);
     }
     process.exit(0);
   };

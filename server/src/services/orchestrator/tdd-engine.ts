@@ -173,8 +173,8 @@ export class TddEngine {
           }
         }
       }
-    } catch {
-      // If test command fails, return empty results
+    } catch (err) {
+      console.warn(`[TddEngine] Failed to run tests for ${moduleName}:`, err instanceof Error ? err.message : err);
     }
 
     // If no results from JSON, try parsing console output
@@ -246,8 +246,8 @@ export class TddEngine {
         const total = coverage.total?.lines?.pct || coverage.total?.statements?.pct;
         if (total) return Math.round(total);
       }
-    } catch {
-      // Coverage not available
+    } catch (err) {
+      console.warn("[TddEngine] Failed to read coverage report:", err instanceof Error ? err.message : err);
     }
 
     return 0;

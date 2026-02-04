@@ -198,8 +198,8 @@ export function registerContextTools(
       let memories: Awaited<ReturnType<typeof memoryStore.recall>> = [];
       try {
         memories = await memoryStore.recall(module, undefined, 5);
-      } catch {
-        // Non-critical: continue without memories
+      } catch (err) {
+        console.warn(`[ContextTools] Failed to recall memories for module ${module}:`, err instanceof Error ? err.message : err);
       }
       if (memories.length > 0) {
         sections.push(

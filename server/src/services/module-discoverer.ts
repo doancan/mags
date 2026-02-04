@@ -4,8 +4,8 @@
 // with config override support
 // ============================================
 
-import { existsSync, readdirSync, lstatSync } from "node:fs";
-import { join, basename } from "node:path";
+import { existsSync, readdirSync } from "node:fs";
+import { join } from "node:path";
 import type { ArchitectureType, ModuleDefinition, MagsConfig } from "../types/index.js";
 import { DEFAULT_MODULES } from "../config/defaults.js";
 
@@ -211,7 +211,8 @@ export class ModuleDiscoverer {
       return readdirSync(dirPath, { withFileTypes: true })
         .filter((e) => e.isDirectory() && !e.name.startsWith("."))
         .map((e) => e.name);
-    } catch {
+    } catch (err) {
+      console.warn(`[ModuleDiscoverer] Failed to read directory ${dirPath}:`, err instanceof Error ? err.message : err);
       return [];
     }
   }
@@ -241,8 +242,8 @@ export class ModuleDiscoverer {
 
       // Has README
       if (files.some((f) => f.toLowerCase().startsWith("readme"))) score += 5;
-    } catch {
-      // Can't read directory
+    } catch (err) {
+      console.warn(`[ModuleDiscoverer] Failed to calculate confidence for ${modulePath}:`, err instanceof Error ? err.message : err);
     }
 
     return Math.min(100, score);

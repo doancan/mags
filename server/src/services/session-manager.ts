@@ -60,7 +60,8 @@ export class SessionManager {
     try {
       const raw = readFileSync(this.latestPath, "utf-8");
       return YAML.parse(raw) as SessionEntry;
-    } catch {
+    } catch (err) {
+      console.warn("[SessionManager] Failed to parse latest session:", err instanceof Error ? err.message : err);
       return null;
     }
   }
@@ -75,7 +76,8 @@ export class SessionManager {
     try {
       const raw = readFileSync(filePath, "utf-8");
       return YAML.parse(raw) as SessionEntry;
-    } catch {
+    } catch (err) {
+      console.warn(`[SessionManager] Failed to parse session ${sessionId}:`, err instanceof Error ? err.message : err);
       return null;
     }
   }
@@ -97,8 +99,8 @@ export class SessionManager {
       try {
         const raw = readFileSync(join(this.sessionsDir, file), "utf-8");
         sessions.push(YAML.parse(raw) as SessionEntry);
-      } catch {
-        // Skip corrupted files
+      } catch (err) {
+        console.warn(`[SessionManager] Failed to parse session file ${file}:`, err instanceof Error ? err.message : err);
       }
     }
 

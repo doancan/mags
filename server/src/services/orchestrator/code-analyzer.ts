@@ -221,8 +221,8 @@ export class CodeAnalyzer {
             });
           }
         });
-      } catch {
-        // Skip unreadable files
+      } catch (err) {
+        console.warn(`[CodeAnalyzer] Failed to read file for tech debt scan: ${file}:`, err instanceof Error ? err.message : err);
       }
     }
 
@@ -278,8 +278,8 @@ export class CodeAnalyzer {
           handler: "anonymous",
         });
       }
-    } catch {
-      // Skip unreadable files
+    } catch (err) {
+      console.warn(`[CodeAnalyzer] Failed to parse endpoints in ${file}:`, err instanceof Error ? err.message : err);
     }
 
     return endpoints;

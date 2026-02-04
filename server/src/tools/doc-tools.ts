@@ -177,14 +177,14 @@ export function registerDocTools(
       const bakPath = doc.path + ".bak";
       try {
         copyFileSync(doc.path, bakPath);
-      } catch {
-        // If backup fails, proceed anyway (file might not exist yet)
+      } catch (err) {
+        console.warn(`[DocTools] Failed to create backup at ${bakPath}:`, err instanceof Error ? err.message : err);
       }
 
       try {
         writeFileSync(doc.path, newContent, "utf-8");
         // Success — remove backup
-        try { unlinkSync(bakPath); } catch { /* ignore if .bak doesn't exist */ }
+        try { unlinkSync(bakPath); } catch (err) { console.warn(`[DocTools] Failed to remove backup ${bakPath}:`, err instanceof Error ? err.message : err); }
       } catch (err) {
         return {
           content: [{ type: "text" as const, text: `Failed to write "${doc.relativePath}": ${err instanceof Error ? err.message : String(err)}. Backup saved at ${bakPath}` }],

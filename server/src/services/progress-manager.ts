@@ -33,7 +33,8 @@ export class ProgressManager {
       this.progress = YAML.parse(raw) as ProjectProgress;
       this.recalculateCompletions();
       return this.progress;
-    } catch {
+    } catch (err) {
+      console.warn("[ProgressManager] Failed to load progress file:", err instanceof Error ? err.message : err);
       return null;
     }
   }

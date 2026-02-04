@@ -61,7 +61,8 @@ export class DocIndexer {
     let entries;
     try {
       entries = await readdir(dirPath, { withFileTypes: true });
-    } catch {
+    } catch (err) {
+      console.warn(`[DocIndexer] Failed to read directory ${dirPath}:`, err instanceof Error ? err.message : err);
       return;
     }
 
@@ -78,7 +79,8 @@ export class DocIndexer {
           const realTarget = resolve(fullPath);
           if (visited.has(realTarget)) continue;
         }
-      } catch {
+      } catch (err) {
+        console.warn(`[DocIndexer] Failed to stat ${fullPath}:`, err instanceof Error ? err.message : err);
         continue;
       }
 
@@ -104,7 +106,8 @@ export class DocIndexer {
     let entries;
     try {
       entries = readdirSync(dirPath, { withFileTypes: true });
-    } catch {
+    } catch (err) {
+      console.warn(`[DocIndexer] Failed to read directory ${dirPath}:`, err instanceof Error ? err.message : err);
       return;
     }
 
@@ -120,7 +123,8 @@ export class DocIndexer {
           const realTarget = realpathSync(fullPath);
           if (visited.has(realTarget)) continue;
         }
-      } catch {
+      } catch (err) {
+        console.warn(`[DocIndexer] Failed to stat ${fullPath}:`, err instanceof Error ? err.message : err);
         continue;
       }
 
@@ -268,8 +272,8 @@ export class DocIndexer {
             content: block.trim(),
           });
         }
-      } catch {
-        // Skip files that can't be read
+      } catch (err) {
+        console.warn(`[DocIndexer] Failed to read ${doc.path} for search index:`, err instanceof Error ? err.message : err);
       }
     }
 
@@ -309,7 +313,8 @@ export class DocIndexer {
     let raw: string;
     try {
       raw = readFileSync(doc.path, "utf-8");
-    } catch {
+    } catch (err) {
+      console.warn(`[DocIndexer] Failed to read ${doc.path}:`, err instanceof Error ? err.message : err);
       return null;
     }
     const { content } = matter(raw);

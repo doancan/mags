@@ -146,8 +146,8 @@ export class TemplateEngine {
           // Try root of pack
           this.loadFromDir(resolvedPath);
         }
-      } catch {
-        // Skip invalid packs
+      } catch (err) {
+        console.warn(`[TemplateEngine] Failed to load custom pack from ${packPath}:`, err instanceof Error ? err.message : err);
       }
     }
   }

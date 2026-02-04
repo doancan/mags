@@ -151,8 +151,8 @@ export class MemoryStore {
             created_at: parsed.createdAt ?? new Date().toISOString(),
             updated_at: parsed.updatedAt ?? new Date().toISOString(),
           });
-        } catch {
-          // Skip corrupted YAML files
+        } catch (err) {
+          console.warn(`[MemoryStore] Failed to migrate YAML file ${file}:`, err instanceof Error ? err.message : err);
         }
       }
 
@@ -379,7 +379,8 @@ export class MemoryStore {
     let tags: string[] = [];
     try {
       tags = JSON.parse(row.tags);
-    } catch {
+    } catch (err) {
+      console.warn(`[MemoryStore] Failed to parse tags for entry ${row.key}:`, err instanceof Error ? err.message : err);
       tags = [];
     }
 
@@ -389,7 +390,8 @@ export class MemoryStore {
       if (parsed && typeof parsed === "object" && Object.keys(parsed).length > 0) {
         metadata = parsed;
       }
-    } catch {
+    } catch (err) {
+      console.warn(`[MemoryStore] Failed to parse metadata for entry ${row.key}:`, err instanceof Error ? err.message : err);
       metadata = undefined;
     }
 
