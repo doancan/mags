@@ -34,6 +34,13 @@
     "dev": "cd server && npm run dev",
     "start": "cd server && npm start",
     "typecheck": "cd server && npm run typecheck",
-    "prepare": "cd server && npm install && npm run build && npm run bundle"
+    "lint": "cd server && npm run lint",
+    "lint:fix": "cd server && npm run lint:fix",
+    "format": "cd server && npm run format",
+    "format:check": "cd server && npm run format:check",
+    "prepare": "husky && cd server && npm install && npm run build && npm run bundle"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7"
   }
 }
