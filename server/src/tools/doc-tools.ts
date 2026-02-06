@@ -138,32 +138,49 @@ export function registerDocTools(
       const parsed = matter(raw);
       const docContent = parsed.content;
 
-      // Find and replace section
-      const sectionRegex = new RegExp(
+      // Find section in document
+      const sectionPattern = new RegExp(
         `(^#{1,3}\\s+${escapeRegex(section)}\\s*$)`,
         "m"
       );
-      const match = sectionRegex.exec(docContent);
-
-      // Reconstruct frontmatter + content
-      const frontmatter = matter.stringify("", {
-        ...parsed.data,
-        last_updated: new Date().toISOString().split("T")[0],
-      });
+      const match = sectionPattern.exec(docContent);
 
       let newContent: string;
       let created = false;
+      let contentChanged = true;
 
       if (!match) {
-        // Section not found — append as new ## section at the end
+        created = true;
+      } else {
+        // Check if content actually changed before updating last_updated
+        const rest = docContent.slice(match.index + match[0].length);
+        const level = match[0].match(/^(#+)/)?.[1] ?? "##";
+        const nextHeading = rest.match(
+          new RegExp(`^#{1,${level.length}}\\s+`, "m")
+        );
+        const existingContent = nextHeading
+          ? rest.slice(0, rest.indexOf(nextHeading[0])).trim()
+          : rest.trim();
+
+        if (existingContent === content.trim()) {
+          contentChanged = false;
+        }
+      }
+
+      // Only update last_updated when content actually changed
+      const frontmatterData = { ...parsed.data };
+      if (contentChanged) {
+        frontmatterData.last_updated = new Date().toISOString().split("T")[0];
+      }
+      const frontmatter = matter.stringify("", frontmatterData);
+
+      if (!match) {
         const trimmed = docContent.trimEnd();
         newContent = `${frontmatter.trim()}\n\n${trimmed}\n\n## ${section}\n\n${content}\n`;
-        created = true;
       } else {
         const beforeSection = docContent.slice(0, match.index);
         const level = match[0].match(/^(#+)/)?.[1] ?? "##";
 
-        // Find next same-level heading
         const rest = docContent.slice(match.index + match[0].length);
         const nextHeading = rest.match(
           new RegExp(`^#{1,${level.length}}\\s+`, "m")
@@ -227,6 +244,80 @@ export function registerDocTools(
           {
             type: "text" as const,
             text: JSON.stringify({ query, results, total: results.length }, null, 2),
+          },
+        ],
+      };
+    }
+  );
+
+  // --- mags_update_metadata ---
+  server.tool(
+    "mags_update_metadata",
+    "Update frontmatter metadata fields of a document (e.g. status, title, tags) without changing content",
+    {
+      name: z.string().describe("Document name"),
+      metadata: z
+        .record(z.union([z.string(), z.number(), z.boolean(), z.array(z.string()), z.null()]))
+        .describe("Metadata fields to set. Use null to remove a field."),
+    },
+    async ({
+      name,
+      metadata,
+    }: {
+      name: string;
+      metadata: Record<string, string | number | boolean | string[] | null>;
+    }) => {
+      const doc = docIndexer.getDoc(name);
+      if (!doc) {
+        return {
+          content: [{ type: "text" as const, text: `Document "${name}" not found` }],
+          isError: true,
+        };
+      }
+
+      const { readFileSync: readFile } = await import("node:fs");
+      const { default: matter } = await import("gray-matter");
+
+      const raw = readFile(doc.path, "utf-8");
+      const parsed = matter(raw);
+
+      // Merge metadata: null values remove the field
+      const newData = { ...parsed.data };
+      for (const [key, value] of Object.entries(metadata)) {
+        if (value === null) {
+          delete newData[key];
+        } else {
+          newData[key] = value;
+        }
+      }
+
+      // Only update last_updated if not explicitly provided
+      if (!("last_updated" in metadata) && !("lastUpdated" in metadata)) {
+        newData.last_updated = new Date().toISOString().split("T")[0];
+      }
+
+      const newContent = matter.stringify(parsed.content, newData);
+
+      try {
+        writeFileSync(doc.path, newContent, "utf-8");
+      } catch (err) {
+        return {
+          content: [{ type: "text" as const, text: `Failed to write "${doc.relativePath}": ${err instanceof Error ? err.message : String(err)}` }],
+          isError: true,
+        };
+      }
+
+      docIndexer.index();
+
+      return {
+        content: [
+          {
+            type: "text" as const,
+            text: JSON.stringify({
+              success: true,
+              path: doc.relativePath,
+              updatedFields: Object.keys(metadata),
+            }),
           },
         ],
       };

@@ -266,6 +266,18 @@ describe("Skill Integrity Guard", () => {
     "mags_list_sessions",
     "mags_detect_stack",
     "mags_discover_modules",
+    "mags_reindex",
+    "mags_update_metadata",
+    "mags_parse_prd",
+    "mags_analyze_codebase",
+    "mags_generate_skill",
+    "mags_generate_agent",
+    "mags_init_execution",
+    "mags_execute_step",
+    "mags_get_current_step",
+    "mags_resume_execution",
+    "mags_verify_module",
+    "mags_get_execution_status",
   ];
 
   // Claude Code built-in tools that skills can reference
