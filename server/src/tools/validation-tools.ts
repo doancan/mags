@@ -28,6 +28,8 @@ export function registerValidationTools(
     "Validate document consistency: check frontmatter, cross-references, empty sections, and structural issues",
     { deep: z.boolean().optional().default(false) },
     async ({ deep }: { deep: boolean }) => {
+      // Re-index before validation to ensure fresh data (fixes stale index after Edit tool changes)
+      docIndexer.reindex();
       const docs = docIndexer.listDocs();
       const issues: ValidationIssue[] = [];
 
@@ -147,7 +149,11 @@ export function registerValidationTools(
       const docCount = Math.max(docs.length, 1);
       const penalty =
         (errorCount * 15 + warningCount * 2 + infoCount * 0.5) / docCount;
-      const score = Math.max(0, Math.round(100 - penalty));
+      const rawScore = Math.max(0, Math.round(100 - penalty));
+      // Cap at 99 when any issues exist — a perfect 100 means zero issues
+      const score = rawScore === 100 && (errorCount + warningCount + infoCount) > 0
+        ? 99
+        : rawScore;
 
       const result: ValidationResult = {
         issues,
