@@ -2,7 +2,7 @@
 
 A Claude Code plugin that keeps your project context alive across sessions.
 
-MAGS indexes your documentation, remembers decisions, tracks development progress, and persists session state — so every new conversation picks up exactly where the last one left off.
+MAGS indexes your documentation, remembers decisions, and tracks development progress — so every new conversation picks up exactly where the last one left off.
 
 ## Why MAGS?
 
@@ -40,7 +40,7 @@ Restart Claude Code, then inside any project:
 /mags-init
 ```
 
-That's it. MAGS will scan your `docs/` directory (or help you create one from templates), set up session persistence, and start tracking your project.
+That's it. MAGS will scan your `docs/` directory (or help you create one from templates) and start tracking your project.
 
 ## What You Get
 
@@ -54,10 +54,6 @@ That's it. MAGS will scan your `docs/` directory (or help you create one from te
 | `/mags-docs-create <template>` | Create a new document from template |
 | `/mags-docs-validate` | Run document validation checks |
 | `/mags-docs-search <query>` | Search across all documents |
-| `/mags-session` | Show session status overview |
-| `/mags-session-save` | Save current session state |
-| `/mags-session-load` | Load and restore last session |
-| `/mags-session-history` | List all saved sessions |
 | `/mags-changelog` | Generate a changelog from git history |
 | `/mags-setup` | Analyze your project and recommend Claude Code configuration |
 | `/mags-legacy` | Initialize MAGS for a legacy/brownfield project with stack detection and tech debt tracking |
@@ -70,9 +66,7 @@ These run silently in the background — no action needed from you:
 
 | Event | What happens |
 |-------|-------------|
-| **SessionStart** | Loads project summary, last session, progress, and conventions |
-| **PreCompact** | Saves session state before context window compaction |
-| **Stop** | Persists a session summary with decisions and next steps |
+| **SessionStart** | Loads project summary, progress, and conventions |
 
 ### Skills (auto-activated)
 
@@ -99,16 +93,15 @@ Claude automatically uses these when relevant:
 
 ```
 Session starts
-  → Hook loads: project summary + last session + progress + conventions
+  → Hook loads: project summary + progress + conventions
 
 You work normally
   → Claude uses MAGS tools as needed (memory, docs, progress)
-
-Session ends
-  → Hook saves: summary, decisions, completed items, next steps
+  → Decisions and context are stored via mags_remember
 
 Next session starts
-  → Everything is restored automatically
+  → Project summary is restored automatically
+  → Stored memories carry over across sessions
 ```
 
 ### Memory
@@ -132,7 +125,7 @@ Module-based progress with items, dependencies, and priorities. Status flows: `n
 
 When all items in a module are completed, the module auto-completes. `mags_get_next` recommends what to work on based on dependencies.
 
-## MCP Tools (37 tools)
+## MCP Tools (34 tools)
 
 ### Documents
 | Tool | Description |
@@ -180,13 +173,6 @@ When all items in a module are completed, the module auto-completes. `mags_get_n
 | `mags_audit_claude_md` | Audit existing CLAUDE.md for completeness |
 | `mags_generate_changelog` | Generate changelog from conventional commits |
 | `mags_scaffold_module` | Generate doc templates for a new module |
-
-### Sessions
-| Tool | Description |
-|------|-------------|
-| `mags_save_session` | Save session with summary, decisions, next steps |
-| `mags_get_last_session` | Load the most recent session |
-| `mags_list_sessions` | List session history |
 
 ### Orchestration (Advanced)
 | Tool | Description |
@@ -239,8 +225,6 @@ docs_dir: "docs"
 mags_dir: "docs/.mags"
 templates: "general"
 
-auto_session_save: true
-auto_session_load: true
 doc_validation: true
 
 locale: "en"                  # Template locale (fallback: en → root)
@@ -282,7 +266,6 @@ mags/
 │   │   │   ├── doc-parser.ts
 │   │   │   ├── memory-store.ts
 │   │   │   ├── progress-manager.ts
-│   │   │   ├── session-manager.ts
 │   │   │   ├── search-engine.ts
 │   │   │   ├── template-engine.ts
 │   │   │   ├── template-pack-loader.ts
@@ -292,22 +275,22 @@ mags/
 │   │   │   ├── claude-md-rules.ts
 │   │   │   ├── consistency-checker.ts
 │   │   │   └── embedding/    # Pluggable embedding providers
-│   │   ├── tools/            # MCP tool registrations (37 tools)
+│   │   ├── tools/            # MCP tool registrations (34 tools)
 │   │   └── types/            # TypeScript type definitions
 │   └── dist/
 │       └── mags-server.bundle.mjs  # Pre-built bundle (no build step needed)
-├── skills/                   # 22 skills (15 slash commands + 7 guidance)
+├── skills/                   # 18 skills (11 slash commands + 7 guidance)
 ├── agents/                   # 2 specialized agents
-├── hooks/                    # 3 event-driven hooks
+├── hooks/                    # 1 event-driven hook
 └── templates/                # Document and project templates
 ```
 
 ## Documentation
 
 - [Getting Started](./docs/getting-started.md) — Installation, first use, core concepts
-- [Skills Reference](./docs/skills-reference.md) — All 22 skills (15 slash commands + 7 guidance)
-- [Commands Reference](./docs/commands-reference.md) — All 15 slash commands in detail
-- [MCP Tools Reference](./docs/tools-reference.md) — All 37 MCP tools with parameters
+- [Skills Reference](./docs/skills-reference.md) — All 18 skills (11 slash commands + 7 guidance)
+- [Commands Reference](./docs/commands-reference.md) — All 11 slash commands in detail
+- [MCP Tools Reference](./docs/tools-reference.md) — All 34 MCP tools with parameters
 - [Orchestrator Guide](./docs/orchestrator-guide.md) — PRD-driven development and code analysis
 - [Workflows](./docs/workflows.md) — Common usage scenarios and patterns
 - [Configuration](./docs/configuration.md) — Settings, embedding providers, customization

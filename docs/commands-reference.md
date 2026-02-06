@@ -1,8 +1,8 @@
 # Commands Reference
 
-> **Note:** Commands have been migrated to the skill-based architecture. Each command now lives at `skills/<name>/SKILL.md` instead of the legacy `commands/` directory. For a complete reference of all 22 skills (15 slash commands + 7 auto-activating guidance skills), see [Skills Reference](./skills-reference.md).
+> **Note:** Commands have been migrated to the skill-based architecture. Each command now lives at `skills/<name>/SKILL.md` instead of the legacy `commands/` directory. For a complete reference of all 18 skills (11 slash commands + 7 auto-activating guidance skills), see [Skills Reference](./skills-reference.md).
 
-MAGS provides 15 slash commands. Each command runs in Claude Code via `/command-name`.
+MAGS provides 11 slash commands. Each command runs in Claude Code via `/command-name`.
 
 ## /mags-init
 
@@ -17,7 +17,7 @@ Initializes your project with MAGS.
 1. Checks for `docs/` and `.mags/` directories
 2. If existing docs are found, indexes them
 3. If not, asks for project info and scaffolds documents from templates
-4. Sets up `.mags/` directory (config, progress, memory, sessions)
+4. Sets up `.mags/` directory (config, progress, memory)
 5. Optionally offers to generate CLAUDE.md
 
 **When to use:** When adding MAGS to a project for the first time. Only needs to run once.
@@ -37,7 +37,6 @@ Shows a project status dashboard.
 - Project name and tech stack
 - Module progress bars (% completion)
 - Document health (error and warning counts)
-- Last session summary
 - Next step suggestions
 
 **When to use:** At the start of a session or whenever you want to check progress.
@@ -131,79 +130,6 @@ Search across all project documents.
 
 ---
 
-## /mags-session
-
-Show session status overview.
-
-**Usage:**
-```
-/mags-session
-```
-
-**Displays:**
-- Last session summary (timestamp, summary)
-- Current progress state
-- Number of pending tasks
-
-**Related commands:**
-| Command | Description |
-|---------|-------------|
-| `/mags-session-save` | Save current session state |
-| `/mags-session-load` | Load and restore last session |
-| `/mags-session-history` | List all saved sessions |
-
-**Note:** Sessions are typically managed automatically by hooks. Manual commands are for special cases.
-
----
-
-## /mags-session-save
-
-Save the current session state.
-
-**Usage:**
-```
-/mags-session-save
-```
-
-**What it saves:**
-- Current progress state
-- Recent work context
-- Open decisions or blockers
-
----
-
-## /mags-session-load
-
-Load and restore the most recent session context.
-
-**Usage:**
-```
-/mags-session-load
-```
-
-**What it does:**
-1. Retrieves the last saved session
-2. Displays session details (timestamp, summary, progress, context)
-3. Restores context into active memory
-
----
-
-## /mags-session-history
-
-List all saved sessions.
-
-**Usage:**
-```
-/mags-session-history
-```
-
-**Displays:**
-- Session number
-- Date and time
-- Brief summary
-
----
-
 ## /mags-changelog
 
 Generates a changelog from git history.
@@ -282,10 +208,10 @@ Shows a quick reference of all available commands, skills, agents, and hooks.
 ```
 
 **Displays:**
-- All 15 slash commands with brief descriptions
+- All 11 slash commands with brief descriptions
 - 7 auto-activating skills and their triggers
 - 2 agents and what they do
-- 3 hooks and when they fire
+- 1 hook and when it fires
 - Quick start steps (adapts to project state)
 - Links to full documentation
 

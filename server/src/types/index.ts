@@ -60,8 +60,6 @@ export interface MagsConfig {
   docsDir: string;
   magsDir: string;
   templates: "general" | "saas" | "mobile" | "cli" | "custom";
-  autoSessionSave: boolean;
-  autoSessionLoad: boolean;
   docValidation: boolean;
   locale: string;
   architecture?: ArchitectureType;
@@ -79,8 +77,6 @@ export const DEFAULT_CONFIG: MagsConfig = {
   docsDir: "docs",
   magsDir: "docs/.mags",
   templates: "general",
-  autoSessionSave: true,
-  autoSessionLoad: true,
   docValidation: true,
   locale: "en",
   embedding: {
@@ -167,19 +163,6 @@ export interface ProjectProgress {
   phase: number;
   startedAt: string;
   modules: ModuleProgress[];
-}
-
-// --- Session ---
-
-export interface SessionEntry {
-  sessionId: string;
-  date: string;
-  summary: string;
-  decisions: string[];
-  completed: string[];
-  nextSteps: string[];
-  blockers: string[];
-  memoryUpdates?: string[];
 }
 
 // --- Validation ---

@@ -21,7 +21,6 @@ The MCP server (`server/src/`) contains 15+ core services organized in layers:
 | Doc Parser | `doc-parser.ts` | Parses YAML frontmatter, sections, and content from documents |
 | Memory Store | `memory-store.ts` | Key-value memory storage with categories and tags |
 | Progress Manager | `progress-manager.ts` | Module and item progress tracking with dependencies |
-| Session Manager | `session-manager.ts` | Session save/load/list with YAML file persistence |
 | Search Engine | `search-engine.ts` | TF-IDF / BM25 full-text search across docs and memory |
 | Template Engine | `template-engine.ts` | Handlebars template rendering with variable substitution |
 | Template Pack Loader | `template-pack-loader.ts` | Loads custom template packs from `pack.yaml` manifests |
@@ -52,7 +51,7 @@ The orchestrator (`services/orchestrator/`) provides advanced project management
 | Code Analyzer | `code-analyzer.ts` | Analyzes codebase for tech debt, endpoints, schema |
 | TDD Engine | `tdd-engine.ts` | Runs test suites and verifies coverage |
 
-Tools are registered in `server/src/tools/` (37 MCP tools total). Each tool file maps to one or more services.
+Tools are registered in `server/src/tools/` (34 MCP tools total). Each tool file maps to one or more services.
 
 ## Adding a New MCP Tool
 

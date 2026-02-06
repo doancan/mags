@@ -37,8 +37,6 @@ function createTestConfig(tempDir: string): MagsConfig {
     docsDir: join(tempDir, "docs"),
     magsDir: join(tempDir, "docs/.mags"),
     templates: "general",
-    autoSessionSave: false,
-    autoSessionLoad: false,
     docValidation: true,
     locale: "en",
     embedding: {

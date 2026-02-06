@@ -23,8 +23,6 @@ function createDefaultConfig(overrides?: Partial<MagsConfig>): MagsConfig {
     docsDir: "docs",
     magsDir: "docs/.mags",
     templates: "general",
-    autoSessionSave: true,
-    autoSessionLoad: true,
     docValidation: true,
     locale: "en",
     embedding: { provider: "local" },

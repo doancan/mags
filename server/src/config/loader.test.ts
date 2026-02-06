@@ -29,7 +29,7 @@ describe("Config Loader", () => {
       expect(config.magsDir).toBe("docs/.mags");
       expect(config.templates).toBe("general");
       expect(config.embedding.provider).toBe("local");
-      expect(config.autoSessionSave).toBe(true);
+      expect(config.docValidation).toBe(true);
     });
 
     it("default locale is en", () => {
@@ -93,7 +93,7 @@ describe("Config Loader", () => {
       const config = loadConfig(projectRoot);
       expect(config.docsDir).toBe("custom-docs");
       expect(config.magsDir).toBe("docs/.mags");
-      expect(config.autoSessionSave).toBe(true);
+      expect(config.docValidation).toBe(true);
     });
 
     it("embedding nested config merge çalışır", () => {

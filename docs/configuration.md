@@ -11,9 +11,6 @@ docs_dir: "docs"              # Document directory (default: docs)
 mags_dir: "docs/.mags"        # MAGS data directory (default: docs/.mags)
 templates: "general"           # Template set (default: general)
 
-auto_session_save: true        # Auto-save sessions (default: true)
-auto_session_load: true        # Auto-load last session (default: true)
-
 doc_validation: true           # Enable doc validation (default: true)
 
 locale: "en"                   # Locale for templates (default: en)
@@ -239,14 +236,10 @@ MAGS creates the following directory structure:
 docs/
 ├── .mags/
 │   ├── progress.yaml          # Module progress file
-│   ├── memory/
-│   │   └── entries/           # Memory entries (individual YAML files)
-│   │       ├── {uuid}.yaml
-│   │       └── ...
-│   └── sessions/
-│       ├── latest.yaml        # Latest session (symlink)
-│       ├── 2026-01-31-001.yaml
-│       └── ...
+│   └── memory/
+│       └── entries/           # Memory entries (individual YAML files)
+│           ├── {uuid}.yaml
+│           └── ...
 ├── product/                   # Product documents
 ├── architecture/              # Architecture documents
 └── ...                        # Project-specific documents
@@ -259,7 +252,7 @@ docs/
 | `decisions` | Architectural and technical decisions | ORM choice, auth strategy |
 | `conventions` | Code standards and rules | Layered architecture, test requirements |
 | `notes` | Observations and ideas | Performance notes, refactoring ideas |
-| `context` | Session context | Active module, ongoing work |
+| `context` | Working context | Active module, ongoing work |
 | `bugs` | Bug observations | Root cause, reproduction steps |
 
 ## Module Aliases
@@ -323,32 +316,18 @@ draft → review → locked
 
 ## Hooks
 
-MAGS uses 3 automatic hooks defined in `hooks/hooks.json`. Hooks run silently in the background — if a tool call fails, the hook still returns `{"ok": true}` and the error is ignored.
+MAGS uses 1 automatic hook defined in `hooks/hooks.json`. The hook runs silently in the background — if a tool call fails, the hook still returns `{"ok": true}` and the error is ignored.
 
 ### SessionStart
 
 - **Trigger:** When a new Claude Code session begins
-- **Action:** Loads project context by calling `mags_project_summary`, `mags_get_last_session`, `mags_get_progress`, and `mags_recall` (for conventions)
+- **Action:** Loads project context by calling `mags_project_summary`
 - **Timeout:** 30 seconds
-- **Purpose:** Restores full project context so every new session picks up where the last one left off
-
-### PreCompact
-
-- **Trigger:** Before Claude Code compacts the context window (when the conversation gets long)
-- **Action:** Calls `mags_save_session` with a brief summary of the current state
-- **Timeout:** 30 seconds
-- **Purpose:** Preserves session state before context is compressed, preventing loss of decisions and progress
-
-### Stop
-
-- **Trigger:** When Claude Code attempts to stop (session end)
-- **Action:** Calls `mags_save_session` with a brief summary of what was accomplished
-- **Timeout:** 30 seconds
-- **Purpose:** Persists the session summary with decisions, completed items, and next steps for the following session
+- **Purpose:** Restores project context so every new session starts with full awareness of the project state
 
 ### Response Format
 
-All hooks use an agent-type hook that must respond with `{"ok": true}`. This is enforced in the prompt to guarantee the hook completes without blocking the session. The tool calls are executed silently before the response is generated, and any failures are ignored to prevent hooks from disrupting the user's workflow.
+The hook uses an agent-type hook that must respond with `{"ok": true}`. This is enforced in the prompt to guarantee the hook completes without blocking the session. The tool call is executed silently before the response is generated, and any failures are ignored to prevent hooks from disrupting the user's workflow.
 
 ### Configuration
 
@@ -380,7 +359,5 @@ An empty `"matcher"` means the hook runs for all events of that type.
 | Limit | Value |
 |-------|-------|
 | Max memory entries | 1000 |
-| Max session history | Unlimited (file-based) |
 | Max document size | Unlimited (file-based) |
 | Search result limit | Default 10, configurable |
-| Session save parameters | `summary` required, others optional |

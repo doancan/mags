@@ -1,6 +1,6 @@
 # MCP Tools Reference
 
-MAGS provides 37 MCP tools. These tools are called automatically by Claude Code or can be triggered directly.
+MAGS provides 34 MCP tools. These tools are called automatically by Claude Code or can be triggered directly.
 
 ## Document Tools
 
@@ -267,7 +267,7 @@ Logic:
 
 ### mags_project_summary
 
-Comprehensive project summary for session start.
+Comprehensive project summary.
 
 **No parameters.**
 
@@ -275,7 +275,6 @@ Comprehensive project summary for session start.
 - Project info (from vision document)
 - Document statistics
 - Progress status (phase, completed/active modules)
-- Last session summary
 - Recent decisions (max 5)
 
 ---
@@ -443,42 +442,6 @@ Generates documentation templates for a new module.
 | `type` | enum | No | `backend`, `frontend`, `fullstack` (default) |
 
 Generated templates: PRD section, data model tables, API endpoints, frontend structure.
-
----
-
-## Session Tools
-
-### mags_save_session
-
-Saves the current session.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `summary` | string | Yes | Session summary |
-| `decisions` | string[] | No | Decisions made |
-| `completed` | string[] | No | Completed items |
-| `nextSteps` | string[] | No | Next steps |
-| `blockers` | string[] | No | Blockers |
-
-**Returns:** `{ saved: true, sessionId, date }`
-
----
-
-### mags_get_last_session
-
-Gets the most recent session.
-
-**No parameters.** Returns an info message if no session exists.
-
----
-
-### mags_list_sessions
-
-Lists session history.
-
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `limit` | number | No | Max results (default 10) |
 
 ---
 

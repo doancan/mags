@@ -7,7 +7,7 @@ import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { ProgressManager } from "../services/progress-manager.js";
-import type { SessionManager } from "../services/session-manager.js";
+
 import type { MemoryStore } from "../services/memory-store.js";
 import { MAX_MEMORY_ENTRIES } from "../config/defaults.js";
 import type { MagsConfig, ModuleDefinition } from "../types/index.js";
@@ -17,19 +17,17 @@ export function registerContextTools(
   server: McpServer,
   docIndexer: DocIndexer,
   progressManager: ProgressManager,
-  sessionManager: SessionManager,
   memoryStore: MemoryStore,
   config: MagsConfig
 ) {
   // --- mags_project_summary ---
   server.tool(
     "mags_project_summary",
-    "Get a comprehensive project summary for session context. Includes: project overview, tech stack, current phase, last session, and next steps. Call this at the start of every session.",
+    "Get a comprehensive project summary for session context. Includes: project overview, tech stack, current phase, and next steps. Call this at the start of every session.",
     {},
     async () => {
       const docs = docIndexer.listDocs();
       const progress = progressManager.getProgress();
-      const lastSession = sessionManager.getLatest();
 
       let memoryCapacity = { total: MAX_MEMORY_ENTRIES, used: 0, available: MAX_MEMORY_ENTRIES, usagePercent: 0 };
       let recentDecisions: Awaited<ReturnType<typeof memoryStore.recall>> = [];
@@ -40,7 +38,7 @@ export function registerContextTools(
         console.error("MAGS: Failed to load memory context:", err);
       }
 
-      const isFirstUse = memoryCapacity.used === 0 && !lastSession;
+      const isFirstUse = memoryCapacity.used === 0;
 
       // Build summary
       const sections: string[] = [];
@@ -84,18 +82,6 @@ export function registerContextTools(
         }
       }
 
-      // Last session
-      if (lastSession) {
-        sections.push(
-          `## Last Session (${lastSession.date})\n${lastSession.summary}`
-        );
-        if (lastSession.nextSteps.length > 0) {
-          sections.push(
-            `Next steps:\n${lastSession.nextSteps.map((s) => `- ${s}`).join("\n")}`
-          );
-        }
-      }
-
       // Recent decisions
       if (recentDecisions.length > 0) {
         sections.push(
@@ -114,13 +100,12 @@ export function registerContextTools(
           `## Getting Started\nThis is your first session with MAGS memory system.\n` +
           `- Use \`mags_remember\` to store decisions, conventions, and context\n` +
           `- Use \`mags_recall\` to search stored memories\n` +
-          `- Memories persist across sessions and help maintain project continuity\n` +
-          `- Run \`/mags-session save\` at the end of each session to auto-save decisions`
+          `- Memories persist across sessions and help maintain project continuity`
         );
-      } else if (lastSession) {
+      } else {
         const decisionCount = recentDecisions.length;
         sections.push(
-          `## Welcome Back\nLast session: ${lastSession.date} | Stored decisions: ${decisionCount} | Memory entries: ${memoryCapacity.used}`
+          `## Welcome Back\nStored decisions: ${decisionCount} | Memory entries: ${memoryCapacity.used}`
         );
       }
 

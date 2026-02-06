@@ -1,6 +1,6 @@
 # Skills Reference
 
-MAGS provides 22 skills organized in two categories: **slash commands** (user-invocable) and **auto-activating skills** (guidance that Claude applies automatically when relevant).
+MAGS provides 18 skills organized in two categories: **slash commands** (user-invocable) and **auto-activating skills** (guidance that Claude applies automatically when relevant).
 
 All skills are located under `skills/<name>/SKILL.md`.
 
@@ -8,7 +8,7 @@ All skills are located under `skills/<name>/SKILL.md`.
 
 | Type | Count | Trigger | Example |
 |------|-------|---------|---------|
-| Slash Command | 15 | User types `/mags-<name>` | `/mags-init` |
+| Slash Command | 11 | User types `/mags-<name>` | `/mags-init` |
 | Auto-Activating | 7 | Claude detects a relevant context | Working on documentation triggers `doc-management` |
 
 ---
@@ -71,42 +71,6 @@ All skills are located under `skills/<name>/SKILL.md`.
 
 ---
 
-### /mags-session
-
-- **Description:** Show session status overview
-- **Location:** `skills/mags-session/SKILL.md`
-- **Tools Used:** `mags_get_last_session`, `mags_get_progress`
-- **Example Scenario:** Run `/mags-session` to see last session summary and current progress side by side.
-
----
-
-### /mags-session-save
-
-- **Description:** Save current session state
-- **Location:** `skills/mags-session-save/SKILL.md`
-- **Tools Used:** `mags_save_session`, `mags_get_progress`, `mags_recall`, `mags_remember`
-- **Example Scenario:** Before ending your work, run `/mags-session-save` to snapshot progress.
-
----
-
-### /mags-session-load
-
-- **Description:** Load and restore last session context
-- **Location:** `skills/mags-session-load/SKILL.md`
-- **Tools Used:** `mags_get_last_session`, `mags_remember`
-- **Example Scenario:** Run `/mags-session-load` at the start of a session to restore context.
-
----
-
-### /mags-session-history
-
-- **Description:** List all saved sessions
-- **Location:** `skills/mags-session-history/SKILL.md`
-- **Tools Used:** `mags_list_sessions`
-- **Example Scenario:** Run `/mags-session-history` to see all past sessions with dates and summaries.
-
----
-
 ### /mags-changelog
 
 - **Description:** Generate changelog from git history and project docs
@@ -139,7 +103,7 @@ All skills are located under `skills/<name>/SKILL.md`.
 - **Description:** Show all available MAGS commands, skills, agents, and hooks at a glance
 - **Location:** `skills/mags-help/SKILL.md`
 - **Tools Used:** `mags_list_docs`, `mags_get_progress`
-- **Example Scenario:** Run `/mags-help` to see a complete quick-reference card of all 15 commands, 7 auto-activating skills, 2 agents, and 3 hooks. Adapts its quick-start section based on whether the project is already initialized.
+- **Example Scenario:** Run `/mags-help` to see a complete quick-reference card of all 11 commands, 7 auto-activating skills, 2 agents, and 1 hook. Adapts its quick-start section based on whether the project is already initialized.
 
 ---
 

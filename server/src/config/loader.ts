@@ -37,8 +37,6 @@ function mergeConfig(partial: Partial<MagsConfig>): MagsConfig {
     docsDir: partial.docsDir ?? DEFAULT_CONFIG.docsDir,
     magsDir: partial.magsDir ?? DEFAULT_CONFIG.magsDir,
     templates: partial.templates ?? DEFAULT_CONFIG.templates,
-    autoSessionSave: partial.autoSessionSave ?? DEFAULT_CONFIG.autoSessionSave,
-    autoSessionLoad: partial.autoSessionLoad ?? DEFAULT_CONFIG.autoSessionLoad,
     docValidation: partial.docValidation ?? DEFAULT_CONFIG.docValidation,
     locale: partial.locale ?? DEFAULT_LOCALE,
     architecture: partial.architecture ?? undefined,

@@ -6,7 +6,6 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { registerContextTools } from "./context-tools.js";
 import { DocIndexer } from "../services/doc-indexer.js";
 import { ProgressManager } from "../services/progress-manager.js";
-import { SessionManager } from "../services/session-manager.js";
 import { MemoryStore } from "../services/memory-store.js";
 import type { MagsConfig } from "../types/index.js";
 
@@ -27,7 +26,6 @@ describe("Context Tools", () => {
   let server: McpServer;
   let docIndexer: DocIndexer;
   let progressManager: ProgressManager;
-  let sessionManager: SessionManager;
   let memoryStore: MemoryStore;
   let config: MagsConfig;
   let registeredTools: Map<string, { handler: (args: Record<string, unknown>) => Promise<unknown> }>;
@@ -49,15 +47,12 @@ describe("Context Tools", () => {
 
     docIndexer = new DocIndexer(docsDir);
     progressManager = new ProgressManager(magsDir);
-    sessionManager = new SessionManager(magsDir);
     memoryStore = new MemoryStore(magsDir);
 
     config = {
       docsDir,
       magsDir,
       templates: "general",
-      autoSessionSave: true,
-      autoSessionLoad: true,
       docValidation: true,
       locale: "en",
       embedding: { provider: "local" },
@@ -77,17 +72,17 @@ describe("Context Tools", () => {
 
   describe("tool registration", () => {
     it("registers mags_project_summary tool", () => {
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       expect(registeredTools.has("mags_project_summary")).toBe(true);
     });
 
     it("registers mags_module_context tool", () => {
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       expect(registeredTools.has("mags_module_context")).toBe(true);
     });
 
     it("registers both tools at once", () => {
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       expect(registeredTools.size).toBe(2);
     });
   });
@@ -119,7 +114,7 @@ status: DRAFT
 `);
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_project_summary");
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
@@ -141,7 +136,7 @@ This is a revolutionary new product that will change the world.
 `);
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_project_summary");
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
@@ -158,7 +153,7 @@ This is a revolutionary new product that will change the world.
         ] },
       ]);
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_project_summary");
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
@@ -167,32 +162,11 @@ This is a revolutionary new product that will change the world.
       expect(result.content[0].text).toContain("Active:");
     });
 
-    it("includes last session information", async () => {
-      sessionManager.save({
-        summary: "Worked on auth module",
-        decisions: ["Use JWT"],
-        completed: ["Login form"],
-        nextSteps: ["Add validation", "Write tests"],
-        blockers: [],
-      });
-
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
-      const tool = registeredTools.get("mags_project_summary");
-      const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
-
-      expect(result.content[0].text).toContain("## Last Session");
-      // Date is auto-generated, check format instead of fixed value
-      expect(result.content[0].text).toMatch(/## Last Session \(\d{4}-\d{2}-\d{2}\)/);
-      expect(result.content[0].text).toContain("Worked on auth module");
-      expect(result.content[0].text).toContain("Next steps:");
-      expect(result.content[0].text).toContain("- Add validation");
-    });
-
     it("includes recent decisions from memory", async () => {
       await memoryStore.remember("auth_strategy", "Use JWT with refresh tokens", "decisions", ["auth"]);
       await memoryStore.remember("db_choice", "PostgreSQL with Prisma", "decisions", ["database"]);
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_project_summary");
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
@@ -205,7 +179,7 @@ This is a revolutionary new product that will change the world.
       // No documents, no sessions, no memories — first use scenario
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_project_summary");
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
@@ -216,23 +190,14 @@ This is a revolutionary new product that will change the world.
     });
 
     it("includes welcome back message for returning users", async () => {
-      // Add a session to indicate returning user
-      sessionManager.save({
-        summary: "Previous work",
-        decisions: [],
-        completed: [],
-        nextSteps: [],
-        blockers: [],
-      });
       await memoryStore.remember("some_key", "some_value", "decisions");
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_project_summary");
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
       expect(result.content[0].text).toContain("## Welcome Back");
-      // Date is auto-generated, check format instead of fixed value
-      expect(result.content[0].text).toMatch(/Last session: \d{4}-\d{2}-\d{2}/);
+      expect(result.content[0].text).toContain("Memory entries: 1");
     });
 
     it("shows document status counts", async () => {
@@ -241,7 +206,7 @@ This is a revolutionary new product that will change the world.
       writeDoc(docsDir, "locked.md", "---\nstatus: LOCKED\n---\n# Locked");
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_project_summary");
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
@@ -254,7 +219,7 @@ This is a revolutionary new product that will change the world.
       await memoryStore.remember("key1", "value1");
       await memoryStore.remember("key2", "value2");
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_project_summary");
       const result = await tool!.handler({}) as { content: { type: string; text: string }[] };
 
@@ -302,7 +267,7 @@ title: Data Model
 `);
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "auth" }) as { content: { type: string; text: string }[] };
 
@@ -316,7 +281,7 @@ title: Data Model
     it("returns error for unknown module", async () => {
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "nonexistent" }) as { content: { type: string; text: string }[] };
 
@@ -339,7 +304,7 @@ title: Data Model
         },
       ]);
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "auth" }) as { content: { type: string; text: string }[] };
 
@@ -351,7 +316,7 @@ title: Data Model
     it("includes related memories", async () => {
       await memoryStore.remember("auth_jwt_strategy", "Use JWT with 15min expiry", "decisions", ["auth"]);
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "auth" }) as { content: { type: string; text: string }[] };
 
@@ -377,7 +342,7 @@ Not related.
 `);
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "auth" }) as { content: { type: string; text: string }[] };
 
@@ -405,7 +370,7 @@ GET /users
 `);
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "auth" }) as { content: { type: string; text: string }[] };
 
@@ -432,7 +397,7 @@ src/db/
 `);
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "auth" }) as { content: { type: string; text: string }[] };
 
@@ -451,7 +416,7 @@ Content for auth.
 `);
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "AUTH" }) as { content: { type: string; text: string }[] };
 
@@ -474,7 +439,7 @@ This is for the custom module.
 `);
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "custom" }) as { content: { type: string; text: string }[] };
 
@@ -487,7 +452,7 @@ This is for the custom module.
       writeDoc(docsDir, "guide.md", "# Guide");
       docIndexer.index();
 
-      registerContextTools(server, docIndexer, progressManager, sessionManager, memoryStore, config);
+      registerContextTools(server, docIndexer, progressManager, memoryStore, config);
       const tool = registeredTools.get("mags_module_context");
       const result = await tool!.handler({ module: "unknown" }) as { content: { type: string; text: string }[] };
 

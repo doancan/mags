@@ -15,7 +15,7 @@ import { loadConfig, getDocsPath, getMagsPath } from "./config/loader.js";
 import { DocIndexer } from "./services/doc-indexer.js";
 import { MemoryStore } from "./services/memory-store.js";
 import { ProgressManager } from "./services/progress-manager.js";
-import { SessionManager } from "./services/session-manager.js";
+
 import { TemplateEngine } from "./services/template-engine.js";
 import { LocalEmbeddingProvider } from "./services/embedding/local.js";
 import { OpenAIEmbeddingProvider } from "./services/embedding/openai.js";
@@ -30,7 +30,7 @@ import { registerValidationTools } from "./tools/validation-tools.js";
 import { registerClaudeMdTools } from "./tools/claude-md-tools.js";
 import { registerChangelogTools } from "./tools/changelog-tools.js";
 import { registerScaffoldTools } from "./tools/scaffold-tools.js";
-import { registerSessionTools } from "./tools/session-tools.js";
+
 import { registerStackTools } from "./tools/stack-tools.js";
 import { registerModuleTools } from "./tools/module-tools.js";
 import { registerOrchestratorTools } from "./tools/orchestrator-tools.js";
@@ -83,8 +83,6 @@ async function main() {
   const progressManager = new ProgressManager(magsPath);
   progressManager.load();
 
-  const sessionManager = new SessionManager(magsPath);
-
   const templateEngine = new TemplateEngine(pluginRoot, {
     locale: config.locale,
     architecture: config.architecture,
@@ -107,7 +105,6 @@ async function main() {
     server,
     docIndexer,
     progressManager,
-    sessionManager,
     memoryStore,
     config
   );
@@ -116,7 +113,7 @@ async function main() {
   registerClaudeMdTools(server, docIndexer, projectRoot, config);
   registerChangelogTools(server, projectRoot);
   registerScaffoldTools(server);
-  registerSessionTools(server, sessionManager, memoryStore);
+
   registerStackTools(server, projectRoot, config);
   registerModuleTools(server, projectRoot, config);
   registerOrchestratorTools(server, config, projectRoot);

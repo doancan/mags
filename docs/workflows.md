@@ -61,7 +61,6 @@ The recurring flow for each session. Hooks automate most of it.
 Session starts
   ↓ (SessionStart hook)
   → project_summary loaded
-  → last_session loaded
   → progress loaded
   → conventions loaded
 
@@ -75,11 +74,6 @@ Develop
   → Write code
   → Save important decisions to memory
   → Update progress as items are completed
-
-Session ends
-  ↓ (Stop hook)
-  → Session is saved
-  → Progress is updated
 ```
 
 ---
@@ -147,8 +141,6 @@ Before releasing a new version.
    → Generate changelog from git history
    → Create release file
 
-4. Save final session
-   → /mags-session save
 ```
 
 ---
@@ -188,30 +180,30 @@ mags_recall("", "notes")
 
 ## 8. Multi-Session Project
 
-Session continuity for long-running projects.
+Context continuity for long-running projects via memory and progress tracking.
 
 ```
 Session 1: Planning
   → Documents created
   → Progress initialized
-  → Session saved
+  → Decisions saved to memory
 
 Session 2: Auth module
-  → Session 1 auto-loaded
+  → Project summary auto-loaded
   → Auth context loaded
   → Development done
-  → Session saved
+  → Progress updated, decisions remembered
 
 Session 3: Tenant module
-  → Session 2 auto-loaded
+  → Project summary auto-loaded
   → Auth shown as completed
   → Switch to tenant
   → ...
 ```
 
 Each session:
-- **Loaded:** Last session + progress + conventions (automatic)
-- **Saved:** Completed work + decisions + next steps (automatic)
+- **Loaded:** Project summary + progress + conventions (automatic via hook)
+- **Persisted:** Decisions and conventions via `mags_remember` (throughout session)
 
 ---
 
@@ -308,15 +300,13 @@ Then run `/mags-init` — MAGS will use the architecture-specific template set a
 
 ## Hooks
 
-MAGS runs 3 automatic hooks:
+MAGS runs 1 automatic hook:
 
 | Hook | Trigger | What it does |
 |------|---------|-------------|
-| **SessionStart** | Session start | Loads project_summary + last_session + progress + conventions |
-| **PreCompact** | Before context compaction | Saves session state |
-| **Stop** | Session end | Updates progress, saves session |
+| **SessionStart** | Session start | Loads project_summary |
 
-Hooks run silently — if they fail, they are skipped without error.
+The hook runs silently — if it fails, it is skipped without error.
 
 ---
 
@@ -333,21 +323,6 @@ claude mcp list
 
 # If disconnected, restart Claude Code
 # The MCP server is bundled — no manual start needed
-```
-
-### Session Issues
-
-If session data is not loading:
-
-```
-# Check if sessions exist
-/mags-session history
-
-# Manually load last session
-/mags-session load
-
-# Check .mags directory
-# Ensure docs/.mags/sessions/ exists and contains session files
 ```
 
 ### Validation Problems

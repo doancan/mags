@@ -1,6 +1,6 @@
 # Getting Started
 
-MAGS (Memory And Guidance System) is a Claude Code plugin that preserves project context across sessions. It indexes your documents, remembers decisions, tracks progress, and starts every session where the last one left off.
+MAGS (Memory And Guidance System) is a Claude Code plugin that preserves project context across sessions. It indexes your documents, remembers decisions, and tracks progress.
 
 ## Installation
 
@@ -29,7 +29,7 @@ In your project directory within Claude Code:
 This command:
 - Scans and indexes existing `docs/` if present
 - Otherwise asks for project info and scaffolds documents from templates
-- Sets up `docs/.mags/` directory (progress, memory, sessions)
+- Sets up `docs/.mags/` directory (progress, memory)
 - Optionally generates CLAUDE.md
 
 ## Quick Win (2 minutes)
@@ -47,7 +47,7 @@ Get value from MAGS in three steps:
    → Project dashboard displayed
 ```
 
-That's it. MAGS is now tracking your project. Every new session will start with full context restored.
+That's it. MAGS is now tracking your project.
 
 ## Verify Installation
 
@@ -132,7 +132,7 @@ MAGS has three layers:
 
 ```
 You → Slash Commands (/mags-*) → MCP Tools (mags_*) → Services
-      15 commands                 37 tools              15+ services
+      11 commands                 34 tools              15+ services
 ```
 
 - **Slash commands** — what you use directly (e.g. `/mags-init`, `/mags-status`)
@@ -178,17 +178,13 @@ not_started → in_progress → completed
 
 When all items are completed, the module auto-completes. `mags_get_next` recommends the next task based on dependencies.
 
-### Sessions
-
-Every work session is automatically saved: what was done, decisions made, next steps. When a new session starts, hooks automatically load the previous context — no manual intervention needed.
-
 ## Daily Usage Flow
 
-MAGS hooks automate most of the work. A typical session looks like this:
+A typical session looks like this:
 
 ```
 Session starts
-  → (automatic) project_summary + last_session + progress + conventions loaded
+  → (automatic) project_summary + progress + conventions loaded
 
 Start working on a module
   → "Load the context for the auth module"
@@ -199,9 +195,6 @@ Develop
   → Write code, make decisions
   → "We're using custom JWT middleware instead of Passport, remember this"
   → Claude automatically saves to memory
-
-Session ends
-  → (automatic) session is saved, progress is updated
 ```
 
 ### Useful Commands
@@ -221,9 +214,9 @@ Session ends
 
 ## Next Steps
 
-- [Commands Reference](./commands-reference.md) — All 15 slash commands in detail
-- [Skills Reference](./skills-reference.md) — All 22 skills (15 commands + 7 guidance)
-- [MCP Tools Reference](./tools-reference.md) — All 37 MCP tools with parameters
+- [Commands Reference](./commands-reference.md) — All 11 slash commands in detail
+- [Skills Reference](./skills-reference.md) — All 18 skills (11 commands + 7 guidance)
+- [MCP Tools Reference](./tools-reference.md) — All 34 MCP tools with parameters
 - [Orchestrator Guide](./orchestrator-guide.md) — PRD-driven development and code analysis
 - [Workflows](./workflows.md) — Common usage scenarios and patterns
 - [Configuration](./configuration.md) — Settings and customization

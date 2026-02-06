@@ -317,8 +317,6 @@ PostgreSQL provides excellent JSON support.
         docsDir: "docs",
         magsDir: "docs/.mags",
         templates: "general",
-        autoSessionSave: true,
-        autoSessionLoad: true,
         docValidation: true,
         locale: "en",
         stack: {
@@ -349,8 +347,6 @@ PostgreSQL provides excellent JSON support.
         docsDir: "docs",
         magsDir: "docs/.mags",
         templates: "general",
-        autoSessionSave: true,
-        autoSessionLoad: true,
         docValidation: true,
         locale: "en",
         architecture: "microservices",

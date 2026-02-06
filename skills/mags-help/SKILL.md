@@ -21,7 +21,7 @@ Present the following reference card directly (no tool calls needed for this ste
 ```
 == MAGS Quick Reference ==
 
-SLASH COMMANDS (15)
+SLASH COMMANDS (11)
   /mags-help              Show this reference card
   /mags-init              Initialize MAGS for your project
   /mags-status            Project dashboard (progress, docs health, next steps)
@@ -29,10 +29,6 @@ SLASH COMMANDS (15)
   /mags-docs-create <t>   Create document from template
   /mags-docs-validate     Run document validation checks
   /mags-docs-search <q>   Search across all documents
-  /mags-session           Show session status overview
-  /mags-session-save      Save current session state
-  /mags-session-load      Load and restore last session
-  /mags-session-history   List all saved sessions
   /mags-changelog         Generate changelog from git history
   /mags-setup             Recommend Claude Code configuration
   /mags-legacy            Initialize MAGS for a legacy/brownfield project
@@ -52,10 +48,8 @@ AGENTS (2)
   - doc-sync-validator    Checks if documentation matches actual code
   - setup-recommender     Recommends plugins, skills, and hooks for your stack
 
-HOOKS (3 — automatic, no action needed)
-  - SessionStart          Loads project summary + last session on startup
-  - PreCompact            Saves session before context window compaction
-  - Stop                  Persists session summary on exit
+HOOKS (1 — automatic, no action needed)
+  - SessionStart          Loads project summary on startup
 ```
 
 ### 2. Show quick start (if no progress exists)

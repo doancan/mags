@@ -6,31 +6,7 @@
         "hooks": [
           {
             "type": "agent",
-            "prompt": "New session started. If mags_get_last_session and mags_project_summary tools are available, use them to load previous session context and project summary. If the tools are not available or fail, skip gracefully. Respond with a brief summary of what was loaded, or {\"ok\": true} if nothing was loaded.",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "PreCompact": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "agent",
-            "prompt": "Context window is being compacted. If mags_save_session tool is available, save current session state with a brief summary of the current work, decisions made, and next steps. If the tool is not available or fails, skip gracefully. Respond with: {\"ok\": true}",
-            "timeout": 30
-          }
-        ]
-      }
-    ],
-    "Stop": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "agent",
-            "prompt": "Session completed. If mags_save_session tool is available, save a brief session summary including what was accomplished, decisions made, and suggested next steps. If the tool is not available or fails, skip gracefully. Respond with: {\"ok\": true}",
+            "prompt": "New session started. If mags_project_summary tool is available, use it to load project summary. If the tool is not available or fails, skip gracefully. Respond with a brief summary of what was loaded, or {\"ok\": true} if nothing was loaded.",
             "timeout": 30
           }
         ]
