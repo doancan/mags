@@ -124,6 +124,28 @@ Use JWT tokens.
 `
     );
 
+    // ADR with frontmatter status only (no ## Status heading)
+    writeFileSync(
+      join(docsDir, "adr", "adr-003-frontmatter-status.md"),
+      `---
+title: Caching Strategy
+status: proposed
+last_updated: "2025-01-01"
+---
+
+# ADR 003: Caching Strategy
+
+## Context
+We need caching for performance.
+
+## Decision
+Use Redis for caching.
+
+## Consequences
+Adds an external dependency.
+`
+    );
+
     // ADR with invalid status
     writeFileSync(
       join(docsDir, "adr", "adr-002-db.md"),
@@ -224,9 +246,16 @@ Need to manage migrations.
     const issues = await checker.runDeepValidation();
     expect(issues.length).toBeGreaterThan(0);
 
-    // Should detect ADR with missing Consequences section
+    // Should detect ADR with missing Consequences section (adr-001)
     const adrIssues = issues.filter((i) => i.type === "adr_missing_section");
     expect(adrIssues.length).toBeGreaterThan(0);
+
+    // adr-003 uses frontmatter status only (no ## Status heading)
+    // — should NOT produce a missing Status section warning
+    const adr003StatusIssues = adrIssues.filter(
+      (i) => i.doc.includes("adr-003") && i.detail.includes("Status")
+    );
+    expect(adr003StatusIssues).toHaveLength(0);
 
     // Should detect invalid ADR status
     const statusIssues = issues.filter((i) => i.type === "invalid_status");

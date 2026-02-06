@@ -307,6 +307,15 @@ export class ConsistencyChecker {
             h.toLowerCase() === enName.toLowerCase() ||
             h.toLowerCase() === trName.toLowerCase()
         );
+
+        // Accept frontmatter "status" as alternative to ## Status / ## Durum heading
+        if (!found && enName === "Status") {
+          const fmStatus = doc.metadata?.status;
+          if (fmStatus && String(fmStatus).trim() !== "") {
+            continue; // frontmatter has status — no heading needed
+          }
+        }
+
         if (!found) {
           issues.push({
             type: "adr_missing_section",
@@ -317,11 +326,13 @@ export class ConsistencyChecker {
         }
       }
 
-      // Check status value in Status section
+      // Check status value — from heading section OR frontmatter
       const statusContent = this.docIndexer.getDocContent(doc.name, "Status") ||
         this.docIndexer.getDocContent(doc.name, "Durum");
+      const fmStatus = doc.metadata?.status ? String(doc.metadata.status).toLowerCase().trim() : "";
+      const validStatuses = FRONTMATTER_SCHEMAS.adr.status_values || [];
+
       if (statusContent) {
-        const validStatuses = FRONTMATTER_SCHEMAS.adr.status_values || [];
         const hasValidStatus = validStatuses.some((s) =>
           statusContent.toLowerCase().includes(s)
         );
@@ -330,6 +341,16 @@ export class ConsistencyChecker {
             type: "adr_invalid_status",
             doc: doc.name,
             detail: `ADR Status section does not contain a valid status value`,
+            severity: "warning",
+          });
+        }
+      } else if (fmStatus) {
+        // No heading — validate frontmatter status value
+        if (!validStatuses.includes(fmStatus)) {
+          issues.push({
+            type: "adr_invalid_status",
+            doc: doc.name,
+            detail: `ADR frontmatter status "${doc.metadata.status}" is not valid. Valid values: ${validStatuses.join(", ")}`,
             severity: "warning",
           });
         }
