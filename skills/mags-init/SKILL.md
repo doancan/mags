@@ -118,5 +118,8 @@ MAGS initialized successfully.
   Progress:   Tracking enabled
   CLAUDE.md:  <generated / skipped>
 
-Run /mags-status to see your project dashboard.
+Next steps:
+  → /mags-help     — See all available commands
+  → /mags-status   — View project dashboard
+  → /mags-setup    — Get Claude Code configuration recommendations
 ```

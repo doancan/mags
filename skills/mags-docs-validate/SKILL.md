@@ -21,7 +21,12 @@ Run validation checks on all project documents.
 
 ## Steps
 
-1. Call `mags_validate_docs` to run all validation checks.
+1. Ask the user: "Standard validation or deep validation?"
+   - **Standard** — checks frontmatter, required sections, cross-references, freshness
+   - **Deep** — all standard checks plus: version conflict detection, memory-doc consistency, ADR structure validation, and module completeness checks
+
+   If deep: call `mags_validate_docs` with `deep: true`.
+   If standard (or no preference): call `mags_validate_docs` with default parameters.
 2. Display results grouped by severity:
    ```
    == Document Validation ==
@@ -38,3 +43,11 @@ Run validation checks on all project documents.
    ```
 3. If there are errors, ask: "Would you like me to fix the errors?"
 4. If yes, read each problematic doc with `mags_get_doc`, fix the issues, and call `mags_update_doc`.
+
+---
+
+**Related commands:**
+| Command | Description |
+|---------|-------------|
+| `/mags-docs` | List all project documents |
+| `/mags-docs-search <query>` | Search across all documents |

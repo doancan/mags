@@ -70,4 +70,15 @@ After displaying the dashboard, say:
 
 "Run `/mags-docs validate` to fix doc issues, or `/mags-session save` to snapshot this state."
 
+If no progress data is returned, show: "No modules defined yet. Run `/mags-init` to set up your project, or use `mags_init_progress` to define modules manually."
+
 Do not take any further action unless the user asks.
+
+---
+
+**Related commands:**
+| Command | Description |
+|---------|-------------|
+| `/mags-help` | See all available commands |
+| `/mags-docs-validate` | Check documentation health in detail |
+| `/mags-session` | View session status |

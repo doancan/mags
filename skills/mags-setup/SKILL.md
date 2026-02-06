@@ -99,3 +99,12 @@ Wait for user to pick an action. Do not proceed automatically.
 If the user picks option 1, call `mags_generate_claude_md` and write the result to the project root.
 If the user picks option 2, ask for the module name, then call `mags_scaffold_module` (pass the `locale` from config.yaml if available).
 If the user picks option 3, create the appropriate hook scripts in `.githooks/` or configure via the project's tooling (husky for Node, pre-commit for Python, etc.).
+
+---
+
+**Related commands:**
+| Command | Description |
+|---------|-------------|
+| `/mags-init` | Initialize MAGS for a new project |
+| `/mags-legacy` | Initialize MAGS for a legacy project |
+| `/mags-help` | See all available commands |

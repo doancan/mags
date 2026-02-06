@@ -69,3 +69,11 @@ If the user chooses to save:
 2. If it exists, prepend the new entry at the top using `mags_update_doc`.
 3. If it does not exist, create it with `mags_create_doc`.
 4. Confirm: "Changelog saved to `<path>`."
+
+---
+
+**Related commands:**
+| Command | Description |
+|---------|-------------|
+| `/mags-status` | View project progress dashboard |
+| `/mags-docs` | List all project documents |

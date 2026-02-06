@@ -14,6 +14,8 @@ allowed-tools:
 
 Save the current session state including progress, decisions, and context.
 
+> **Note:** Usually not needed — the Stop and PreCompact hooks save sessions automatically. Use this command when you want to take a manual snapshot mid-conversation or if a hook failed.
+
 ## Usage
 
 ```

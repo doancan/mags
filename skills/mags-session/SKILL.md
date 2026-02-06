@@ -26,6 +26,18 @@ Show session status overview with last session summary and current progress.
 | `/mags-session-load` | Load and restore last session |
 | `/mags-session-history` | List all saved sessions |
 
+## Automatic vs Manual
+
+MAGS hooks automatically manage sessions in the background:
+- **SessionStart** — Previous session is loaded automatically
+- **PreCompact** — Session is saved before context window compaction
+- **Stop** — Session is saved when the conversation ends
+
+Manual commands are only needed when:
+- A hook failed or was skipped
+- You want to take a mid-conversation snapshot
+- You want to inspect or restore a specific older session
+
 ## Steps
 
 1. Call `mags_get_last_session` and `mags_get_progress` in parallel.

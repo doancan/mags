@@ -90,3 +90,12 @@ MAGS Legacy Init Complete
 Run /mags-status to see your project dashboard.
 Run mags_get_progress with category "tech-debt" to see debt items.
 ```
+
+---
+
+**Related commands:**
+| Command | Description |
+|---------|-------------|
+| `/mags-init` | Initialize MAGS for a new project |
+| `/mags-status` | View project progress dashboard |
+| `/mags-setup` | Get Claude Code configuration recommendations |

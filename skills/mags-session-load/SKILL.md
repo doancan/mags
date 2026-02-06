@@ -12,6 +12,8 @@ allowed-tools:
 
 Load and restore the most recent session context.
 
+> **Note:** Usually not needed — the SessionStart hook loads the previous session automatically when a new conversation begins. Use this command if the hook was skipped or you want to restore a specific session.
+
 ## Usage
 
 ```

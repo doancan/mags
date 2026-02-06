@@ -20,7 +20,7 @@ List all saved sessions for the project.
 ## Steps
 
 1. Call `mags_list_sessions` to get all sessions.
-2. If empty, say "No sessions recorded yet."
+2. If empty, say "No sessions recorded yet. Sessions are saved automatically by the Stop hook at the end of each conversation. You can also save manually with `/mags-session-save`."
 3. Otherwise, display as a table:
    ```
    #   Date                 Summary

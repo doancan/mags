@@ -47,3 +47,4 @@ List all indexed project documents.
    Total: <N> documents
    ```
 3. Show the path and a brief description (first line or title) for each doc.
+4. If no documents are found, say: "No indexed documents found. Run `/mags-init` to scan your docs/ directory or scaffold new documents from templates."
