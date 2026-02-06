@@ -119,7 +119,7 @@ async function main() {
   registerSessionTools(server, sessionManager, memoryStore);
   registerStackTools(server, projectRoot, config);
   registerModuleTools(server, projectRoot, config);
-  registerOrchestratorTools(server, config);
+  registerOrchestratorTools(server, config, projectRoot);
 
   // Start server
   const transport = new StdioServerTransport();

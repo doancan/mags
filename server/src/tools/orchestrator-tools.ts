@@ -3,6 +3,7 @@
 // ============================================
 
 import { z } from "zod";
+import * as path from "path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   createOrchestrator,
@@ -24,8 +25,13 @@ function getOrchestrator(config?: { projectRoot?: string; magsDir?: string }) {
   return orchestratorInstance;
 }
 
-export function registerOrchestratorTools(server: McpServer, config: MagsConfig) {
+export function registerOrchestratorTools(server: McpServer, config: MagsConfig, projectRoot: string) {
   const magsDir = config.magsDir;
+
+  /** Resolve a user-provided path against the project root */
+  function resolvePath(filePath: string): string {
+    return path.isAbsolute(filePath) ? filePath : path.resolve(projectRoot, filePath);
+  }
 
   // --- mags_parse_prd ---
   server.tool(
@@ -36,10 +42,11 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
       validateOnly: z.boolean().optional().describe("Only validate, don't extract plan"),
     },
     async ({ prdPath, validateOnly }: { prdPath: string; validateOnly?: boolean }) => {
+      const resolvedPath = resolvePath(prdPath);
       const parser = createPrdParser();
 
       if (validateOnly) {
-        const result = parser.validate(prdPath);
+        const result = parser.validate(resolvedPath);
         return {
           content: [
             {
@@ -58,7 +65,7 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
         };
       }
 
-      const plan = await parser.parse(prdPath);
+      const plan = await parser.parse(resolvedPath);
 
       if (!plan) {
         return {
@@ -117,13 +124,14 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
       generateReversePrd: z.boolean().optional().describe("Also generate reverse PRD"),
     },
     async ({
-      projectRoot,
+      projectRoot: userProjectRoot,
       generateReversePrd,
     }: {
       projectRoot?: string;
       generateReversePrd?: boolean;
     }) => {
-      const analyzer = createCodeAnalyzer(projectRoot);
+      const resolvedRoot = userProjectRoot ? resolvePath(userProjectRoot) : projectRoot;
+      const analyzer = createCodeAnalyzer(resolvedRoot);
       const analysis = await analyzer.analyze();
 
       const result: Record<string, unknown> = {
@@ -172,8 +180,9 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
       prdPath: z.string().describe("Path to PRD file"),
     },
     async ({ moduleName, prdPath }: { moduleName: string; prdPath: string }) => {
+      const resolvedPath = resolvePath(prdPath);
       const parser = createPrdParser();
-      const plan = await parser.parse(prdPath);
+      const plan = await parser.parse(resolvedPath);
 
       if (!plan) {
         return {
@@ -238,8 +247,9 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
       prdPath: z.string().describe("Path to PRD file"),
     },
     async ({ moduleName, prdPath }: { moduleName: string; prdPath: string }) => {
+      const resolvedPath = resolvePath(prdPath);
       const parser = createPrdParser();
-      const plan = await parser.parse(prdPath);
+      const plan = await parser.parse(resolvedPath);
 
       if (!plan) {
         return {
@@ -303,8 +313,9 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
       moduleType: z.enum(["backend", "frontend"]).optional().describe("Type of modules (default: backend)"),
     },
     async ({ prdPath, moduleType: _moduleType }: { prdPath: string; moduleType?: "backend" | "frontend" }) => {
-      const orchestrator = getOrchestrator({ magsDir });
-      const result = await orchestrator.initializeFromPrd(prdPath);
+      const resolvedPath = resolvePath(prdPath);
+      const orchestrator = getOrchestrator({ projectRoot, magsDir });
+      const result = await orchestrator.initializeFromPrd(resolvedPath);
 
       if (!result.success) {
         return {
@@ -491,7 +502,7 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
       prdPath: z.string().optional().describe("Path to PRD file for acceptance criteria"),
     },
     async ({ moduleName, prdPath }: { moduleName: string; prdPath?: string }) => {
-      const tddEngine = createTddEngine(process.cwd(), magsDir);
+      const tddEngine = createTddEngine(projectRoot, magsDir);
 
       // Quick verify without PRD
       if (!prdPath) {
@@ -518,8 +529,9 @@ export function registerOrchestratorTools(server: McpServer, config: MagsConfig)
       }
 
       // Full verify with PRD
+      const resolvedPrdPath = resolvePath(prdPath);
       const parser = createPrdParser();
-      const plan = await parser.parse(prdPath);
+      const plan = await parser.parse(resolvedPrdPath);
 
       if (!plan) {
         return {

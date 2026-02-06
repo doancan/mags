@@ -161,7 +161,7 @@ describe("Orchestrator Tools Integration Tests", () => {
     mkdirSync(config.magsDir, { recursive: true });
 
     // Register tools
-    registerOrchestratorTools(server, config);
+    registerOrchestratorTools(server, config, tempDir);
   });
 
   afterEach(() => {
@@ -562,7 +562,7 @@ describe("Orchestrator Tools Integration Tests", () => {
     it("should handle action without execution state", async () => {
       // Create fresh server without initialization
       const freshServer = createMockServer();
-      registerOrchestratorTools(freshServer, config);
+      registerOrchestratorTools(freshServer, config, tempDir);
 
       const tool = freshServer._tools.get("mags_execute_step")!;
 
