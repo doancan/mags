@@ -61,10 +61,17 @@ if (needsInstall) {
 }
 
 // Start the MCP server
+// Capture the original cwd (user's project root) before forking
+// because fork's cwd: __dirname changes it to server/ for native deps.
+const originalCwd = process.cwd();
 const { fork } = await import("node:child_process");
 const child = fork(BUNDLE_PATH, process.argv.slice(2), {
   stdio: "inherit",
   cwd: __dirname,
+  env: {
+    ...process.env,
+    MAGS_PROJECT_ROOT: process.env.MAGS_PROJECT_ROOT || originalCwd,
+  },
 });
 
 child.on("exit", (code) => process.exit(code ?? 0));
