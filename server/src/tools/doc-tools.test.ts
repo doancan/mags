@@ -107,11 +107,12 @@ status: DRAFT
       expect(server.getTool("mags_reindex")).toBeDefined();
     });
 
-    it("registers all 6 expected tools", () => {
+    it("registers all 7 expected tools", () => {
       const expectedTools = [
         "mags_list_docs",
         "mags_get_doc",
         "mags_update_doc",
+        "mags_update_metadata",
         "mags_search_docs",
         "mags_create_doc",
         "mags_reindex",
@@ -119,7 +120,7 @@ status: DRAFT
       for (const toolName of expectedTools) {
         expect(server.getTool(toolName)).toBeDefined();
       }
-      expect(server.tools.size).toBe(6);
+      expect(server.tools.size).toBe(7);
     });
   });
 
