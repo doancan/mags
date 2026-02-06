@@ -13,6 +13,9 @@
   "license": "MIT",
   "scripts": {
     "postinstall": "npm rebuild better-sqlite3 2>/dev/null || true",
+    "check-native": "node -e \"try{require('better-sqlite3')}catch(e){process.exit(1)}\" 2>/dev/null || npm rebuild better-sqlite3",
+    "pretest": "npm run check-native",
+    "prebuild": "npm run check-native",
     "build": "tsc",
     "bundle": "node bundle.mjs",
     "dev": "tsx watch src/index.ts",
