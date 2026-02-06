@@ -235,7 +235,6 @@ MAGS creates the following directory structure:
 ```
 docs/
 ├── .mags/
-│   ├── progress.yaml          # Module progress file
 │   └── memory/
 │       └── entries/           # Memory entries (individual YAML files)
 │           ├── {uuid}.yaml

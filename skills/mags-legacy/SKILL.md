@@ -8,8 +8,6 @@ allowed-tools:
   - mcp__mags_mags__mags_create_doc
   - mcp__mags_mags__mags_detect_stack
   - mcp__mags_mags__mags_discover_modules
-  - mcp__mags_mags__mags_init_progress
-  - mcp__mags_mags__mags_update_progress
   - mcp__mags_mags__mags_remember
   - mcp__mags_mags__mags_generate_claude_md
   - Bash
@@ -62,22 +60,13 @@ Also create standard docs:
 - `tech-stack` — Based on detected stack
 - `project-structure` — Based on discovered modules
 
-### 4. Set up tech debt tracking
-
-Use `mags_init_progress` to create progress tracking with:
-- Discovered modules as `feature` category items
-- Known pain points as `tech-debt` category items
-- Migration steps as `migration` category items
-
-### 5. Show summary
+### 4. Show summary
 
 ```
 MAGS Legacy Init Complete
 
   Stack:         <detected stack summary>
   Modules:       <N> modules discovered
-  Tech Debt:     <N> items tracked
-  Migration:     <strategy> planned
 
   Documents Created:
     - current-architecture.md
@@ -88,7 +77,6 @@ MAGS Legacy Init Complete
     - project-structure.md
 
 Run /mags-status to see your project dashboard.
-Run mags_get_progress with category "tech-debt" to see debt items.
 ```
 
 ---

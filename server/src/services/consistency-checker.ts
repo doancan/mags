@@ -5,13 +5,11 @@
 
 import type { DocIndexer } from "./doc-indexer.js";
 import type { MemoryStore } from "./memory-store.js";
-import type { ProgressManager } from "./progress-manager.js";
 import type { StackDetector } from "./stack-detector.js";
 import type {
   ValidationIssue,
   TechTerm,
   DocEntry,
-  ProjectProgress,
 } from "../types/index.js";
 import { FRONTMATTER_SCHEMAS } from "../config/defaults.js";
 
@@ -72,7 +70,6 @@ export class ConsistencyChecker {
   constructor(
     private docIndexer: DocIndexer,
     private memoryStore: MemoryStore,
-    private progressManager: ProgressManager,
     private stackDetector: StackDetector,
     private projectRoot: string
   ) {}
@@ -360,74 +357,14 @@ export class ConsistencyChecker {
     return issues;
   }
 
-  checkModuleCompleteness(): ValidationIssue[] {
-    const issues: ValidationIssue[] = [];
-    const progress = this.progressManager.getProgress() as ProjectProgress | null;
-    if (!progress) return issues;
-
-    const docs = this.docIndexer.listDocs();
-
-    for (const mod of progress.modules) {
-      const moduleName = mod.name.toLowerCase();
-
-      // Check PRD
-      const hasPRD = docs.some((d) => {
-        if (!d.name.toLowerCase().includes("prd")) return false;
-        const content = this.docIndexer.getDocContent(d.name);
-        return content ? content.toLowerCase().includes(moduleName) : false;
-      });
-      if (!hasPRD) {
-        issues.push({
-          type: "module_incomplete",
-          doc: mod.name,
-          detail: `Module "${mod.name}" not found in any PRD document`,
-          severity: "warning",
-        });
-      }
-
-      // Check data-model
-      const hasDataModel = docs.some((d) => {
-        if (!d.name.toLowerCase().includes("data-model") && !d.name.toLowerCase().includes("data_model")) return false;
-        const content = this.docIndexer.getDocContent(d.name);
-        return content ? content.toLowerCase().includes(moduleName) : false;
-      });
-      if (!hasDataModel) {
-        issues.push({
-          type: "module_incomplete",
-          doc: mod.name,
-          detail: `Module "${mod.name}" not found in data model document`,
-          severity: "warning",
-        });
-      }
-
-      // Check api-design
-      const hasAPI = docs.some((d) => {
-        if (!d.name.toLowerCase().includes("api")) return false;
-        const content = this.docIndexer.getDocContent(d.name);
-        return content ? content.toLowerCase().includes(moduleName) : false;
-      });
-      if (!hasAPI) {
-        issues.push({
-          type: "module_incomplete",
-          doc: mod.name,
-          detail: `Module "${mod.name}" not found in API design document`,
-          severity: "warning",
-        });
-      }
-    }
-
-    return issues;
-  }
-
   async runDeepValidation(): Promise<ValidationIssue[]> {
-    const [versions, memory, frontmatter, adr, modules] = await Promise.all([
+    const [versions, memory, frontmatter, adr] = await Promise.all([
       this.checkVersionConflicts(),
       this.checkMemoryDocConsistency(),
       this.validateFrontmatterSchemas(),
       this.validateADRStructure(),
-      this.checkModuleCompleteness(),
     ]);
-    return [...versions, ...memory, ...frontmatter, ...adr, ...modules];
+    return [...versions, ...memory, ...frontmatter, ...adr];
   }
 }
 

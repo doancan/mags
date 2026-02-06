@@ -15,15 +15,11 @@ Full setup for a project starting from scratch.
    → vision.md, prd.md, tech-stack.md, data-model.md, api-design.md
    → Have Claude write the content for you
 
-3. Start progress tracking
-   → mags_init_progress to define modules
-   → Set dependencies and priorities
-
-4. Record decisions
+3. Record decisions
    → mags_remember for architectural decisions
    → Record conventions
 
-5. /mags-status
+4. /mags-status
    → Verify everything is set up correctly
 ```
 
@@ -41,13 +37,11 @@ Integrating MAGS into a project that already has documentation.
    → Check document quality
    → Fix any gaps
 
-3. mags_init_progress to register modules
-
-4. Transfer decisions to memory
+3. Transfer decisions to memory
    → "We use Drizzle as our ORM, remember this"
    → "Backend uses a 3-layer architecture, remember this"
 
-5. Create or update CLAUDE.md
+4. Create or update CLAUDE.md
    → /mags-setup for recommendations
 ```
 
@@ -61,19 +55,17 @@ The recurring flow for each session. Hooks automate most of it.
 Session starts
   ↓ (SessionStart hook)
   → project_summary loaded
-  → progress loaded
   → conventions loaded
 
 Focus on a module
   ↓
   → mags_module_context("auth")
-  → PRD + data model + API + progress displayed
+  → PRD + data model + API displayed
 
 Develop
   ↓
   → Write code
   → Save important decisions to memory
-  → Update progress as items are completed
 ```
 
 ---
@@ -85,23 +77,16 @@ End-to-end development of a single module.
 ```
 1. Load context
    → mags_module_context("{module}")
-   → Relevant PRD, data model, API, progress
+   → Relevant PRD, data model, API
 
 2. Check decisions and conventions
    → mags_recall("{module}")
 
-3. Start development
-   → mags_update_progress("{module}", status: "in_progress")
+3. Develop
+   → Write code, make decisions
 
-4. Complete items
-   → mags_update_progress("{module}", "{item}", "completed")
-
-5. Record decisions
+4. Record decisions
    → mags_remember(key, value, "decisions", tags)
-
-6. When module is done
-   → All items completed → module auto-completes
-   → mags_get_next → next module suggested
 ```
 
 ---
@@ -180,29 +165,27 @@ mags_recall("", "notes")
 
 ## 8. Multi-Session Project
 
-Context continuity for long-running projects via memory and progress tracking.
+Context continuity for long-running projects via memory.
 
 ```
 Session 1: Planning
   → Documents created
-  → Progress initialized
   → Decisions saved to memory
 
 Session 2: Auth module
   → Project summary auto-loaded
   → Auth context loaded
   → Development done
-  → Progress updated, decisions remembered
+  → Decisions remembered
 
 Session 3: Tenant module
   → Project summary auto-loaded
-  → Auth shown as completed
   → Switch to tenant
   → ...
 ```
 
 Each session:
-- **Loaded:** Project summary + progress + conventions (automatic via hook)
+- **Loaded:** Project summary + conventions (automatic via hook)
 - **Persisted:** Decisions and conventions via `mags_remember` (throughout session)
 
 ---
@@ -224,16 +207,11 @@ Setting up and managing a microservices architecture.
    → Microservices-specific templates created
    → Additional templates: service-catalog, api-gateway, inter-service-comm
 
-3. Define services as modules
-   → mags_init_progress with each service as a module
-   → Set inter-service dependencies
-
-4. Per-service development
+3. Per-service development
    → mags_module_context("{service-name}")
    → Each service gets its own PRD section, data model, API design
-   → Track progress independently per service
 
-5. Cross-service concerns
+4. Cross-service concerns
    → Use memory for shared decisions ("Event bus uses RabbitMQ")
    → Document inter-service communication patterns
    → API gateway configuration tracked as a module
@@ -256,20 +234,14 @@ Documenting and modernizing an existing codebase.
    → tech-debt.md — prioritize items
    → migration-plan.md — adjust timeline
 
-3. Track tech debt
-   → mags_get_progress (filter by tech-debt category)
-   → Address items incrementally
-   → mags_update_progress as debt is resolved
-
-4. Plan modernization
+3. Plan modernization
    → target-architecture.md guides decisions
-   → Migration steps tracked as progress items
    → Decisions recorded in memory for consistency
 
-5. Incremental migration
+4. Incremental migration
    → Work module by module
    → Update current-architecture.md as changes land
-   → Track migration progress alongside feature work
+   → Record migration decisions in memory
 ```
 
 ---
@@ -516,26 +488,7 @@ Use `mags_discover_modules` to scan the project structure and find existing modu
      - billing (confidence: 85%) — src/modules/billing/
      - notifications (confidence: 70%) — src/services/notifications/
 
-3. Initialize progress tracking:
-   → Call mags_init_progress with the discovered modules
-   → Set dependencies between modules (e.g., users depends on auth)
-   → Set priorities (core modules first)
-
-   mags_init_progress({
-     project: "my-project",
-     modules: [
-       { name: "auth", priority: 1 },
-       { name: "users", priority: 2, dependsOn: ["auth"] },
-       { name: "billing", priority: 3, dependsOn: ["auth", "users"] },
-       { name: "notifications", priority: 4, dependsOn: ["users"] }
-     ]
-   })
-
-4. Verify with /mags-status
-   → Modules should appear in the progress dashboard
-   → Dependencies should be reflected in the order
-
-5. Optional: Scaffold documentation
+3. Optional: Scaffold documentation
    → For each discovered module, run mags_scaffold_module
    → Creates PRD section, data model draft, API endpoint draft
 ```

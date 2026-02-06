@@ -2,14 +2,13 @@
 
 A Claude Code plugin that keeps your project context alive across sessions.
 
-MAGS indexes your documentation, remembers decisions, and tracks development progress — so every new conversation picks up exactly where the last one left off.
+MAGS indexes your documentation and remembers decisions — so every new conversation picks up exactly where the last one left off.
 
 ## Why MAGS?
 
 Claude Code sessions are stateless. Every time you start a new conversation, you lose context: what was decided, what was built, what's next. MAGS solves this by giving Claude a persistent memory layer tied to your project.
 
 - **No more repeating yourself** — decisions, conventions, and context carry over
-- **No more lost progress** — module-level tracking with dependencies
 - **No more stale docs** — validation catches drift between code and documentation
 - **Zero config** — works offline with local TF-IDF, no API keys needed
 
@@ -49,7 +48,7 @@ That's it. MAGS will scan your `docs/` directory (or help you create one from te
 | Command | What it does |
 |---------|-------------|
 | `/mags-init` | Set up MAGS for your project — scan docs or scaffold from templates |
-| `/mags-status` | Dashboard — progress bars, doc health score, next steps |
+| `/mags-status` | Dashboard — doc health score, next steps |
 | `/mags-docs` | List all project documents |
 | `/mags-docs-create <template>` | Create a new document from template |
 | `/mags-docs-validate` | Run document validation checks |
@@ -58,7 +57,6 @@ That's it. MAGS will scan your `docs/` directory (or help you create one from te
 | `/mags-setup` | Analyze your project and recommend Claude Code configuration |
 | `/mags-legacy` | Initialize MAGS for a legacy/brownfield project with stack detection and tech debt tracking |
 | `/mags-help` | Quick reference of all commands, skills, agents, and hooks |
-| `/mags-orchestrate` | PRD analysis, codebase analysis, and execution plan management |
 
 ### Automatic Hooks
 
@@ -66,7 +64,7 @@ These run silently in the background — no action needed from you:
 
 | Event | What happens |
 |-------|-------------|
-| **SessionStart** | Loads project summary, progress, and conventions |
+| **SessionStart** | Loads project summary and conventions |
 
 ### Skills (auto-activated)
 
@@ -93,10 +91,10 @@ Claude automatically uses these when relevant:
 
 ```
 Session starts
-  → Hook loads: project summary + progress + conventions
+  → Hook loads: project summary + conventions
 
 You work normally
-  → Claude uses MAGS tools as needed (memory, docs, progress)
+  → Claude uses MAGS tools as needed (memory, docs)
   → Decisions and context are stored via mags_remember
 
 Next session starts
@@ -119,13 +117,7 @@ Categories: `decisions`, `conventions`, `notes`, `context`, `bugs`
 
 MAGS indexes your `docs/` directory — parses YAML frontmatter, extracts section headings, and builds a fuzzy search index. Supports `.md`, `.mdx`, `.rst`, and `.adoc`.
 
-### Progress Tracking
-
-Module-based progress with items, dependencies, and priorities. Status flows: `not_started` → `in_progress` → `completed` (or `blocked`).
-
-When all items in a module are completed, the module auto-completes. `mags_get_next` recommends what to work on based on dependencies.
-
-## MCP Tools (34 tools)
+## MCP Tools (20 tools)
 
 ### Documents
 | Tool | Description |
@@ -145,19 +137,11 @@ When all items in a module are completed, the module auto-completes. `mags_get_n
 | `mags_forget` | Delete a memory entry |
 | `mags_promote_memory` | Suggest promoting frequently used memory to CLAUDE.md |
 
-### Progress
-| Tool | Description |
-|------|-------------|
-| `mags_init_progress` | Initialize modules with items, dependencies, and priorities |
-| `mags_get_progress` | Get overall or per-module progress |
-| `mags_update_progress` | Update module/item status |
-| `mags_get_next` | Get next recommended work items |
-
 ### Context
 | Tool | Description |
 |------|-------------|
 | `mags_project_summary` | Full project context for session start |
-| `mags_module_context` | Deep context for a module (PRD + data model + API + progress) |
+| `mags_module_context` | Deep context for a module (PRD + data model + API) |
 
 ### Stack & Discovery
 | Tool | Description |
@@ -173,20 +157,6 @@ When all items in a module are completed, the module auto-completes. `mags_get_n
 | `mags_audit_claude_md` | Audit existing CLAUDE.md for completeness |
 | `mags_generate_changelog` | Generate changelog from conventional commits |
 | `mags_scaffold_module` | Generate doc templates for a new module |
-
-### Orchestration (Advanced)
-| Tool | Description |
-|------|-------------|
-| `mags_parse_prd` | Parse PRD document to extract features, modules, and requirements |
-| `mags_generate_skill` | Generate a skill definition from PRD content |
-| `mags_generate_agent` | Generate an agent definition from PRD content |
-| `mags_analyze_codebase` | Analyze codebase for tech debt, endpoints, and schema |
-| `mags_init_execution` | Initialize execution plan from parsed PRD |
-| `mags_execute_step` | Execute the next step in the execution plan |
-| `mags_get_current_step` | Get the current step in execution |
-| `mags_get_execution_status` | Get overall execution status and progress |
-| `mags_resume_execution` | Resume paused or failed execution |
-| `mags_verify_module` | Verify module implementation against requirements |
 
 ## Document Templates
 
@@ -265,7 +235,6 @@ mags/
 │   │   │   ├── doc-indexer.ts
 │   │   │   ├── doc-parser.ts
 │   │   │   ├── memory-store.ts
-│   │   │   ├── progress-manager.ts
 │   │   │   ├── search-engine.ts
 │   │   │   ├── template-engine.ts
 │   │   │   ├── template-pack-loader.ts
@@ -275,11 +244,11 @@ mags/
 │   │   │   ├── claude-md-rules.ts
 │   │   │   ├── consistency-checker.ts
 │   │   │   └── embedding/    # Pluggable embedding providers
-│   │   ├── tools/            # MCP tool registrations (34 tools)
+│   │   ├── tools/            # MCP tool registrations (20 tools)
 │   │   └── types/            # TypeScript type definitions
 │   └── dist/
 │       └── mags-server.bundle.mjs  # Pre-built bundle (no build step needed)
-├── skills/                   # 18 skills (11 slash commands + 7 guidance)
+├── skills/                   # 17 skills (10 slash commands + 7 guidance)
 ├── agents/                   # 2 specialized agents
 ├── hooks/                    # 1 event-driven hook
 └── templates/                # Document and project templates
@@ -288,10 +257,9 @@ mags/
 ## Documentation
 
 - [Getting Started](./docs/getting-started.md) — Installation, first use, core concepts
-- [Skills Reference](./docs/skills-reference.md) — All 18 skills (11 slash commands + 7 guidance)
-- [Commands Reference](./docs/commands-reference.md) — All 11 slash commands in detail
-- [MCP Tools Reference](./docs/tools-reference.md) — All 34 MCP tools with parameters
-- [Orchestrator Guide](./docs/orchestrator-guide.md) — PRD-driven development and code analysis
+- [Skills Reference](./docs/skills-reference.md) — All 17 skills (10 slash commands + 7 guidance)
+- [Commands Reference](./docs/commands-reference.md) — All 10 slash commands in detail
+- [MCP Tools Reference](./docs/tools-reference.md) — All 20 MCP tools with parameters
 - [Workflows](./docs/workflows.md) — Common usage scenarios and patterns
 - [Configuration](./docs/configuration.md) — Settings, embedding providers, customization
 

@@ -14,7 +14,6 @@ const { version: SERVER_VERSION } = require("../package.json");
 import { loadConfig, getDocsPath, getMagsPath } from "./config/loader.js";
 import { DocIndexer } from "./services/doc-indexer.js";
 import { MemoryStore } from "./services/memory-store.js";
-import { ProgressManager } from "./services/progress-manager.js";
 
 import { TemplateEngine } from "./services/template-engine.js";
 import { LocalEmbeddingProvider } from "./services/embedding/local.js";
@@ -24,7 +23,6 @@ import { StackDetector } from "./services/stack-detector.js";
 
 import { registerDocTools } from "./tools/doc-tools.js";
 import { registerMemoryTools } from "./tools/memory-tools.js";
-import { registerProgressTools } from "./tools/progress-tools.js";
 import { registerContextTools } from "./tools/context-tools.js";
 import { registerValidationTools } from "./tools/validation-tools.js";
 import { registerClaudeMdTools } from "./tools/claude-md-tools.js";
@@ -33,7 +31,6 @@ import { registerScaffoldTools } from "./tools/scaffold-tools.js";
 
 import { registerStackTools } from "./tools/stack-tools.js";
 import { registerModuleTools } from "./tools/module-tools.js";
-import { registerOrchestratorTools } from "./tools/orchestrator-tools.js";
 
 async function main() {
   // Resolve project root
@@ -80,9 +77,6 @@ async function main() {
     memoryStore.setEmbeddingProvider(new LocalEmbeddingProvider());
   }
 
-  const progressManager = new ProgressManager(magsPath);
-  progressManager.load();
-
   const templateEngine = new TemplateEngine(pluginRoot, {
     locale: config.locale,
     architecture: config.architecture,
@@ -100,23 +94,20 @@ async function main() {
   // Register all tools
   registerDocTools(server, docIndexer, templateEngine, docsPath);
   registerMemoryTools(server, memoryStore);
-  registerProgressTools(server, progressManager, memoryStore);
   registerContextTools(
     server,
     docIndexer,
-    progressManager,
     memoryStore,
     config
   );
   const stackDetector = new StackDetector();
-  registerValidationTools(server, docIndexer, memoryStore, progressManager, stackDetector, projectRoot);
+  registerValidationTools(server, docIndexer, memoryStore, stackDetector, projectRoot);
   registerClaudeMdTools(server, docIndexer, projectRoot, config);
   registerChangelogTools(server, projectRoot);
   registerScaffoldTools(server);
 
   registerStackTools(server, projectRoot, config);
   registerModuleTools(server, projectRoot, config);
-  registerOrchestratorTools(server, config, projectRoot);
 
   // Start server
   const transport = new StdioServerTransport();

@@ -6,8 +6,6 @@
 import { z } from "zod";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
-import type { ProgressManager } from "../services/progress-manager.js";
-
 import type { MemoryStore } from "../services/memory-store.js";
 import { MAX_MEMORY_ENTRIES } from "../config/defaults.js";
 import type { MagsConfig, ModuleDefinition } from "../types/index.js";
@@ -16,7 +14,6 @@ import { DEFAULT_MODULES } from "../config/defaults.js";
 export function registerContextTools(
   server: McpServer,
   docIndexer: DocIndexer,
-  progressManager: ProgressManager,
   memoryStore: MemoryStore,
   config: MagsConfig
 ) {
@@ -27,7 +24,6 @@ export function registerContextTools(
     {},
     async () => {
       const docs = docIndexer.listDocs();
-      const progress = progressManager.getProgress();
 
       let memoryCapacity = { total: MAX_MEMORY_ENTRIES, used: 0, available: MAX_MEMORY_ENTRIES, usagePercent: 0 };
       let recentDecisions: Awaited<ReturnType<typeof memoryStore.recall>> = [];
@@ -61,26 +57,6 @@ export function registerContextTools(
           `Locked: ${docs.filter((d) => d.status === "LOCKED").length} | ` +
           `Draft: ${docs.filter((d) => d.status === "DRAFT").length}`
       );
-
-      // Progress
-      if (progress && "modules" in progress) {
-        const completed = progress.modules.filter(
-          (m) => m.status === "completed"
-        ).length;
-        const total = progress.modules.length;
-        sections.push(
-          `## Progress\nPhase: ${progress.phase} | Modules: ${completed}/${total} completed`
-        );
-
-        const inProgress = progress.modules.filter(
-          (m) => m.status === "in_progress"
-        );
-        if (inProgress.length > 0) {
-          sections.push(
-            `Active: ${inProgress.map((m) => `${m.name} (${m.completionPercent}%)`).join(", ")}`
-          );
-        }
-      }
 
       // Recent decisions
       if (recentDecisions.length > 0) {
@@ -123,7 +99,7 @@ export function registerContextTools(
   // --- mags_module_context ---
   server.tool(
     "mags_module_context",
-    "Get all relevant context for a specific module: PRD section, data model tables, API endpoints, project structure, and progress. Use this before working on a module.",
+    "Get all relevant context for a specific module: PRD section, data model tables, API endpoints, and project structure. Use this before working on a module.",
     {
       module: z.string().describe("Module name (e.g., 'auth', 'crm', 'pms', 'feedback')"),
     },
@@ -172,12 +148,6 @@ export function registerContextTools(
         if (moduleStructure) {
           sections.push(`## Project Structure\n${moduleStructure}`);
         }
-      }
-
-      // Progress
-      const progress = progressManager.getProgress(module);
-      if (progress) {
-        sections.push(`## Progress\n${JSON.stringify(progress, null, 2)}`);
       }
 
       // Related memories

@@ -9,7 +9,6 @@ import { join, dirname } from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { DocIndexer } from "../services/doc-indexer.js";
 import type { MemoryStore } from "../services/memory-store.js";
-import type { ProgressManager } from "../services/progress-manager.js";
 import type { StackDetector } from "../services/stack-detector.js";
 import { ConsistencyChecker } from "../services/consistency-checker.js";
 import type { ValidationIssue, ValidationResult } from "../types/index.js";
@@ -18,7 +17,6 @@ export function registerValidationTools(
   server: McpServer,
   docIndexer: DocIndexer,
   memoryStore: MemoryStore,
-  progressManager: ProgressManager,
   stackDetector: StackDetector,
   projectRoot: string
 ) {
@@ -131,7 +129,6 @@ export function registerValidationTools(
         const checker = new ConsistencyChecker(
           docIndexer,
           memoryStore,
-          progressManager,
           stackDetector,
           projectRoot
         );

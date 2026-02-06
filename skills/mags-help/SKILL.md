@@ -5,7 +5,6 @@ version: 1.0.0
 user-invocable: true
 allowed-tools:
   - mcp__mags_mags__mags_list_docs
-  - mcp__mags_mags__mags_get_progress
 ---
 
 # MAGS Help
@@ -21,10 +20,10 @@ Present the following reference card directly (no tool calls needed for this ste
 ```
 == MAGS Quick Reference ==
 
-SLASH COMMANDS (11)
+SLASH COMMANDS (10)
   /mags-help              Show this reference card
   /mags-init              Initialize MAGS for your project
-  /mags-status            Project dashboard (progress, docs health, next steps)
+  /mags-status            Project dashboard (docs health, memory, next steps)
   /mags-docs              List all project documents
   /mags-docs-create <t>   Create document from template
   /mags-docs-validate     Run document validation checks
@@ -32,7 +31,6 @@ SLASH COMMANDS (11)
   /mags-changelog         Generate changelog from git history
   /mags-setup             Recommend Claude Code configuration
   /mags-legacy            Initialize MAGS for a legacy/brownfield project
-  /mags-orchestrate       PRD analysis, codebase analysis, and execution plans
 
 AUTO-ACTIVATING SKILLS (7)
   These activate automatically when Claude detects a relevant context:
@@ -52,11 +50,11 @@ HOOKS (1 — automatic, no action needed)
   - SessionStart          Loads project summary on startup
 ```
 
-### 2. Show quick start (if no progress exists)
+### 2. Show quick start
 
-Call `mags_get_progress` to check if the project has been initialized.
+Call `mags_list_docs` to check if any documents exist.
 
-If no progress data exists, show:
+If no documents exist, show:
 
 ```
 QUICK START
@@ -65,12 +63,12 @@ QUICK START
   3. /mags-status         → See your project dashboard
 ```
 
-If progress exists, show:
+If documents exist, show:
 
 ```
 QUICK START
   You're all set! Try:
-  → /mags-status          See current progress
+  → /mags-status          See project dashboard
   → /mags-docs-validate   Check documentation health
   → "What's next?"        Get recommended next steps
 ```
@@ -85,7 +83,6 @@ DOCUMENTATION
   → Commands Reference:   docs/commands-reference.md
   → Skills Reference:     docs/skills-reference.md
   → MCP Tools Reference:  docs/tools-reference.md
-  → Orchestrator Guide:   docs/orchestrator-guide.md
   → Configuration:        docs/configuration.md
 ```
 

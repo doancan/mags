@@ -250,10 +250,6 @@ describe("Skill Integrity Guard", () => {
     "mags_recall",
     "mags_forget",
     "mags_promote_memory",
-    "mags_init_progress",
-    "mags_get_progress",
-    "mags_update_progress",
-    "mags_get_next",
     "mags_project_summary",
     "mags_module_context",
     "mags_validate_docs",
@@ -265,16 +261,6 @@ describe("Skill Integrity Guard", () => {
     "mags_discover_modules",
     "mags_reindex",
     "mags_update_metadata",
-    "mags_parse_prd",
-    "mags_analyze_codebase",
-    "mags_generate_skill",
-    "mags_generate_agent",
-    "mags_init_execution",
-    "mags_execute_step",
-    "mags_get_current_step",
-    "mags_resume_execution",
-    "mags_verify_module",
-    "mags_get_execution_status",
   ];
 
   // Claude Code built-in tools that skills can reference
@@ -350,12 +336,6 @@ describe("Skill Integrity Guard", () => {
     }
   });
 
-  it("mags-init has mags_init_progress in allowed-tools", () => {
-    const skillMd = join(SKILLS_DIR, "mags-init", "SKILL.md");
-    expect(existsSync(skillMd)).toBe(true);
-    const content = readFileSync(skillMd, "utf-8");
-    expect(content).toContain(`${MCP_PREFIX}mags_init_progress`);
-  });
 });
 
 // ── 1.5 Deep Validation Guard ───────────────────────

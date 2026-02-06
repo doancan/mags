@@ -5,9 +5,7 @@ version: 1.0.0
 user-invocable: true
 allowed-tools:
   - mcp__mags_mags__mags_project_summary
-  - mcp__mags_mags__mags_get_progress
   - mcp__mags_mags__mags_validate_docs
-  - mcp__mags_mags__mags_get_next
   - mcp__mags_mags__mags_recall
 ---
 
@@ -19,14 +17,10 @@ Display a comprehensive project status dashboard.
 
 ### 1. Gather data
 
-Call all three in parallel:
+Call these in parallel:
 - `mags_project_summary` — Get overall project summary
-- `mags_get_progress` — Get module/task progress
 - `mags_validate_docs` — Check documentation health
-
-Then call `mags_get_next` to get recommended next steps.
-
-Also call `mags_recall` with query "recent decisions and blockers" to surface anything relevant.
+- `mags_recall` with query "recent decisions and blockers" — Surface relevant memories
 
 ### 2. Format the dashboard
 
@@ -39,13 +33,6 @@ PROJECT
   Name:     <project name>
   Stack:    <tech stack>
   State:    <project state>
-
-PROGRESS
-  <module name>    [========--]  80%   <status note>
-  <module name>    [====------]  40%   <status note>
-  <module name>    [----------]   0%   not started
-
-  Overall: <X>% complete  |  <N> modules  |  <M> tasks pending
 
 DOCUMENTATION HEALTH
   Total docs:      <N>
@@ -62,15 +49,11 @@ NEXT STEPS
   3. <recommended action>
 ```
 
-Use plain text block formatting. Represent progress bars using `=` for filled and `-` for empty inside brackets, 10 characters wide.
-
 ### 3. Offer actions
 
 After displaying the dashboard, say:
 
 "Run `/mags-docs-validate` to fix doc issues, or use `mags_remember` to save important decisions."
-
-If no progress data is returned, show: "No modules defined yet. Run `/mags-init` to set up your project, or use `mags_init_progress` to define modules manually."
 
 Do not take any further action unless the user asks.
 

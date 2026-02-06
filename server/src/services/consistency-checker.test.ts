@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { ConsistencyChecker } from "./consistency-checker.js";
-import type { DocEntry, MemoryEntry, ProjectProgress, ModuleProgress } from "../types/index.js";
+import type { DocEntry, MemoryEntry } from "../types/index.js";
 
 // --- Mock factories ---
 
@@ -50,19 +50,6 @@ function createMockMemoryStore(memories: MemoryEntry[] = []) {
   };
 }
 
-function createMockProgressManager(progress: ProjectProgress | null = null) {
-  return {
-    getProgress: vi.fn(() => progress),
-    load: vi.fn(),
-    initialize: vi.fn(),
-    updateProgress: vi.fn(),
-    getNext: vi.fn(),
-    addModule: vi.fn(),
-    getUnmetDependencies: vi.fn(),
-    getModuleItemNames: vi.fn(),
-  };
-}
-
 function createMockStackDetector(versions: Record<string, string> = {}) {
   return {
     detect: vi.fn(() => ({
@@ -98,7 +85,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         createMockDocIndexer([]) as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -117,7 +103,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         createMockDocIndexer([]) as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -132,7 +117,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         createMockDocIndexer([]) as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -145,7 +129,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         createMockDocIndexer([]) as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -168,7 +151,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -185,7 +167,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector({ React: "19.0.0" }) as any,
         "/tmp"
       );
@@ -203,7 +184,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector({ React: "18.2.0" }) as any,
         "/tmp"
       );
@@ -226,7 +206,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         memoryStore as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -247,7 +226,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         memoryStore as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -271,7 +249,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -292,7 +269,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -314,7 +290,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -338,7 +313,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
@@ -360,87 +334,12 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );
 
       const issues = checker.validateADRStructure();
       expect(issues.filter((i) => i.type === "adr_missing_section")).toHaveLength(0);
-    });
-  });
-
-  describe("checkModuleCompleteness", () => {
-    it("detects module missing from PRD", () => {
-      const docIndexer = createMockDocIndexer([
-        { name: "prd", content: "# PRD\n\n## Auth Module\nAuth features..." },
-        { name: "data-model", content: "# Data Model\n\n## payments\nPayments tables..." },
-        { name: "api-design", content: "# API\n\n## payments\nPayments endpoints..." },
-      ]);
-
-      const progress: ProjectProgress = {
-        project: "test",
-        phase: 1,
-        startedAt: new Date().toISOString(),
-        modules: [
-          {
-            name: "payments",
-            status: "not_started",
-            phase: 1,
-            priority: 1,
-            dependsOn: [],
-            items: [],
-            completionPercent: 0,
-          },
-        ],
-      };
-
-      const checker = new ConsistencyChecker(
-        docIndexer as any,
-        createMockMemoryStore() as any,
-        createMockProgressManager(progress) as any,
-        createMockStackDetector() as any,
-        "/tmp"
-      );
-
-      const issues = checker.checkModuleCompleteness();
-      expect(issues.some((i) => i.type === "module_incomplete" && i.detail.includes("PRD"))).toBe(true);
-    });
-
-    it("passes when module is in all docs", () => {
-      const docIndexer = createMockDocIndexer([
-        { name: "prd", content: "# PRD\n\n## Auth\nauth features..." },
-        { name: "data-model", content: "# Data Model\n\n## Auth\nauth tables..." },
-        { name: "api-design", content: "# API\n\n## Auth\nauth endpoints..." },
-      ]);
-
-      const progress: ProjectProgress = {
-        project: "test",
-        phase: 1,
-        startedAt: new Date().toISOString(),
-        modules: [
-          {
-            name: "auth",
-            status: "not_started",
-            phase: 1,
-            priority: 1,
-            dependsOn: [],
-            items: [],
-            completionPercent: 0,
-          },
-        ],
-      };
-
-      const checker = new ConsistencyChecker(
-        docIndexer as any,
-        createMockMemoryStore() as any,
-        createMockProgressManager(progress) as any,
-        createMockStackDetector() as any,
-        "/tmp"
-      );
-
-      const issues = checker.checkModuleCompleteness();
-      expect(issues.filter((i) => i.type === "module_incomplete")).toHaveLength(0);
     });
   });
 
@@ -458,7 +357,6 @@ describe("ConsistencyChecker", () => {
       const checker = new ConsistencyChecker(
         docIndexer as any,
         createMockMemoryStore() as any,
-        createMockProgressManager() as any,
         createMockStackDetector() as any,
         "/tmp"
       );

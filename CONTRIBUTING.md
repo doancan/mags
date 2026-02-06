@@ -20,7 +20,6 @@ The MCP server (`server/src/`) contains 15+ core services organized in layers:
 | Doc Indexer | `doc-indexer.ts` | Indexes markdown files from `docs/` directory |
 | Doc Parser | `doc-parser.ts` | Parses YAML frontmatter, sections, and content from documents |
 | Memory Store | `memory-store.ts` | Key-value memory storage with categories and tags |
-| Progress Manager | `progress-manager.ts` | Module and item progress tracking with dependencies |
 | Search Engine | `search-engine.ts` | TF-IDF / BM25 full-text search across docs and memory |
 | Template Engine | `template-engine.ts` | Handlebars template rendering with variable substitution |
 | Template Pack Loader | `template-pack-loader.ts` | Loads custom template packs from `pack.yaml` manifests |
@@ -37,21 +36,7 @@ The MCP server (`server/src/`) contains 15+ core services organized in layers:
 | Local Embedding | `embedding/local.ts` | TF-IDF based offline semantic search |
 | OpenAI Embedding | `embedding/openai.ts` | OpenAI API-based semantic embeddings |
 
-### Orchestrator Subsystem
-
-The orchestrator (`services/orchestrator/`) provides advanced project management:
-
-| Service | File | Responsibility |
-|---------|------|----------------|
-| Project Orchestrator | `index.ts` | Coordinates PRD parsing, skill generation, and execution |
-| PRD Parser | `prd-parser.ts` | Extracts features, modules, and requirements from PRD |
-| Skill Generator | `skill-generator.ts` | Auto-generates skills from PRD requirements |
-| Agent Generator | `agent-generator.ts` | Generates agent definitions from PRD |
-| Plan Executor | `plan-executor.ts` | Executes implementation plans step-by-step |
-| Code Analyzer | `code-analyzer.ts` | Analyzes codebase for tech debt, endpoints, schema |
-| TDD Engine | `tdd-engine.ts` | Runs test suites and verifies coverage |
-
-Tools are registered in `server/src/tools/` (34 MCP tools total). Each tool file maps to one or more services.
+Tools are registered in `server/src/tools/` (20 MCP tools total). Each tool file maps to one or more services.
 
 ## Adding a New MCP Tool
 

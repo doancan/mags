@@ -1,8 +1,8 @@
 # Commands Reference
 
-> **Note:** Commands have been migrated to the skill-based architecture. Each command now lives at `skills/<name>/SKILL.md` instead of the legacy `commands/` directory. For a complete reference of all 18 skills (11 slash commands + 7 auto-activating guidance skills), see [Skills Reference](./skills-reference.md).
+> **Note:** Commands have been migrated to the skill-based architecture. Each command now lives at `skills/<name>/SKILL.md` instead of the legacy `commands/` directory. For a complete reference of all 17 skills (10 slash commands + 7 auto-activating guidance skills), see [Skills Reference](./skills-reference.md).
 
-MAGS provides 11 slash commands. Each command runs in Claude Code via `/command-name`.
+MAGS provides 10 slash commands. Each command runs in Claude Code via `/command-name`.
 
 ## /mags-init
 
@@ -17,7 +17,7 @@ Initializes your project with MAGS.
 1. Checks for `docs/` and `.mags/` directories
 2. If existing docs are found, indexes them
 3. If not, asks for project info and scaffolds documents from templates
-4. Sets up `.mags/` directory (config, progress, memory)
+4. Sets up `.mags/` directory (config, memory)
 5. Optionally offers to generate CLAUDE.md
 
 **When to use:** When adding MAGS to a project for the first time. Only needs to run once.
@@ -35,11 +35,10 @@ Shows a project status dashboard.
 
 **Displays:**
 - Project name and tech stack
-- Module progress bars (% completion)
 - Document health (error and warning counts)
 - Next step suggestions
 
-**When to use:** At the start of a session or whenever you want to check progress.
+**When to use:** At the start of a session or whenever you want to check project status.
 
 ---
 
@@ -192,7 +191,7 @@ Initializes MAGS for an existing (brownfield/legacy) project that already has co
    - `target-architecture` — target architecture document
    - `tech-stack` — based on detected stack
    - `project-structure` — based on discovered modules
-4. **Sets up tech debt tracking** — initializes progress with discovered modules as features, pain points as tech-debt items, and migration steps
+4. **Documents tech debt** — records pain points and migration steps in documentation
 
 **When to use:** When adding MAGS to a project that already has a codebase but needs documentation and modernization tracking.
 
@@ -208,7 +207,7 @@ Shows a quick reference of all available commands, skills, agents, and hooks.
 ```
 
 **Displays:**
-- All 11 slash commands with brief descriptions
+- All 10 slash commands with brief descriptions
 - 7 auto-activating skills and their triggers
 - 2 agents and what they do
 - 1 hook and when it fires
@@ -217,26 +216,3 @@ Shows a quick reference of all available commands, skills, agents, and hooks.
 
 **When to use:** When you want a quick overview of everything MAGS offers, or to discover a command you haven't used before.
 
----
-
-## /mags-orchestrate
-
-Orchestrates PRD-driven development: parse requirements, analyze your codebase, create execution plans, and run them step by step.
-
-**Usage:**
-```
-/mags-orchestrate
-```
-
-**What it does:**
-1. Asks what you want to do (PRD analysis, codebase analysis, create plan, or run plan)
-2. Based on your choice:
-   - **PRD Analysis** — Parses a PRD to extract features, modules, and requirements
-   - **Codebase Analysis** — Scans for tech debt, endpoints, and schema
-   - **Create Execution Plan** — Generates a step-by-step plan from your PRD
-   - **Run / Resume Plan** — Executes or continues an existing plan
-3. Shows results and suggests next steps
-
-**When to use:** When you want to systematically implement features from a PRD, or analyze your codebase for tech debt and improvement opportunities.
-
-**Related:** See [Orchestrator Guide](./orchestrator-guide.md) for detailed documentation.

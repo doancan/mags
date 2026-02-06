@@ -4,7 +4,6 @@ import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { DocIndexer } from "../server/src/services/doc-indexer.js";
 import { MemoryStore } from "../server/src/services/memory-store.js";
-import { ProgressManager } from "../server/src/services/progress-manager.js";
 import { StackDetector } from "../server/src/services/stack-detector.js";
 import { ConsistencyChecker } from "../server/src/services/consistency-checker.js";
 import { LocalEmbeddingProvider } from "../server/src/services/embedding/local.js";
@@ -15,7 +14,6 @@ describe("Deep Validation Integration", () => {
   let magsDir: string;
   let docIndexer: DocIndexer;
   let memoryStore: MemoryStore;
-  let progressManager: ProgressManager;
   let stackDetector: StackDetector;
 
   beforeAll(async () => {
@@ -202,26 +200,6 @@ Need to manage migrations.
       ["auth"]
     );
 
-    progressManager = new ProgressManager(magsDir);
-    progressManager.initialize("test-project", [
-      {
-        name: "auth",
-        status: "not_started",
-        phase: 1,
-        priority: 1,
-        dependsOn: [],
-        items: [],
-      },
-      {
-        name: "payments",
-        status: "not_started",
-        phase: 2,
-        priority: 2,
-        dependsOn: ["auth"],
-        items: [],
-      },
-    ]);
-
     stackDetector = new StackDetector();
   });
 
@@ -238,7 +216,6 @@ Need to manage migrations.
     const checker = new ConsistencyChecker(
       docIndexer,
       memoryStore,
-      progressManager,
       stackDetector,
       tmpDir
     );
@@ -261,18 +238,12 @@ Need to manage migrations.
     const statusIssues = issues.filter((i) => i.type === "invalid_status");
     expect(statusIssues.length).toBeGreaterThan(0);
 
-    // Should detect payments module missing from PRD
-    const moduleIssues = issues.filter(
-      (i) => i.type === "module_incomplete" && i.detail.includes("payments")
-    );
-    expect(moduleIssues.length).toBeGreaterThan(0);
   });
 
   it("extractTechTerms finds versioned terms in tech-stack doc", () => {
     const checker = new ConsistencyChecker(
       docIndexer,
       memoryStore,
-      progressManager,
       stackDetector,
       tmpDir
     );
@@ -292,7 +263,6 @@ Need to manage migrations.
     const checker = new ConsistencyChecker(
       docIndexer,
       memoryStore,
-      progressManager,
       stackDetector,
       tmpDir
     );

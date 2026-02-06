@@ -133,38 +133,6 @@ export interface ScoredMemory extends MemoryEntry {
   score: number;
 }
 
-// --- Progress ---
-
-export type ModuleStatus =
-  | "not_started"
-  | "in_progress"
-  | "completed"
-  | "blocked";
-
-export interface ProgressItem {
-  name: string;
-  status: ModuleStatus;
-  notes?: string;
-}
-
-export interface ModuleProgress {
-  name: string;
-  status: ModuleStatus;
-  phase: number;
-  priority: number;
-  dependsOn: string[];
-  items: ProgressItem[];
-  completionPercent: number;
-  category?: "feature" | "tech-debt" | "migration";
-}
-
-export interface ProjectProgress {
-  project: string;
-  phase: number;
-  startedAt: string;
-  modules: ModuleProgress[];
-}
-
 // --- Validation ---
 
 export type IssueSeverity = "error" | "warning" | "info";

@@ -1,6 +1,6 @@
 # Getting Started
 
-MAGS (Memory And Guidance System) is a Claude Code plugin that preserves project context across sessions. It indexes your documents, remembers decisions, and tracks progress.
+MAGS (Memory And Guidance System) is a Claude Code plugin that preserves project context across sessions. It indexes your documents and remembers decisions.
 
 ## Installation
 
@@ -29,7 +29,7 @@ In your project directory within Claude Code:
 This command:
 - Scans and indexes existing `docs/` if present
 - Otherwise asks for project info and scaffolds documents from templates
-- Sets up `docs/.mags/` directory (progress, memory)
+- Sets up `docs/.mags/` directory (memory)
 - Optionally generates CLAUDE.md
 
 ## Quick Win (2 minutes)
@@ -107,10 +107,6 @@ A project with code already written but disorganized documentation:
 # Record decisions and conventions
 "We use JWT + refresh tokens for auth, remember this"
 → mags_remember is called
-
-# Start progress tracking
-"We have auth, tenant, and dashboard modules, initialize progress"
-→ mags_init_progress is called
 ```
 
 ### Scenario D: Legacy/Brownfield Project
@@ -123,7 +119,7 @@ An existing project that needs documentation, migration planning, and tech debt 
 → 8 modules discovered with confidence scores
 → Legacy context gathered (migration goals, pain points)
 → Documents created: current-architecture, migration-plan, tech-debt, target-architecture
-→ Progress tracking initialized with tech debt items
+→ Tech debt items documented
 ```
 
 ## Architecture Overview
@@ -132,7 +128,7 @@ MAGS has three layers:
 
 ```
 You → Slash Commands (/mags-*) → MCP Tools (mags_*) → Services
-      11 commands                 34 tools              15+ services
+      10 commands                 20 tools              15+ services
 ```
 
 - **Slash commands** — what you use directly (e.g. `/mags-init`, `/mags-status`)
@@ -167,29 +163,18 @@ Information stored as key-value pairs. Claude automatically saves them when you 
 | `context` | Session context | "Currently working on auth module" |
 | `bugs` | Bug observations | "Refresh token race condition exists" |
 
-### Progress
-
-Module-based progress tracking. Each module has sub-items, dependencies, and a status:
-
-```
-not_started → in_progress → completed
-                           → blocked (due to dependency)
-```
-
-When all items are completed, the module auto-completes. `mags_get_next` recommends the next task based on dependencies.
-
 ## Daily Usage Flow
 
 A typical session looks like this:
 
 ```
 Session starts
-  → (automatic) project_summary + progress + conventions loaded
+  → (automatic) project_summary + conventions loaded
 
 Start working on a module
   → "Load the context for the auth module"
   → Claude calls mags_module_context("auth")
-  → PRD section + data model + API endpoints + progress displayed
+  → PRD section + data model + API endpoints displayed
 
 Develop
   → Write code, make decisions
@@ -206,17 +191,14 @@ Develop
 | Check document quality | `/mags-docs validate` |
 | Record a decision | Tell Claude in natural language |
 | Get module context | "Load the auth module context" |
-| Find out what's next | "What's next?" → `mags_get_next` |
 | Generate a changelog | `/mags-changelog` |
 | Set up a legacy project | `/mags-legacy` |
 | See all available commands | `/mags-help` |
-| PRD analysis & execution | `/mags-orchestrate` |
 
 ## Next Steps
 
-- [Commands Reference](./commands-reference.md) — All 11 slash commands in detail
-- [Skills Reference](./skills-reference.md) — All 18 skills (11 commands + 7 guidance)
-- [MCP Tools Reference](./tools-reference.md) — All 34 MCP tools with parameters
-- [Orchestrator Guide](./orchestrator-guide.md) — PRD-driven development and code analysis
+- [Commands Reference](./commands-reference.md) — All 10 slash commands in detail
+- [Skills Reference](./skills-reference.md) — All 17 skills (10 commands + 7 guidance)
+- [MCP Tools Reference](./tools-reference.md) — All 20 MCP tools with parameters
 - [Workflows](./workflows.md) — Common usage scenarios and patterns
 - [Configuration](./configuration.md) — Settings and customization

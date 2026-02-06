@@ -8,8 +8,6 @@ allowed-tools:
   - mcp__mags_mags__mags_create_doc
   - mcp__mags_mags__mags_update_doc
   - mcp__mags_mags__mags_search_docs
-  - mcp__mags_mags__mags_init_progress
-  - mcp__mags_mags__mags_update_progress
   - mcp__mags_mags__mags_detect_stack
   - mcp__mags_mags__mags_generate_claude_md
   - mcp__mags_mags__mags_project_summary
@@ -68,7 +66,6 @@ Create the following structure:
 ```
 .mags/
   config.yaml    — MAGS configuration
-  progress.yaml  — Task/module progress tracking
 ```
 
 **config.yaml** content:
@@ -81,15 +78,6 @@ initialized_at: <current ISO date>
 ```
 
 Use the locale code the user selected in question 5 (en, tr, etc.) as the `locale` value.
-
-**progress.yaml** content:
-```yaml
-modules: []
-tasks: []
-last_updated: <current ISO date>
-```
-
-Call `mags_init_progress` to initialize the progress tracker with the project's modules.
 
 ### 4. Offer CLAUDE.md generation
 
@@ -115,7 +103,6 @@ MAGS initialized successfully.
 
   Project:    <name>
   Docs:       <N> documents indexed
-  Progress:   Tracking enabled
   CLAUDE.md:  <generated / skipped>
 
 Next steps:
