@@ -316,6 +316,85 @@ A test application for unit testing.
     });
   });
 
+  describe("h2 module headers", () => {
+    it("should parse PRD with ## module headers", async () => {
+      const prd = writePrd(`---
+title: "TestApp: Product Requirements"
+---
+
+# TestApp — Product Requirements (PRD)
+
+## Overview
+
+A test application.
+
+## M1: auth
+> Authentication module
+
+### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | Email/password login | P0 | 1 |
+
+### Acceptance Criteria
+- [ ] User can login with email
+
+### Dependencies
+- Requires: []
+- Blocks: [crm]
+
+---
+
+## M2: crm
+> Customer management
+
+### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M2-001 | Customers | Customer management | P1 | 2 |
+
+### Dependencies
+- Requires: [auth]
+- Blocks: []
+`);
+
+      const result = await parser.parse(prd);
+
+      expect(result).not.toBeNull();
+      expect(result!.modules).toHaveLength(2);
+
+      const auth = result!.modules.find((m) => m.name === "auth");
+      expect(auth).toBeDefined();
+      expect(auth!.id).toBe("M1");
+      expect(auth!.features).toHaveLength(1);
+      expect(auth!.acceptanceCriteria).toHaveLength(1);
+      expect(auth!.dependencies.blocks).toContain("crm");
+
+      const crm = result!.modules.find((m) => m.name === "crm");
+      expect(crm).toBeDefined();
+      expect(crm!.dependencies.requires).toContain("auth");
+    });
+
+    it("should handle mixed heading levels across modules", async () => {
+      // Edge case: all modules should use the same level, but parser should still work
+      const prd = writePrd(`# Test
+
+## M1: auth
+> Auth
+
+### Features
+| ID | Feature | Description | Priority | Phase |
+|---|---|---|---|---|
+| M1-001 | Login | Login | P0 | 1 |
+`);
+
+      const result = await parser.parse(prd);
+      expect(result).not.toBeNull();
+      expect(result!.modules).toHaveLength(1);
+      expect(result!.modules[0].features).toHaveLength(1);
+    });
+  });
+
   describe("phases", () => {
     it("should extract phases from modules", async () => {
       const prd = writePrd(`# Test

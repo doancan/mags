@@ -18,7 +18,7 @@ import type {
 
 // --- Regex Patterns ---
 
-const MODULE_HEADER_REGEX = /^###\s+M(\d+):\s+(.+)$/;
+const MODULE_HEADER_REGEX = /^(#{2,3})\s+M(\d+):\s+(.+)$/;
 const MODULE_DESC_REGEX = /^>\s+(.+)$/;
 const FEATURE_TABLE_REGEX = /^\|\s*([A-Z0-9-]+)\s*\|\s*([^|]+)\s*\|\s*([^|]*)\s*\|\s*(P[012])\s*\|\s*([123])\s*\|$/;
 const ACCEPTANCE_REGEX = /^-\s+\[[ x]\]\s+(.+)$/;
@@ -172,12 +172,13 @@ export class PrdParser {
     let inFeatureTable = false;
     let inAcceptanceCriteria = false;
     let inDependencies = false;
+    let subHeadingPrefix = "####"; // default: one level below ###
 
     for (let i = 0; i < lines.length; i++) {
       const line = lines[i];
       const lineNum = i + 1;
 
-      // Module header: ### M1: auth
+      // Module header: ## M1: auth or ### M1: auth
       const moduleMatch = line.match(MODULE_HEADER_REGEX);
       if (moduleMatch) {
         // Save previous module
@@ -185,9 +186,13 @@ export class PrdParser {
           modules.push(this.finalizeModule(currentModule));
         }
 
+        // Determine sub-heading level from module heading level
+        const headingHashes = moduleMatch[1]; // "##" or "###"
+        subHeadingPrefix = "#".repeat(headingHashes.length + 1);
+
         currentModule = {
-          id: `M${moduleMatch[1]}`,
-          name: moduleMatch[2].trim().toLowerCase(),
+          id: `M${moduleMatch[2]}`,
+          name: moduleMatch[3].trim().toLowerCase(),
           description: "",
           features: [],
           acceptanceCriteria: [],
@@ -210,20 +215,20 @@ export class PrdParser {
         continue;
       }
 
-      // Section headers
-      if (line.match(/^####\s+Features/i)) {
+      // Section headers (dynamic level based on module heading)
+      if (line.match(new RegExp(`^${subHeadingPrefix}\\s+Features`, "i"))) {
         inFeatureTable = true;
         inAcceptanceCriteria = false;
         inDependencies = false;
         continue;
       }
-      if (line.match(/^####\s+Acceptance\s+Criteria/i)) {
+      if (line.match(new RegExp(`^${subHeadingPrefix}\\s+Acceptance\\s+Criteria`, "i"))) {
         inFeatureTable = false;
         inAcceptanceCriteria = true;
         inDependencies = false;
         continue;
       }
-      if (line.match(/^####\s+Dependencies/i)) {
+      if (line.match(new RegExp(`^${subHeadingPrefix}\\s+Dependencies`, "i"))) {
         inFeatureTable = false;
         inAcceptanceCriteria = false;
         inDependencies = true;
@@ -339,7 +344,7 @@ export class PrdParser {
       this.errors.push({
         type: "missing",
         message: "No modules found in PRD",
-        suggestion: "Add modules using format: ### M1: module_name",
+        suggestion: "Add modules using format: ## M1: module_name or ### M1: module_name",
       });
       return;
     }
