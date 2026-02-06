@@ -13,6 +13,7 @@ export function loadConfig(projectRoot: string): MagsConfig {
   const configPaths = [
     join(projectRoot, ".mags.yaml"),
     join(projectRoot, ".mags.yml"),
+    join(projectRoot, ".mags", "config.yaml"),
     join(projectRoot, "docs", ".mags", "config.yaml"),
   ];
 
