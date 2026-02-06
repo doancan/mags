@@ -1,6 +1,6 @@
 # MCP Tools Reference
 
-MAGS provides 36 MCP tools. These tools are called automatically by Claude Code or can be triggered directly.
+MAGS provides 37 MCP tools. These tools are called automatically by Claude Code or can be triggered directly.
 
 ## Document Tools
 
@@ -65,6 +65,31 @@ Creates a new document from a template.
 | `template` | string | Yes | Template name (vision, prd, tech-stack, etc.) |
 | `variables` | object | No | Handlebars template variables |
 | `path` | string | No | Custom output path (relative to docs/) |
+
+---
+
+### mags_update_metadata
+
+Updates frontmatter metadata fields of a document without changing its content body.
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `name` | string | Yes | Document name |
+| `metadata` | object | Yes | Fields to set. Use `null` to remove a field. |
+
+**Returns:** `{ success: true, path: "...", updatedFields: [...] }`
+
+**Example:**
+```json
+{
+  "name": "prd",
+  "metadata": {
+    "status": "review",
+    "tags": ["backend", "api"],
+    "version": "2.0"
+  }
+}
+```
 
 ---
 

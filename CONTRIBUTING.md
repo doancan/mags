@@ -52,7 +52,7 @@ The orchestrator (`services/orchestrator/`) provides advanced project management
 | Code Analyzer | `code-analyzer.ts` | Analyzes codebase for tech debt, endpoints, schema |
 | TDD Engine | `tdd-engine.ts` | Runs test suites and verifies coverage |
 
-Tools are registered in `server/src/tools/` (36 MCP tools total). Each tool file maps to one or more services.
+Tools are registered in `server/src/tools/` (37 MCP tools total). Each tool file maps to one or more services.
 
 ## Adding a New MCP Tool
 

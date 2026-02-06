@@ -113,6 +113,15 @@ locale: "tr"   # Turkish templates
 
 Default locale is `en`.
 
+### Available Locales
+
+| Locale | Language |
+|--------|----------|
+| `en` | English (default, full coverage) |
+| `tr` | Turkish (full coverage) |
+
+Other locales fall back to `en` for missing templates.
+
 ## Custom Template Packs
 
 You can add custom template packs beyond the built-in templates. Each pack must contain a `pack.yaml` manifest:
@@ -149,6 +158,57 @@ customTemplatePacks:
   - ./my-templates
   - /absolute/path/to/pack
 ```
+
+### Override Rules
+
+Custom templates take priority over built-in templates with the same name. Resolution order:
+
+1. Custom pack (locale-specific, e.g. `my-templates/tr/prd.md`)
+2. Custom pack (default, e.g. `my-templates/prd.md`)
+3. Built-in (locale-specific, e.g. `templates/docs/tr/prd.md`)
+4. Built-in (english, e.g. `templates/docs/en/prd.md`)
+5. Built-in (root, e.g. `templates/docs/prd.md`)
+
+### Creating a Custom Template Pack
+
+1. Create a directory with a `pack.yaml` manifest:
+   ```yaml
+   id: my-pack
+   name: My Custom Templates
+   version: "1.0.0"
+   description: Templates for our team
+   templates:
+     - sprint-review
+     - design-spec
+   ```
+
+2. Add template files (`.md` or `.hbs`):
+   ```
+   my-pack/
+   ├── pack.yaml
+   ├── sprint-review.md
+   └── design-spec.md
+   ```
+
+3. Optionally add locale directories for multi-language support:
+   ```
+   my-pack/
+   ├── pack.yaml
+   ├── en/
+   │   ├── sprint-review.md
+   │   └── design-spec.md
+   └── tr/
+       ├── sprint-review.md
+       └── design-spec.md
+   ```
+
+4. Register in `.mags.yaml`:
+   ```yaml
+   customTemplatePacks:
+     - ./my-pack
+   ```
+
+5. Use via `/mags-docs-create sprint-review`
 
 ## Stack Configuration
 

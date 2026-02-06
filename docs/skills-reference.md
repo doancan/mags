@@ -1,6 +1,6 @@
 # Skills Reference
 
-MAGS provides 20 skills organized in two categories: **slash commands** (user-invocable) and **auto-activating skills** (guidance that Claude applies automatically when relevant).
+MAGS provides 22 skills organized in two categories: **slash commands** (user-invocable) and **auto-activating skills** (guidance that Claude applies automatically when relevant).
 
 All skills are located under `skills/<name>/SKILL.md`.
 
@@ -8,7 +8,7 @@ All skills are located under `skills/<name>/SKILL.md`.
 
 | Type | Count | Trigger | Example |
 |------|-------|---------|---------|
-| Slash Command | 13 | User types `/mags-<name>` | `/mags-init` |
+| Slash Command | 15 | User types `/mags-<name>` | `/mags-init` |
 | Auto-Activating | 7 | Claude detects a relevant context | Working on documentation triggers `doc-management` |
 
 ---
@@ -131,6 +131,24 @@ All skills are located under `skills/<name>/SKILL.md`.
 - **Location:** `skills/mags-legacy/SKILL.md`
 - **Tools Used:** `mags_list_docs`, `mags_create_doc`, `mags_detect_stack`, `mags_discover_modules`, `mags_init_progress`, `mags_update_progress`, `mags_remember`, `mags_generate_claude_md`, Bash, Read, Glob, Write
 - **Example Scenario:** You have a large codebase without documentation. Run `/mags-legacy` — it detects the tech stack, discovers existing modules with confidence scores, asks about migration goals, creates architecture docs, and sets up tech debt tracking.
+
+---
+
+### /mags-help
+
+- **Description:** Show all available MAGS commands, skills, agents, and hooks at a glance
+- **Location:** `skills/mags-help/SKILL.md`
+- **Tools Used:** `mags_list_docs`, `mags_get_progress`
+- **Example Scenario:** Run `/mags-help` to see a complete quick-reference card of all 15 commands, 7 auto-activating skills, 2 agents, and 3 hooks. Adapts its quick-start section based on whether the project is already initialized.
+
+---
+
+### /mags-orchestrate
+
+- **Description:** PRD analysis, codebase analysis, and execution plan management
+- **Location:** `skills/mags-orchestrate/SKILL.md`
+- **Tools Used:** `mags_parse_prd`, `mags_analyze_codebase`, `mags_generate_skill`, `mags_generate_agent`, `mags_init_execution`, `mags_execute_step`, `mags_get_current_step`, `mags_get_execution_status`, `mags_resume_execution`, `mags_verify_module`, AskUserQuestion, Read, Glob, Bash
+- **Example Scenario:** Run `/mags-orchestrate` — choose "PRD Analysis" to extract features and modules from your PRD, then "Create Execution Plan" to generate a step-by-step implementation plan, and "Run Plan" to execute it incrementally.
 
 ---
 

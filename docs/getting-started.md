@@ -32,6 +32,23 @@ This command:
 - Sets up `docs/.mags/` directory (progress, memory, sessions)
 - Optionally generates CLAUDE.md
 
+## Quick Win (2 minutes)
+
+Get value from MAGS in three steps:
+
+```
+1. /mags-init
+   → Project scanned, documents indexed
+
+2. "We're using JWT for auth, remember this"
+   → Claude auto-saves to memory
+
+3. /mags-status
+   → Project dashboard displayed
+```
+
+That's it. MAGS is now tracking your project. Every new session will start with full context restored.
+
 ## Verify Installation
 
 Confirm the plugin is working correctly:
@@ -109,6 +126,21 @@ An existing project that needs documentation, migration planning, and tech debt 
 → Progress tracking initialized with tech debt items
 ```
 
+## Architecture Overview
+
+MAGS has three layers:
+
+```
+You → Slash Commands (/mags-*) → MCP Tools (mags_*) → Services
+      15 commands                 37 tools              15+ services
+```
+
+- **Slash commands** — what you use directly (e.g. `/mags-init`, `/mags-status`)
+- **MCP tools** — what Claude uses automatically behind the scenes (e.g. `mags_remember`, `mags_recall`)
+- **Services** — internal engines that power everything (you never interact with these directly)
+
+For daily use, slash commands are all you need. Run `/mags-help` to see them all.
+
 ## Core Concepts
 
 ### Documents
@@ -184,10 +216,14 @@ Session ends
 | Find out what's next | "What's next?" → `mags_get_next` |
 | Generate a changelog | `/mags-changelog` |
 | Set up a legacy project | `/mags-legacy` |
+| See all available commands | `/mags-help` |
+| PRD analysis & execution | `/mags-orchestrate` |
 
 ## Next Steps
 
-- [Commands Reference](./commands-reference.md) — All 7 slash commands in detail
-- [MCP Tools Reference](./tools-reference.md) — All 24 MCP tools with parameters
+- [Commands Reference](./commands-reference.md) — All 15 slash commands in detail
+- [Skills Reference](./skills-reference.md) — All 22 skills (15 commands + 7 guidance)
+- [MCP Tools Reference](./tools-reference.md) — All 37 MCP tools with parameters
+- [Orchestrator Guide](./orchestrator-guide.md) — PRD-driven development and code analysis
 - [Workflows](./workflows.md) — Common usage scenarios and patterns
 - [Configuration](./configuration.md) — Settings and customization

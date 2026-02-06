@@ -61,6 +61,8 @@ That's it. MAGS will scan your `docs/` directory (or help you create one from te
 | `/mags-changelog` | Generate a changelog from git history |
 | `/mags-setup` | Analyze your project and recommend Claude Code configuration |
 | `/mags-legacy` | Initialize MAGS for a legacy/brownfield project with stack detection and tech debt tracking |
+| `/mags-help` | Quick reference of all commands, skills, agents, and hooks |
+| `/mags-orchestrate` | PRD analysis, codebase analysis, and execution plan management |
 
 ### Automatic Hooks
 
@@ -130,7 +132,7 @@ Module-based progress with items, dependencies, and priorities. Status flows: `n
 
 When all items in a module are completed, the module auto-completes. `mags_get_next` recommends what to work on based on dependencies.
 
-## MCP Tools (36 tools)
+## MCP Tools (37 tools)
 
 ### Documents
 | Tool | Description |
@@ -290,11 +292,11 @@ mags/
 │   │   │   ├── claude-md-rules.ts
 │   │   │   ├── consistency-checker.ts
 │   │   │   └── embedding/    # Pluggable embedding providers
-│   │   ├── tools/            # MCP tool registrations (36 tools)
+│   │   ├── tools/            # MCP tool registrations (37 tools)
 │   │   └── types/            # TypeScript type definitions
 │   └── dist/
 │       └── mags-server.bundle.mjs  # Pre-built bundle (no build step needed)
-├── skills/                   # 20 skills (7 guidance + 13 slash commands)
+├── skills/                   # 22 skills (15 slash commands + 7 guidance)
 ├── agents/                   # 2 specialized agents
 ├── hooks/                    # 3 event-driven hooks
 └── templates/                # Document and project templates
@@ -303,9 +305,9 @@ mags/
 ## Documentation
 
 - [Getting Started](./docs/getting-started.md) — Installation, first use, core concepts
-- [Skills Reference](./docs/skills-reference.md) — All 14 skills (7 slash commands + 7 guidance)
-- [Commands Reference](./docs/commands-reference.md) — All 7 slash commands in detail
-- [MCP Tools Reference](./docs/tools-reference.md) — All 36 MCP tools with parameters
+- [Skills Reference](./docs/skills-reference.md) — All 22 skills (15 slash commands + 7 guidance)
+- [Commands Reference](./docs/commands-reference.md) — All 15 slash commands in detail
+- [MCP Tools Reference](./docs/tools-reference.md) — All 37 MCP tools with parameters
 - [Orchestrator Guide](./docs/orchestrator-guide.md) — PRD-driven development and code analysis
 - [Workflows](./docs/workflows.md) — Common usage scenarios and patterns
 - [Configuration](./docs/configuration.md) — Settings, embedding providers, customization

@@ -1,8 +1,8 @@
 # Commands Reference
 
-> **Note:** Commands have been migrated to the skill-based architecture. Each command now lives at `skills/<name>/SKILL.md` instead of the legacy `commands/` directory. For a complete reference of all 14 skills (7 slash commands + 7 auto-activating guidance skills), see [Skills Reference](./skills-reference.md).
+> **Note:** Commands have been migrated to the skill-based architecture. Each command now lives at `skills/<name>/SKILL.md` instead of the legacy `commands/` directory. For a complete reference of all 22 skills (15 slash commands + 7 auto-activating guidance skills), see [Skills Reference](./skills-reference.md).
 
-MAGS provides 7 slash commands. Each command runs in Claude Code via `/command-name`.
+MAGS provides 15 slash commands. Each command runs in Claude Code via `/command-name`.
 
 ## /mags-init
 
@@ -269,3 +269,48 @@ Initializes MAGS for an existing (brownfield/legacy) project that already has co
 4. **Sets up tech debt tracking** — initializes progress with discovered modules as features, pain points as tech-debt items, and migration steps
 
 **When to use:** When adding MAGS to a project that already has a codebase but needs documentation and modernization tracking.
+
+---
+
+## /mags-help
+
+Shows a quick reference of all available commands, skills, agents, and hooks.
+
+**Usage:**
+```
+/mags-help
+```
+
+**Displays:**
+- All 15 slash commands with brief descriptions
+- 7 auto-activating skills and their triggers
+- 2 agents and what they do
+- 3 hooks and when they fire
+- Quick start steps (adapts to project state)
+- Links to full documentation
+
+**When to use:** When you want a quick overview of everything MAGS offers, or to discover a command you haven't used before.
+
+---
+
+## /mags-orchestrate
+
+Orchestrates PRD-driven development: parse requirements, analyze your codebase, create execution plans, and run them step by step.
+
+**Usage:**
+```
+/mags-orchestrate
+```
+
+**What it does:**
+1. Asks what you want to do (PRD analysis, codebase analysis, create plan, or run plan)
+2. Based on your choice:
+   - **PRD Analysis** — Parses a PRD to extract features, modules, and requirements
+   - **Codebase Analysis** — Scans for tech debt, endpoints, and schema
+   - **Create Execution Plan** — Generates a step-by-step plan from your PRD
+   - **Run / Resume Plan** — Executes or continues an existing plan
+3. Shows results and suggests next steps
+
+**When to use:** When you want to systematically implement features from a PRD, or analyze your codebase for tech debt and improvement opportunities.
+
+**Related:** See [Orchestrator Guide](./orchestrator-guide.md) for detailed documentation.
