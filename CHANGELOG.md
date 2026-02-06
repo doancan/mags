@@ -5,6 +5,36 @@ All notable changes to MAGS will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.0] - 2026-02-06
+
+### Added
+
+- **`/mags-help` command**: Quick reference card showing all 15 commands, 7 auto-activating skills, 2 agents, and 3 hooks with adaptive quick-start section
+- **`/mags-orchestrate` command**: Interactive entry point for PRD analysis, codebase analysis, execution plan creation, and step-by-step plan execution
+- **`mags_update_metadata` tool**: Update document frontmatter fields (status, tags, title) without modifying content body; supports null to remove fields
+- **Document templates**: `adr`, `module`, and `guide` templates in both EN and TR locales
+- **Related commands**: 5 skills now show related command tables for better discoverability
+- **Empty state guidance**: 3 skills show helpful next-step hints when no data exists
+- **Deep validation option**: `/mags-docs-validate` now offers standard or deep validation mode
+- **Post-init guidance**: `/mags-init` shows recommended next steps after initialization
+- **Session clarity**: `/mags-session` explains automatic hooks vs manual commands
+- **Configuration docs**: Custom Template Pack override rules, available locales list, hooks documentation
+
+### Fixed
+
+- **Project root resolution**: `start.js` now captures the original working directory and passes it as `MAGS_PROJECT_ROOT` to the forked MCP server, fixing incorrect path resolution
+- **Config file discovery**: Added `.mags/config.yaml` to the config search path list
+- **Validation score accuracy**: Health score capped at 99 when any issues exist; a perfect 100 now means zero issues
+- **Stale index in validation**: Documents are automatically re-indexed before every validation check
+- **Unnecessary timestamp updates**: `mags_update_doc` now compares section content before writing; `last_updated` is preserved when content hasn't changed
+- **Hook resilience**: All 3 hooks now include graceful fallback guards for missing or unavailable tools
+
+### Changed
+
+- Subcommands split into separate skills: `mags-docs-create`, `mags-docs-search`, `mags-docs-validate`, `mags-session-save`, `mags-session-load`, `mags-session-history`
+- Tool count increased from 36 to 37 (added `mags_update_metadata`)
+- Skill count increased from 20 to 22 (added `/mags-help` and `/mags-orchestrate`)
+
 ## [0.3.0] - 2026-02-04
 
 ### Added
